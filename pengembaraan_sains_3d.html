@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pengembaraan Sains 3D</title>
+<style>
+:root{
+  --navy:#17324d; --blue:#4eb7ff; --sky:#bdeeff; --green:#58c878;
+  --yellow:#ffd45a; --orange:#ff9958; --pink:#ff7fa1; --white:#fff;
+  --ink:#243447; --shadow:0 14px 35px rgba(31,58,83,.18);
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:var(--ink);background:linear-gradient(#bdeeff,#e9fbff)}
+button{font:inherit}
+.hidden{display:none!important}
+#app{min-height:100vh;overflow:hidden}
+.topbar{
+  height:74px;background:rgba(255,255,255,.93);backdrop-filter:blur(10px);
+  display:flex;align-items:center;justify-content:space-between;padding:0 22px;
+  box-shadow:0 5px 22px rgba(44,77,101,.12);position:relative;z-index:20
+}
+.brand{display:flex;gap:12px;align-items:center;font-weight:900;color:var(--navy);font-size:1.15rem}
+.brand-badge{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,#67d8ff,#3c8cff);display:grid;place-items:center;color:#fff;font-size:1.5rem;box-shadow:inset 0 3px rgba(255,255,255,.35)}
+.stats{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.pill{padding:9px 13px;border-radius:999px;background:#f2f8fc;border:1px solid #d7e7f1;font-weight:800;font-size:.9rem}
+.pill strong{color:#1573a9}
+.view{min-height:calc(100vh - 74px);position:relative}
+.screen{min-height:calc(100vh - 74px);padding:20px}
+.hero{
+  max-width:1200px;margin:auto;display:grid;grid-template-columns:1.1fr .9fr;gap:22px;
+  align-items:center
+}
+.intro-card,.panel,.quiz-card{background:rgba(255,255,255,.95);border:1px solid rgba(214,231,241,.95);border-radius:28px;box-shadow:var(--shadow)}
+.intro-card{padding:30px}
+.kicker{font-weight:900;color:#1685c0;letter-spacing:.08em;text-transform:uppercase;font-size:.8rem}
+h1{font-size:clamp(2.5rem,6vw,5.4rem);line-height:.95;margin:10px 0 16px;color:var(--navy);letter-spacing:-.04em}
+h2{color:var(--navy);margin:0 0 8px}
+.lead{font-size:1.05rem;line-height:1.6;max-width:680px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.primary,.secondary,.option,.teleport-btn,.map-node,.back-btn{
+  border:0;cursor:pointer;border-radius:16px;font-weight:900;transition:.2s transform,.2s box-shadow,.2s opacity
+}
+.primary{background:linear-gradient(135deg,#258cff,#55d7ff);color:#fff;padding:14px 19px;box-shadow:0 10px 22px rgba(36,139,255,.28)}
+.secondary{background:#eff7fb;color:var(--navy);padding:14px 19px}
+.primary:hover,.secondary:hover,.option:hover,.teleport-btn:hover,.map-node:hover{transform:translateY(-2px)}
+.scene-wrap{perspective:900px;min-height:470px;display:grid;place-items:center;position:relative}
+.scene{
+  width:min(500px,92vw);height:410px;position:relative;transform-style:preserve-3d;
+  transform:rotateX(12deg) rotateY(-12deg);transition:transform .3s
+}
+.sky-card{position:absolute;inset:0;border-radius:34px;background:linear-gradient(#88dcff 0 52%,#6fd182 52%);box-shadow:var(--shadow);overflow:hidden;transform-style:preserve-3d}
+.cloud{position:absolute;width:90px;height:32px;background:#fff;border-radius:40px;filter:drop-shadow(0 7px 0 rgba(68,120,150,.08));opacity:.9}
+.cloud:before,.cloud:after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud:before{width:45px;height:45px;left:17px;top:-20px}.cloud:after{width:58px;height:58px;right:15px;top:-30px}
+.c1{top:65px;left:50px}.c2{top:110px;right:38px;transform:scale(.72)}
+.hill{position:absolute;bottom:86px;width:320px;height:170px;border-radius:55% 55% 0 0;background:#4bbf77;box-shadow:inset 0 18px rgba(255,255,255,.12)}
+.h1{left:-45px;transform:rotate(-8deg)}.h2{right:-50px;background:#43ae6c;transform:rotate(8deg)}
+.ground{position:absolute;bottom:0;left:0;right:0;height:104px;background:#54bd70;transform:translateZ(18px)}
+.path{position:absolute;left:30%;bottom:0;width:42%;height:190px;background:#e9bd79;clip-path:polygon(35% 0,65% 0,100% 100%,0 100%);transform:translateZ(25px)}
+.flower{position:absolute;bottom:78px;width:14px;height:65px;background:#389e60;border-radius:10px;transform:translateZ(45px)}
+.flower:before{content:"✿";position:absolute;top:-24px;left:-8px;font-size:30px;color:#ff6b91}
+.f1{left:18%}.f2{right:16%;transform:translateZ(42px) scale(.8)}
+.hero-char{position:absolute;left:50%;bottom:68px;transform:translateX(-50%) translateZ(95px);width:115px;height:165px}
+.head{position:absolute;left:22px;top:0;width:72px;height:72px;background:#ffd7aa;border-radius:50%;box-shadow:inset 0 -7px rgba(219,144,84,.14)}
+.hair{position:absolute;left:15px;top:-5px;width:82px;height:43px;background:#4c362a;border-radius:50% 50% 35% 45%}
+.eye{position:absolute;top:31px;width:8px;height:11px;background:#25313c;border-radius:50%}.e1{left:42px}.e2{left:70px}
+.smile{position:absolute;left:47px;top:48px;width:24px;height:12px;border-bottom:4px solid #a85151;border-radius:0 0 20px 20px}
+.body{position:absolute;left:15px;top:65px;width:85px;height:90px;background:#438df5;border-radius:25px 25px 17px 17px}
+.badge{position:absolute;left:31px;top:15px;width:53px;height:53px;border-radius:50%;background:#ffd45a;display:grid;place-items:center;font-weight:1000;color:#814c00}
+.leg{position:absolute;top:142px;width:23px;height:28px;background:#31475b;border-radius:0 0 10px 10px}.l1{left:25px}.l2{right:25px}
+.map-screen{padding:25px;position:relative}
+.map-board{
+  max-width:1250px;min-height:700px;margin:auto;border-radius:32px;background:
+  radial-gradient(circle at 20% 20%,rgba(255,255,255,.7) 0 10%,transparent 11%),
+  linear-gradient(145deg,#dff9ff,#c7f0dc);box-shadow:var(--shadow);position:relative;overflow:hidden;
+  border:6px solid #fff;
+}
+.map-board:before{content:"";position:absolute;inset:0;background:
+  linear-gradient(145deg,transparent 45%,rgba(61,164,113,.12) 45% 55%,transparent 55%),
+  radial-gradient(circle at 80% 80%,rgba(255,255,255,.55),transparent 28%);
+}
+.map-title{position:relative;padding:26px 28px;display:flex;justify-content:space-between;gap:15px;align-items:center}
+.map-title p{margin:5px 0 0;color:#5d7583}
+.map-path{position:absolute;left:13%;right:13%;top:53%;height:12px;background:#e7be7b;border-radius:999px;transform:rotate(-5deg);box-shadow:0 3px rgba(130,89,39,.12)}
+.map-node{
+  position:absolute;width:150px;min-height:126px;padding:15px;background:#fff;box-shadow:0 12px 25px rgba(67,103,120,.17);
+  display:grid;place-items:center;text-align:center;border:4px solid #e2eff4
+}
+.map-node.locked{filter:grayscale(.85);opacity:.58;cursor:not-allowed}
+.map-node.current{border-color:#3c9cff;box-shadow:0 0 0 7px rgba(60,156,255,.15),0 12px 25px rgba(67,103,120,.17)}
+.map-node.done{border-color:#56c877}
+.node-icon{font-size:38px}.node-name{font-weight:1000;color:var(--navy)}.node-sub{font-size:.78rem;color:#71828c}
+.n1{left:10%;top:34%}.n2{left:39%;top:22%}.n3{right:10%;top:34%}.n4{left:25%;bottom:7%}.n5{right:26%;bottom:7%}
+.back-btn{background:#fff;padding:10px 13px;box-shadow:0 6px 15px rgba(50,82,100,.12);color:var(--navy)}
+.level-screen{padding:18px;display:flex;flex-direction:column;gap:14px}
+.level-header{max-width:1200px;width:100%;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.level-tag{display:inline-block;background:#e9f8ff;padding:7px 11px;border-radius:999px;font-weight:900;color:#1485bb}
+.world{
+  max-width:1200px;width:100%;height:360px;margin:auto;border-radius:30px;position:relative;overflow:hidden;
+  box-shadow:var(--shadow);border:5px solid #fff;perspective:900px
+}
+.world.plants{background:linear-gradient(#87ddff 0 56%,#57c87a 56%)}
+.world.water{background:linear-gradient(#a2e8ff 0 56%,#70c6dc 56%)}
+.world.energy{background:linear-gradient(#ffd98a 0 56%,#d9b86d 56%)}
+.world:after{content:"";position:absolute;left:0;right:0;bottom:0;height:82px;background:rgba(51,141,82,.32)}
+.world-object{position:absolute;transform-style:preserve-3d}
+.tree{left:15%;bottom:70px;width:50px;height:150px;background:#895e3a;border-radius:25px;box-shadow:25px -35px 0 25px #55bd71, -16px -58px 0 30px #62c97b}
+.tree2{right:18%;bottom:75px;transform:scale(.8)}
+.river{position:absolute;left:0;right:0;bottom:45px;height:105px;background:linear-gradient(180deg,#63d1ed,#45aee1);transform:skewY(-7deg);opacity:.9}
+.cloud2{position:absolute;top:40px;left:32%;font-size:50px;opacity:.8}
+.sun{position:absolute;right:70px;top:35px;font-size:54px}
+.mountain{position:absolute;bottom:82px;right:28%;width:260px;height:150px;background:#8cbdc9;clip-path:polygon(50% 0,100% 100%,0 100%);opacity:.75}
+.lesson-panel{max-width:1200px;width:100%;margin:auto;display:grid;grid-template-columns:1fr 1.25fr;gap:16px}
+.panel{padding:20px}
+.activity-list{display:grid;gap:9px;margin-top:14px}
+.activity-btn{width:100%;padding:13px;border:2px solid #d9eaf3;background:#f8fcfe;border-radius:15px;text-align:left;cursor:pointer;font-weight:900;color:var(--navy)}
+.activity-btn.active{border-color:#54aafa;background:#eef8ff}
+.lesson-text{line-height:1.6;color:#536974}
+.quiz-area{min-height:250px}
+.question{font-size:1.25rem;font-weight:950;color:var(--navy);margin-bottom:14px}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.option{padding:14px;background:#f5f9fc;border:2px solid #d8e7ef;text-align:left;color:var(--ink)}
+.option.correct{background:#e7faec;border-color:#53c978}.option.wrong{background:#ffeded;border-color:#ff8282}
+.feedback{margin-top:14px;padding:12px;border-radius:13px;background:#f5f8fa;font-weight:800}
+.sequence{display:grid;gap:10px}
+.seq-items{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.seq-item{padding:14px;background:#f5f9fc;border:2px solid #dae9f1;border-radius:14px;text-align:center;cursor:grab;font-weight:900}
+.seq-item.selected{border-color:#489eff;background:#eaf5ff}
+.seq-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px}
+.reward{
+  position:fixed;right:18px;bottom:18px;background:#fff;padding:15px 18px;border-radius:18px;box-shadow:var(--shadow);
+  z-index:30;min-width:230px;border:1px solid #dbe9f0
+}
+.modal-bg{position:fixed;inset:0;background:rgba(20,44,62,.52);backdrop-filter:blur(5px);display:grid;place-items:center;padding:18px;z-index:100}
+.modal{width:min(560px,100%);background:#fff;border-radius:28px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.25);text-align:center}
+.celebrate{font-size:60px}
+.progress{height:11px;background:#e6f0f4;border-radius:999px;overflow:hidden;margin-top:9px}.progress>div{height:100%;background:linear-gradient(90deg,#46a8ff,#55d988);width:0;transition:.4s}
+.small{font-size:.86rem;color:#6f818b}
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr}
+  .scene-wrap{min-height:380px}
+  .lesson-panel{grid-template-columns:1fr}
+  .map-board{min-height:760px}.n1{left:5%;top:26%}.n2{left:37%;top:17%}.n3{right:5%;top:26%}.n4{left:16%;bottom:7%}.n5{right:16%;bottom:7%}
+}
+@media(max-width:640px){
+  .topbar{height:auto;min-height:74px;padding:10px 12px}.stats{justify-content:flex-end}.pill{padding:7px 9px;font-size:.78rem}
+  .screen{padding:13px}.intro-card{padding:22px}
+  .world{height:290px}.lesson-panel{gap:12px}.panel{padding:15px}
+  .options,.seq-items{grid-template-columns:1fr 1fr}
+  .map-node{width:112px;min-height:106px;padding:10px}.node-icon{font-size:30px}.node-name{font-size:.88rem}.node-sub{font-size:.7rem}
+}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="topbar">
+  <div class="brand"><div class="brand-badge">🔬</div><span>Pengembaraan Sains 3D</span></div>
+  <div class="stats">
+    <div class="pill">⭐ <strong id="score">0</strong></div>
+    <div class="pill">🏆 <strong id="badges">0</strong></div>
+    <div class="pill">📚 <strong id="levelCount">0/3</strong></div>
+  </div>
+</header>
+<main class="view" id="view"></main>
+<div id="reward" class="reward hidden"></div>
+<div id="modal" class="modal-bg hidden">
+  <div class="modal" id="modalContent"></div>
+</div>
+</div>
+
+<script>
+const state = {
+  started:false,
+  score:0,
+  badges:0,
+  currentLevel:0,
+  unlocked:1,
+  completed:new Set(),
+  activity:'learn',
+  questionIndex:0,
+  waterOrder:['Penyejatan','Pemeluwapan','Kerpasan','Pengumpulan'],
+  selectedSeq:[],
+  seqSolved:false
+};
+
+const levels = [
+ {id:1,name:'Tumbuhan Hebat',icon:'🌱',theme:'plants',short:'Bahagian & kehidupan tumbuhan',
+  facts:[
+   ['Akar','Menyerap air dan mineral serta membantu memegang tumbuhan.'],
+   ['Batang','Menyokong tumbuhan dan membantu mengangkut air.'],
+   ['Daun','Tempat utama tumbuhan membuat makanan melalui fotosintesis.'],
+   ['Bunga','Membantu proses pembiakan sesetengah tumbuhan.']
+  ],
+  questions:[
+   {q:'Bahagian tumbuhan yang menyerap air dan mineral dari tanah ialah…',a:['Akar','Daun','Bunga','Buah'],c:0},
+   {q:'Di manakah fotosintesis banyak berlaku?',a:['Akar','Daun','Biji benih','Tanah'],c:1}
+  ]
+ },
+ {id:2,name:'Kitaran Air',icon:'💧',theme:'water',short:'Air bergerak dalam satu kitaran',
+  facts:[
+   ['Penyejatan','Haba matahari menyebabkan air berubah menjadi wap air.'],
+   ['Pemeluwapan','Wap air menyejuk lalu membentuk titisan air dalam awan.'],
+   ['Kerpasan','Air turun ke bumi sebagai hujan.'],
+   ['Pengumpulan','Air berkumpul di sungai, tasik, laut dan tanah.']
+  ],
+  questions:[
+   {q:'Apakah proses apabila air dipanaskan lalu menjadi wap?',a:['Pemeluwapan','Penyejatan','Kerpasan','Pembekuan'],c:1},
+   {q:'Susunan manakah menggambarkan kitaran air dengan betul?',a:['Penyejatan → Pemeluwapan → Kerpasan → Pengumpulan','Kerpasan → Penyejatan → Pengumpulan → Pemeluwapan','Pengumpulan → Kerpasan → Pemeluwapan → Penyejatan','Pemeluwapan → Pengumpulan → Penyejatan → Kerpasan'],c:0}
+  ]
+ },
+ {id:3,name:'Tenaga & Haba',icon:'☀️',theme:'energy',short:'Kenali sumber dan perubahan tenaga',
+  facts:[
+   ['Matahari','Sumber tenaga cahaya dan haba yang sangat penting kepada Bumi.'],
+   ['Haba','Tenaga haba boleh menyebabkan perubahan suhu atau keadaan bahan.'],
+   ['Cahaya','Tenaga cahaya membolehkan kita melihat objek dan membantu tumbuhan.'],
+   ['Elektrik','Bentuk tenaga yang digunakan oleh banyak peralatan harian.']
+  ],
+  questions:[
+   {q:'Apakah sumber tenaga utama yang memanaskan permukaan Bumi?',a:['Bulan','Matahari','Angin malam','Awan'],c:1},
+   {q:'Peralatan manakah biasanya menggunakan tenaga elektrik untuk menghasilkan cahaya?',a:['Lampu','Buku','Batu','Pokok'],c:0}
+  ]
+ }
+];
+
+function $(id){return document.getElementById(id)}
+function renderTop(){ $('score').textContent=state.score; $('badges').textContent=state.badges; $('levelCount').textContent=`${state.completed.size}/3`; }
+
+function showReward(text){
+  const el=$('reward'); el.textContent=text; el.classList.remove('hidden');
+  clearTimeout(showReward.t); showReward.t=setTimeout(()=>el.classList.add('hidden'),2600);
+}
+
+function home(){
+ state.currentLevel=0;
+ $('view').innerHTML=`
+ <section class="screen">
+  <div class="hero">
+   <div class="intro-card">
+    <div class="kicker">Kembara • Teroka • Belajar</div>
+    <h1>Misi Sains<br><span style="color:#3a9df7">3D!</span></h1>
+    <p class="lead">Masuk ke dunia kartun 3D, pilih portal, teroka alam dan selesaikan cabaran Sains untuk membuka kawasan baharu.</p>
+    <div class="cta">
+      <button class="primary" onclick="startGame()">🚀 Mula Pengembaraan</button>
+      <button class="secondary" onclick="showHow()">❔ Cara Bermain</button>
+    </div>
+    <div style="margin-top:22px"><b>Matlamat:</b> lengkapkan 3 dunia, jawab soalan dan kumpulkan lencana.</div>
+   </div>
+   <div class="scene-wrap">
+    <div class="scene" id="heroScene">
+      <div class="sky-card">
+        <div class="cloud c1"></div><div class="cloud c2"></div>
+        <div class="hill h1"></div><div class="hill h2"></div><div class="path"></div>
+        <div class="flower f1"></div><div class="flower f2"></div><div class="ground"></div>
+        <div class="hero-char"><div class="hair"></div><div class="head"><i class="eye e1"></i><i class="eye e2"></i><div class="smile"></div></div><div class="body"><div class="badge">SCI</div></div><div class="leg l1"></div><div class="leg l2"></div></div>
+      </div>
+    </div>
+   </div>
+  </div>
+ </section>`;
+ const s=$('heroScene'); s.onpointermove=e=>{const r=s.getBoundingClientRect(); const x=(e.clientX-r.left)/r.width-.5; const y=(e.clientY-r.top)/r.height-.5; s.style.transform=`rotateX(${12-y*16}deg) rotateY(${-12+x*18}deg)`}; s.onpointerleave=()=>s.style.transform='rotateX(12deg) rotateY(-12deg)';
+}
+
+function startGame(){ state.started=true; mapScreen(); }
+
+function showHow(){
+ openModal(`
+  <div class="celebrate">🧭</div><h2>Cara Bermain</h2>
+  <p>Teroka peta, masuk ke portal yang tersedia, baca fakta Sains dan selesaikan mini-game.</p>
+  <p>Setiap jawapan betul memberi mata. Lengkapkan semua aktiviti untuk membuka level seterusnya.</p>
+  <button class="primary" onclick="closeModal()">Jom Mulakan</button>
+ `);
+}
+
+function mapScreen(){
+ $('view').innerHTML=`
+ <section class="map-screen">
+   <div class="map-board">
+    <div class="map-title">
+      <div><div class="kicker">Peta Pengembaraan</div><h2>Pilih Dunia Untuk Diteroka</h2><p>Teleport ke lokasi Sains baharu.</p></div>
+      <button class="back-btn" onclick="home()">⌂ Utama</button>
+    </div>
+    <div class="map-path"></div>
+    ${levels.map((l,i)=>`
+      <button class="map-node ${state.completed.has(i+1)?'done':''} ${i+1===state.unlocked?'current':''} ${i+1>state.unlocked?'locked':''}"
+        ${i+1<=state.unlocked?`onclick="enterLevel(${i+1})"`:''}>
+        <div class="node-icon">${i+1>state.unlocked?'🔒':l.icon}</div>
+        <div class="node-name">Level ${l.id}<br>${l.name}</div>
+        <div class="node-sub">${i+1>state.unlocked?'Lengkapkan level sebelumnya':state.completed.has(i+1)?'✓ Selesai':'Buka portal'}</div>
+      </button>`).join('')}
+   </div>
+ </section>`;
+}
+
+function enterLevel(n){
+ state.currentLevel=n; state.activity='learn'; state.questionIndex=0; state.selectedSeq=[]; state.seqSolved=false;
+ levelScreen();
+}
+
+function levelScreen(){
+ const l=levels[state.currentLevel-1];
+ $('view').innerHTML=`
+ <section class="level-screen">
+  <div class="level-header">
+    <div><span class="level-tag">${l.icon} LEVEL ${l.id}</span><h2 style="margin:8px 0 2px">${l.name}</h2><div class="small">${l.short}</div></div>
+    <button class="back-btn" onclick="mapScreen()">← Peta</button>
+  </div>
+  <div class="world ${l.theme}">
+    ${worldMarkup(l)}
+  </div>
+  <div class="lesson-panel">
+    <div class="panel">
+      <h2>📖 Buku Misi</h2>
+      <p class="lesson-text">Terokai objek di dunia ini dan kuasai konsep asas. Bila sedia, pilih cabaran di sebelah.</p>
+      <div class="activity-list">
+        <button class="activity-btn ${state.activity==='learn'?'active':''}" onclick="setActivity('learn')">🌟 Eksplorasi Fakta</button>
+        <button class="activity-btn ${state.activity==='quiz'?'active':''}" onclick="setActivity('quiz')">🧠 Kuiz Pantas</button>
+        ${state.currentLevel===2?`<button class="activity-btn ${state.activity==='sequence'?'active':''}" onclick="setActivity('sequence')">🔢 Susun Kitaran Air</button>`:''}
+      </div>
+      <div class="progress"><div id="levelProgress"></div></div>
+      <div class="small" style="margin-top:7px">Kemajuan level: <b id="progressLabel"></b></div>
+    </div>
+    <div class="panel quiz-area" id="activityPanel"></div>
+  </div>
+ </section>`;
+ setActivity(state.activity);
+ updateProgress();
+}
+
+function worldMarkup(l){
+ if(l.id===1) return `<div class="sun">☀️</div><div class="cloud2">☁️</div><div class="mountain"></div><div class="tree"></div><div class="tree tree2"></div>`;
+ if(l.id===2) return `<div class="sun">☀️</div><div class="cloud2">☁️</div><div class="river"></div><div style="position:absolute;left:18%;bottom:145px;font-size:55px">💧</div><div style="position:absolute;right:19%;bottom:139px;font-size:55px">🌧️</div>`;
+ return `<div class="sun" style="font-size:74px">☀️</div><div class="cloud2">☁️</div><div style="position:absolute;left:16%;bottom:113px;font-size:92px">🔋</div><div style="position:absolute;right:18%;bottom:102px;font-size:100px">💡</div><div style="position:absolute;left:47%;bottom:115px;font-size:85px">⚡</div>`;
+}
+
+function setActivity(a){
+ state.activity=a;
+ document.querySelectorAll('.activity-btn').forEach(b=>b.classList.remove('active'));
+ const names={learn:'Eksplorasi Fakta',quiz:'Kuiz Pantas',sequence:'Susun Kitaran Air'};
+ document.querySelectorAll('.activity-btn').forEach(b=>{if(b.textContent.includes(names[a])) b.classList.add('active')});
+ const p=$('activityPanel'); if(!p) return;
+ if(a==='learn') renderLearn(p);
+ if(a==='quiz') renderQuiz(p);
+ if(a==='sequence') renderSequence(p);
+ updateProgress();
+}
+
+function renderLearn(p){
+ const l=levels[state.currentLevel-1];
+ p.innerHTML=`<h2>🔍 Kenali ${l.name}</h2><div style="display:grid;gap:10px">${l.facts.map((f,i)=>`
+  <div style="background:#f7fbfd;border:1px solid #dcecf3;border-radius:15px;padding:12px 14px">
+    <b>${f[0]}</b><div class="small" style="margin-top:4px">${f[1]}</div>
+  </div>`).join('')}</div>
+  <button class="primary" style="margin-top:13px" onclick="setActivity('${state.currentLevel===2?'sequence':'quiz'}')">${state.currentLevel===2?'🎯 Main Cabaran Susunan':'🧠 Mulakan Kuiz'}</button>`;
+}
+
+function renderQuiz(p){
+ const l=levels[state.currentLevel-1], q=l.questions[state.questionIndex];
+ p.innerHTML=`<div class="kicker">CABARAN ${state.questionIndex+1}/${l.questions.length}</div>
+ <div class="question">${q.q}</div>
+ <div class="options">${q.a.map((x,i)=>`<button class="option" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${x}</button>`).join('')}</div>
+ <div id="feedback"></div>`;
+}
+
+function answerQuiz(i){
+ const l=levels[state.currentLevel-1], q=l.questions[state.questionIndex], fb=$('feedback');
+ document.querySelectorAll('.option').forEach((b,idx)=>{b.disabled=true;if(idx===q.c)b.classList.add('correct');if(idx===i&&i!==q.c)b.classList.add('wrong')});
+ if(i===q.c){
+   state.score+=10; showReward('🎉 Betul! +10 mata');
+   fb.innerHTML=`<div class="feedback">✅ Hebat! ${state.questionIndex<l.questions.length-1?'Soalan seterusnya tersedia.':'Semua soalan kuiz selesai.'}</div>`;
+   state.questionIndex++;
+   if(state.questionIndex>=l.questions.length){ state.questionIndex=l.questions.length-1; markActivity('quiz') }
+   else setTimeout(()=>renderQuiz($('activityPanel')),550);
+ } else {
+   fb.innerHTML='<div class="feedback">💡 Hampir! Cuba perhatikan petunjuk daripada dunia ini.</div>';
+ }
+ updateProgress();
+}
+
+function renderSequence(p){
+ const fixed=levels[1];
+ p.innerHTML=`<h2>🔢 Misi Susun Kitaran Air</h2>
+ <p class="lesson-text">Klik kad mengikut urutan yang betul: daripada air menerima haba sehingga air kembali terkumpul di Bumi.</p>
+ <div class="seq-items">${fixed.facts.slice(0,4).map((f,i)=>`<button class="seq-item ${state.selectedSeq.includes(f[0])?'selected':''}" onclick="toggleSeq('${f[0]}')">${i+1}. ${f[0]}</button>`).join('')}</div>
+ <div class="small" style="margin-top:10px">Urutan dipilih: <b>${state.selectedSeq.length?state.selectedSeq.join(' → '):'belum ada'}</b></div>
+ <div class="seq-actions"><button class="primary" onclick="checkSequence()">✓ Semak Urutan</button><button class="secondary" onclick="state.selectedSeq=[];renderSequence($('activityPanel'))">Reset</button></div>
+ <div id="seqFeedback"></div>`;
+}
+
+function toggleSeq(name){
+ if(state.selectedSeq.includes(name)) return;
+ state.selectedSeq.push(name);
+ renderSequence($('activityPanel'));
+}
+
+function checkSequence(){
+ const correct=['Penyejatan','Pemeluwapan','Kerpasan','Pengumpulan'];
+ const fb=$('seqFeedback');
+ if(state.selectedSeq.join('|')===correct.join('|')){
+  if(!state.seqSolved){state.score+=20;state.seqSolved=true;showReward('🌊 Urutan betul! +20 mata');markActivity('sequence');}
+  fb.innerHTML='<div class="feedback">✅ Tepat! Anda berjaya memahami kitaran air.</div>';
+ }else{
+  fb.innerHTML='<div class="feedback">🔎 Cuba lagi. Fikirkan apa berlaku selepas wap air terbentuk.</div>';
+ }
+ updateProgress();
+}
+
+function markActivity(type){
+ state.completed.add(`${state.currentLevel}-${type}`);
+ updateProgress();
+ if(levelComplete()){
+   state.completed.add(state.currentLevel);
+   if(state.currentLevel<3) state.unlocked=Math.max(state.unlocked,state.currentLevel+1);
+   state.badges=state.completed.size;
+   renderTop();
+   setTimeout(()=>showLevelComplete(),450);
+ }
+}
+
+function levelComplete(){
+ if(state.currentLevel===1) return [...state.completed].includes('1-quiz');
+ if(state.currentLevel===2) return [...state.completed].includes('2-quiz') && [...state.completed].includes('2-sequence');
+ if(state.currentLevel===3) return [...state.completed].includes('3-quiz');
+ return false;
+}
+
+function updateProgress(){
+ const done = state.currentLevel===2
+   ? (state.completed.has('2-quiz')?1:0)+(state.seqSolved?1:0)
+   : (state.completed.has(`${state.currentLevel}-quiz`)?1:0);
+ const total=state.currentLevel===2?2:1;
+ const pct=Math.min(100,Math.round(done/total*100));
+ const bar=$('levelProgress'), lab=$('progressLabel');
+ if(bar)bar.style.width=pct+'%'; if(lab)lab.textContent=pct+'%';
+ renderTop();
+}
+
+function showLevelComplete(){
+ const l=levels[state.currentLevel-1];
+ openModal(`<div class="celebrate">🏆</div><h2>Level ${l.id} Selesai!</h2>
+ <p>Anda berjaya menguasai asas <b>${l.name}</b> dan membuka ganjaran baharu.</p>
+ <div style="font-size:1.7rem;margin:12px">⭐ + 🏅</div>
+ <button class="primary" onclick="closeModal(); mapScreen()">Teruskan ke Peta</button>`);
+}
+
+function openModal(html){$('modalContent').innerHTML=html;$('modal').classList.remove('hidden')}
+function closeModal(){$('modal').classList.add('hidden')}
+
+renderTop(); home();
+
+window.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+</script>
+</body>
+</html>
