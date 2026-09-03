@@ -140,8 +140,8 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 </div>
 <div id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 "use strict";
 
@@ -177,15 +177,11 @@ let renderer3d,scene3d,camera3d,playerModel=null,playerGroup=null,playerMixer=nu
 let idleAction=null,walkAction=null,currentAction=null,modelReady=false;
 const clock3d=new THREE.Clock();
 const MODEL_URL="player_character.glb";
-// Model 3D sebenar (GLB) — fail player_character.glb berada dalam folder yang sama dengan HTML.
+// Model 3D sebenar (GLB) — pastikan fail ini berada di folder assets.
 // Model mengandungi animasi Idle dan Walk.
 
 function init3D(){
- try{
-  if(!window.THREE || !THREE.GLTFLoader){
-    throw new Error("Three.js / GLTFLoader tidak tersedia.");
-  }
-  renderer3d=new THREE.WebGLRenderer({canvas:game3d,alpha:true,antialias:true});
+ renderer3d=new THREE.WebGLRenderer({canvas:game3d,alpha:true,antialias:true});
  renderer3d.setPixelRatio(Math.min(devicePixelRatio||1,2));
  renderer3d.setSize(innerWidth,innerHeight,false);
  if("outputColorSpace" in renderer3d) renderer3d.outputColorSpace=THREE.SRGBColorSpace;
@@ -243,13 +239,8 @@ function init3D(){
    toast("Watak 3D berjaya dimuatkan ✨");
  },undefined,(err)=>{
    console.error("Gagal memuatkan GLB:",err);
-   toast("GLB gagal dimuatkan. Game masih boleh dimainkan.");
+   toast("GLB tidak ditemui. Pastikan assets/player_character.glb wujud.");
  });
- }catch(err){
-  console.error("3D gagal dimulakan:",err);
-  renderer3d=null; scene3d=null; camera3d=null;
-  toast("Mod 3D tidak dapat dimulakan. Game diteruskan.");
- }
 }
 
 function set3DAction(moving){
