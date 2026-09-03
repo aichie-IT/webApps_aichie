@@ -402,7 +402,19 @@ function animal(a,t){const p=project(a.x,0,a.z);if(!p)return;
  ctx.fillStyle="#6b4a7e";ctx.beginPath();ctx.arc(bx,by,3*p.s,0,7);ctx.fill();
 }
 function drawPlayer(t){
-  // Watak kini dipaparkan menggunakan player_character.glb.
+  // Fallback: kekalkan watak asal v2 sementara GLB sedang dimuatkan / jika gagal.
+  if(window.modelReadyForFallback)return;
+  const p=project(player.x,0,player.z);if(!p)return;shadow(p,16,7);
+  const moving=mobileStick.active||player.targetX!==null||keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright;
+  const bob=moving?Math.abs(Math.sin(player.walk))*2.5:Math.sin(t/700)*1.2;
+  ctx.save();ctx.translate(p.x,p.y-47*p.s-bob*p.s);ctx.scale(p.s,p.s);
+  ctx.fillStyle="#4f8cff";ctx.beginPath();ctx.roundRect(-14,-3,28,32,9);ctx.fill();
+  ctx.fillStyle="#ffd0a6";ctx.beginPath();ctx.arc(0,-18,15,0,7);ctx.fill();
+  ctx.fillStyle="#513b35";ctx.beginPath();ctx.arc(0,-25,15,Math.PI,0);ctx.fill();
+  ctx.fillStyle="#19324a";ctx.beginPath();ctx.arc(-5,-18,2,0,7);ctx.arc(5,-18,2,0,7);ctx.fill();
+  ctx.fillStyle="#ffb84d";ctx.fillRect(10,3,8,18);
+  if(moving){ctx.strokeStyle="#19324a";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-8,28);ctx.lineTo(-10+Math.sin(player.walk)*3,38);ctx.moveTo(8,28);ctx.lineTo(10-Math.sin(player.walk)*3,38);ctx.stroke()}
+  ctx.restore();
 }
 function drawWorld(t){
  drawSky();drawGround();
@@ -439,6 +451,8 @@ function update(dt,t){
  let dx=0,dz=0;
  if(keys.w||keys.arrowup)dz-=1;if(keys.s||keys.arrowdown)dz+=1;
  if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
+ // Mobile joystick controls the same player movement.
+ if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z;}
  if(dx||dz){player.targetX=null;player.targetZ=null;const l=Math.hypot(dx,dz);dx/=l;dz/=l;
   player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;player.angle=Math.atan2(dx,dz);player.walk+=dt*9}
  else if(player.targetX!==null){
@@ -552,7 +566,7 @@ resize();updateHUD();requestAnimationFrame(loop);
 
 const glbCanvas=document.getElementById("glbCanvas");
 const MODEL_URL="./player_character.glb";
-let renderer,scene,camera3d,character,mixer;
+let renderer,scene,camera3d,character,characterRoot,mixer;
 let idleAction=null,walkAction=null,modelReady=false,lastGLBTime=performance.now();
 
 function findClip(clips,names){
@@ -598,18 +612,17 @@ function initGLB(){
           }
         });
 
-        // Centre and normalize the GLB using its real dimensions.
+        // Put the model inside a root so its mesh origin can be centred
+        // without being overwritten when the player moves around the v2 world.
         const box=new THREE.Box3().setFromObject(character);
         const size=box.getSize(new THREE.Vector3());
         const center=box.getCenter(new THREE.Vector3());
 
-        character.position.x-=center.x;
-        character.position.z-=center.z;
-        character.position.y-=box.min.y;
-
+        characterRoot=new THREE.Group();
+        characterRoot.add(character);
+        character.position.set(-center.x,-box.min.y,-center.z);
         character.userData.baseHeight=Math.max(size.y,0.001);
-
-        scene.add(character);
+        scene.add(characterRoot);
 
         mixer=new THREE.AnimationMixer(character);
 
@@ -626,7 +639,9 @@ function initGLB(){
         }
 
         modelReady=true;
+        window.modelReadyForFallback=true;
         console.log("player_character.glb berjaya dimuatkan.",gltf.animations.map(a=>a.name));
+        if(typeof toast==="function") toast("Watak 3D sedia digunakan ✨");
       },
       undefined,
       function(error){
@@ -685,21 +700,22 @@ function updateGLB(){
 
   if(moving){
     // Adjust this sign if the model's front is opposite to movement.
-    character.rotation.y=player.angle;
+    characterRoot.rotation.y=player.angle;
   }
 
-  // Put the GLB at exactly the same projected location as the old v2 player.
+  // Put the GLB at the same projected position as the original v2 player.
   const p=project(player.x,0,player.z);
   if(!p)return;
 
-  // v2 character was roughly 47*p.s pixels tall.
-  const desiredHeight=Math.max(48,Math.min(220,47*p.s));
+  // Use a stable screen-space height so the model stays readable on phone and desktop.
+  // The original v2 player is visually around 70-110 px on typical screens.
+  const desiredHeight=Math.max(62,Math.min(125,70*p.s));
   const scale=desiredHeight/character.userData.baseHeight;
-  character.scale.setScalar(scale);
+  characterRoot.scale.setScalar(scale);
 
-  character.position.x=p.x;
-  character.position.y=p.y;
-  character.position.z=0;
+  characterRoot.position.x=p.x;
+  characterRoot.position.y=p.y;
+  characterRoot.position.z=0;
 }
 
 function renderGLB(){
