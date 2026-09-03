@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pengembaraan Sains 3D — Pro v2</title>
+<title>Pengembaraan Sains 3D — Pro v4</title>
 <style>
 :root{
   --ink:#18324a;--blue:#4f8cff;--cyan:#55d6ff;--green:#5ed48b;
@@ -177,12 +177,15 @@ let renderer3d,scene3d,camera3d,playerModel=null,playerGroup=null,playerMixer=nu
 let idleAction=null,walkAction=null,currentAction=null,modelReady=false;
 const clock3d=new THREE.Clock();
 const MODEL_URL="assets/player_character.glb";
+// Model 3D sebenar (GLB) — pastikan fail ini berada di folder assets.
+// Model mengandungi animasi Idle dan Walk.
 
 function init3D(){
  renderer3d=new THREE.WebGLRenderer({canvas:game3d,alpha:true,antialias:true});
  renderer3d.setPixelRatio(Math.min(devicePixelRatio||1,2));
  renderer3d.setSize(innerWidth,innerHeight,false);
- renderer3d.outputColorSpace=THREE.SRGBColorSpace;
+ if("outputColorSpace" in renderer3d) renderer3d.outputColorSpace=THREE.SRGBColorSpace;
+   else renderer3d.outputEncoding=THREE.sRGBEncoding;
 
  scene3d=new THREE.Scene();
  camera3d=new THREE.OrthographicCamera(-innerWidth/2,innerWidth/2,innerHeight/2,-innerHeight/2,0.1,1000);
@@ -264,7 +267,7 @@ function update3DPlayer(t,moving){
      playerGroup.scale.setScalar(scaleFactor);
 
      if(moving){
-       const targetRot=Math.atan2(player.angle,1);
+       const targetRot=player.angle;
        let diff=targetRot-playerGroup.rotation.y;
        diff=Math.atan2(Math.sin(diff),Math.cos(diff));
        playerGroup.rotation.y += diff*Math.min(1,.25);
