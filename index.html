@@ -86,8 +86,8 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 }
 
 /* ===== GLB PLAYER + MOBILE GAME CONTROLLER ===== */
-#glbCanvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
-#game{z-index:0}
+#glbCanvas{position:fixed;inset:0;width:100%;height:100%;display:none;z-index:2;pointer-events:none}
+#game{z-index:1}
 #mobileControls{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
 #joystickBase{position:absolute;left:22px;bottom:24px;width:132px;height:132px;border-radius:50%;
  background:rgba(255,255,255,.25);border:3px solid rgba(255,255,255,.65);
@@ -583,6 +583,8 @@ function initGLB(){
     });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
     renderer.setSize(innerWidth,innerHeight,false);
+    renderer.setClearColor(0x000000,0);
+    renderer.autoClear=true;
     renderer.outputEncoding=THREE.sRGBEncoding;
 
     scene=new THREE.Scene();
@@ -640,14 +642,16 @@ function initGLB(){
 
         modelReady=true;
         window.modelReadyForFallback=true;
+        glbCanvas.style.display="block";
         console.log("player_character.glb berjaya dimuatkan.",gltf.animations.map(a=>a.name));
         if(typeof toast==="function") toast("Watak 3D sedia digunakan ✨");
       },
       undefined,
       function(error){
         console.error("Gagal memuatkan player_character.glb:",error);
+        glbCanvas.style.display="none";
         if(typeof toast==="function"){
-          toast("Watak 3D gagal dimuatkan. Pastikan player_character.glb ada dalam folder yang sama.");
+          toast("Watak 3D gagal dimuatkan — game v2 diteruskan.");
         }
       }
     );
@@ -660,6 +664,7 @@ function resizeGLB(){
   if(!renderer)return;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
   renderer.setSize(innerWidth,innerHeight,false);
+  renderer.setClearColor(0x000000,0);
   if(camera3d){
     camera3d.right=innerWidth;
     camera3d.bottom=innerHeight;
@@ -787,6 +792,9 @@ document.getElementById("mapMobileBtn").addEventListener("pointerdown",function(
 initGLB();
 resizeGLB();
 renderGLB();
+
+// Keep the original v2 game running even if the 3D layer is unavailable.
+console.log("Pengembaraan Sains: 2D v2 aktif; GLB sedang dimuatkan dari", MODEL_URL);
 
 })();
 </script>
