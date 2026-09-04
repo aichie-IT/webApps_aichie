@@ -559,21 +559,12 @@ resize();updateHUD();requestAnimationFrame(loop);
 </script>
 
 <!-- ===== MODERN THREE.JS + GLB PLAYER =====
-     GLTFLoader digunakan sebagai ES Module kerana examples/js/loaders/GLTFLoader.js
-     tidak lagi tersedia untuk Three.js r152.
+     Three.js + GLTFLoader menggunakan ES Module secara terus.
+     Ini mengelakkan konflik dengan versi lama THREE.GLTFLoader.
 -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/"
-  }
-}
-</script>
-
 <script type="module">
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js";
+import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/loaders/GLTFLoader.js";
 
 (function(){
 "use strict";
@@ -593,14 +584,34 @@ let modelReady=false;
 let modelHeight=1;
 let lastGLBTime=performance.now();
 
-/* Hanya mengawal saiz/paparan watak GLB. Bahagian game lain dikekalkan. */
+/*
+ * Hanya mengawal saiz dan kedudukan paparan GLB.
+ * Gameplay, world, mission dan kawalan asal tidak diubah.
+ */
 const GLB_HEIGHT_DESKTOP=105;
 const GLB_HEIGHT_MOBILE=88;
-const GLB_VERTICAL_OFFSET=0;
+
+/*
+ * Nilai positif = turun pada skrin.
+ * Nilai ini memastikan tapak/kaki character berada sedikit
+ * di bawah titik player dunia supaya nampak seperti watak game.
+ */
+const GLB_VERTICAL_OFFSET=18;
+
+/* Jika model GLB menghadap arah yang salah, ubah nilai ini sahaja. */
+const GLB_MODEL_ROTATION_Y=0;
 
 function findClip(clips,names){
   if(!clips||!clips.length)return null;
-  return clips.find(c=>names.some(n=>c.name.toLowerCase().includes(n)))||null;
+  return clips.find(c=>{
+    const name=(c.name||"").toLowerCase();
+    return names.some(n=>name.includes(n));
+  })||null;
+}
+
+function playAction(action){
+  if(!action)return;
+  action.reset().fadeIn(0.18).play();
 }
 
 function initGLB(){
@@ -616,19 +627,31 @@ function initGLB(){
     renderer.setSize(window.innerWidth,window.innerHeight,false);
     renderer.setClearColor(0x000000,0);
 
-    // Three.js r152: outputColorSpace menggantikan outputEncoding.
+    /*
+     * Three.js r152:
+     * outputColorSpace menggantikan outputEncoding.
+     */
     renderer.outputColorSpace=THREE.SRGBColorSpace;
 
     scene=new THREE.Scene();
 
     /*
-      GLB dipaparkan dalam screen-space supaya ia boleh mengikut
-      kedudukan player pseudo-3D sedia ada tanpa mengubah world/gameplay.
-    */
+     * Kamera 2D screen-space.
+     *
+     * World Three.js:
+     *   X = kiri/kanan
+     *   Y = bawah/atas
+     *
+     * Mapping dibuat dengan pusat (0,0) di tengah skrin supaya
+     * koordinat pixel tidak terbalik dan model tidak "terangkat".
+     */
     camera3d=new THREE.OrthographicCamera(
-      0,window.innerWidth,
-      window.innerHeight,0,
-      -1000,1000
+      -window.innerWidth/2,
+       window.innerWidth/2,
+       window.innerHeight/2,
+      -window.innerHeight/2,
+      -1000,
+       1000
     );
     camera3d.position.set(0,0,10);
     camera3d.lookAt(0,0,0);
@@ -643,7 +666,11 @@ function initGLB(){
     fillLight.position.set(4,2,5);
     scene.add(fillLight);
 
-    // FIX: GLTFLoader ialah class yang diimport, bukan THREE.GLTFLoader.
+    /*
+     * PENTING:
+     * GLTFLoader diimport sebagai class.
+     * Jangan gunakan THREE.GLTFLoader.
+     */
     const loader=new GLTFLoader();
 
     loader.load(
@@ -664,17 +691,28 @@ function initGLB(){
 
               materials.forEach(function(material){
                 material.needsUpdate=true;
+
+                /*
+                 * Sesetengah GLB lama tidak menetapkan colorSpace
+                 * pada texture dengan betul.
+                 */
+                if(material.map){
+                  material.map.colorSpace=THREE.SRGBColorSpace;
+                }
               });
             }
           }
         });
 
         /*
-          FIX UTAMA KEDUDUKAN:
-          Jadikan origin characterRoot sebagai tapak/kaki watak.
-          Ini mengelakkan model berada terlalu tinggi atau hanya sebahagian
-          badan kelihatan.
-        */
+         * Cari bounding box SEBELUM character dimasukkan ke root.
+         * Kemudian normalise:
+         *   - X/Z berpusat
+         *   - Y bermula tepat di tapak kaki
+         *
+         * Ini mengelakkan model hanya nampak kaki atau badan
+         * berada jauh di atas titik player.
+         */
         character.updateMatrixWorld(true);
 
         const box=new THREE.Box3().setFromObject(character);
@@ -687,7 +725,6 @@ function initGLB(){
         scene.add(characterRoot);
         characterRoot.add(character);
 
-        // X/Z = center, Y = tapak kaki.
         character.position.set(
           -center.x,
           -box.min.y,
@@ -695,31 +732,48 @@ function initGLB(){
         );
 
         characterRoot.position.set(0,0,0);
-        characterRoot.rotation.set(0,0,0);
+        characterRoot.rotation.set(0,GLB_MODEL_ROTATION_Y,0);
 
-        // Sokongan animasi GLB.
-        mixer=new THREE.AnimationMixer(character);
+        /*
+         * AnimationMixer mesti menggunakan scene character.
+         */
+        if(gltf.animations&&gltf.animations.length){
+          mixer=new THREE.AnimationMixer(character);
 
-        const idleClip=findClip(gltf.animations,[
-          "idle","breath","stand","rest"
-        ]);
+          const idleClip=findClip(gltf.animations,[
+            "idle","breath","stand","rest"
+          ]);
 
-        const walkClip=findClip(gltf.animations,[
-          "walk","walking","run","running","move","locomotion"
-        ]);
+          const walkClip=findClip(gltf.animations,[
+            "walk","walking","run","running","move","locomotion"
+          ]);
 
-        if(idleClip){
-          idleAction=mixer.clipAction(idleClip);
-          idleAction.setLoop(THREE.LoopRepeat);
-          idleAction.play();
-        }
+          /*
+           * Jika GLB hanya mempunyai satu animation, gunakan clip
+           * pertama sebagai fallback supaya model tetap bergerak.
+           */
+          const fallbackClip=gltf.animations[0];
 
-        if(walkClip){
-          walkAction=mixer.clipAction(walkClip);
-          walkAction.setLoop(THREE.LoopRepeat);
+          const selectedIdle=idleClip||(!walkClip?fallbackClip:null);
+          const selectedWalk=walkClip||(!idleClip?fallbackClip:null);
+
+          if(selectedIdle){
+            idleAction=mixer.clipAction(selectedIdle);
+            idleAction.setLoop(THREE.LoopRepeat);
+            idleAction.play();
+          }
+
+          if(selectedWalk&&selectedWalk!==selectedIdle){
+            walkAction=mixer.clipAction(selectedWalk);
+            walkAction.setLoop(THREE.LoopRepeat);
+          }
         }
 
         modelReady=true;
+
+        /*
+         * Hentikan fallback 2D hanya selepas GLB benar-benar siap.
+         */
         window.modelReadyForFallback=true;
         glbCanvas.style.display="block";
 
@@ -767,7 +821,11 @@ function initGLB(){
     modelReady=false;
     window.modelReadyForFallback=false;
     glbCanvas.style.display="none";
-    console.error("Three.js initialization error:",error);
+
+    console.error(
+      "Three.js initialization error:",
+      error
+    );
   }
 }
 
@@ -778,10 +836,10 @@ function resizeGLB(){
   renderer.setSize(window.innerWidth,window.innerHeight,false);
 
   if(camera3d){
-    camera3d.left=0;
-    camera3d.right=window.innerWidth;
-    camera3d.top=window.innerHeight;
-    camera3d.bottom=0;
+    camera3d.left=-window.innerWidth/2;
+    camera3d.right=window.innerWidth/2;
+    camera3d.top=window.innerHeight/2;
+    camera3d.bottom=-window.innerHeight/2;
     camera3d.near=-1000;
     camera3d.far=1000;
     camera3d.updateProjectionMatrix();
@@ -797,7 +855,9 @@ function updateGLB(){
   const delta=Math.min(0.05,(now-lastGLBTime)/1000);
   lastGLBTime=now;
 
-  if(mixer)mixer.update(delta);
+  if(mixer){
+    mixer.update(delta);
+  }
 
   const moving=(
     mobileStick.active ||
@@ -806,18 +866,28 @@ function updateGLB(){
     player.targetX!==null
   );
 
-  // Idle <-> Walk transition.
+  /*
+   * Idle <-> Walk transition.
+   */
   if(idleAction&&walkAction){
     if(moving){
       if(!walkAction.isRunning()){
-        walkAction.reset().fadeIn(0.18).play();
+        playAction(walkAction);
       }
       idleAction.fadeOut(0.18);
     }else{
       if(!idleAction.isRunning()){
-        idleAction.reset().fadeIn(0.18).play();
+        playAction(idleAction);
       }
       walkAction.fadeOut(0.18);
+    }
+  }else if(idleAction&&!moving){
+    if(!idleAction.isRunning()){
+      playAction(idleAction);
+    }
+  }else if(walkAction&&moving){
+    if(!walkAction.isRunning()){
+      playAction(walkAction);
     }
   }
 
@@ -825,16 +895,21 @@ function updateGLB(){
   if(!projected)return;
 
   /*
-    FIX KEDUDUKAN MENEGAK:
-    OrthographicCamera menggunakan koordinat Y positif ke atas.
-    Canvas pula menggunakan Y positif ke bawah.
-    Jadi screenY perlu diterbalikkan dengan H - projected.y.
-
-    Sebelum ini model diletakkan pada projected.y secara terus,
-    menyebabkan kedudukannya boleh nampak terlalu tinggi.
-  */
-  const screenX=projected.x;
-  const screenY=window.innerHeight-projected.y;
+   * project() menghasilkan koordinat canvas:
+   *   projected.x = dari kiri
+   *   projected.y = dari atas
+   *
+   * Kamera Three.js pula menggunakan:
+   *   +Y = ke atas
+   *
+   * Jadi:
+   *   screenX = projected.x - W/2
+   *   screenY = H/2 - projected.y
+   *
+   * Ini membetulkan masalah character berada terlalu tinggi.
+   */
+  const screenX=projected.x-(window.innerWidth/2);
+  const screenY=(window.innerHeight/2)-projected.y;
 
   const mobile=window.innerWidth<=900;
   const desiredHeight=mobile
@@ -842,18 +917,30 @@ function updateGLB(){
     : GLB_HEIGHT_DESKTOP;
 
   const scale=desiredHeight/modelHeight;
+
   characterRoot.scale.setScalar(scale);
 
-  // Kaki watak tepat pada titik player dalam dunia asal.
+  /*
+   * Kaki/tapak model tepat pada titik player.
+   * Offset positif menurunkan keseluruhan watak sedikit.
+   */
   characterRoot.position.x=screenX;
   characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET;
   characterRoot.position.z=0;
 
+  /*
+   * Jangan ubah paksi X/Z model ketika idle.
+   * Ketika bergerak, model menghadap arah pergerakan.
+   */
   if(moving){
-    characterRoot.rotation.y=player.angle;
+    characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;
+  }else{
+    characterRoot.rotation.y=GLB_MODEL_ROTATION_Y;
   }
 
-  // Animasi idle kecil supaya watak tidak statik.
+  /*
+   * Bob kecil hanya ketika idle.
+   */
   if(!moving){
     const idleBob=Math.sin(now/550)*1.2;
     characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET+idleBob;
@@ -869,7 +956,7 @@ function renderGLB(){
   }
 }
 
-// ===== Mobile joystick — dikekalkan seperti asal =====
+/* ===== Mobile joystick — dikekalkan seperti asal ===== */
 const base=document.getElementById("joystickBase");
 const knob=document.getElementById("joystickKnob");
 let joyPointer=null;
