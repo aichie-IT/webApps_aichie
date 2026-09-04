@@ -269,8 +269,24 @@ function buildWorld(i){
   {x:0,z:-15,type:"mission",label:"Misi Sains",active:true}
  ];
  if(theme==="plants"){
-  world.nodes.push({x:14,z:-8,type:"tree"},{x:-14,z:-7,type:"tree"},{x:17,z:8,type:"tree"});
-  world.decor.push(...makeDecor("flower",26),...makeDecor("sprout",12));
+  /* Taman tumbuhan yang lebih padat dan berlapis — visual sahaja. */
+  world.nodes.push(
+   {x:15,z:-9,type:"tree"},
+   {x:-15,z:-8,type:"tree"},
+   {x:19,z:7,type:"tree"},
+   {x:-19,z:10,type:"tree"},
+   {x:10,z:15,type:"tree"},
+   {x:-9,z:17,type:"tree"}
+  );
+  world.decor.push(
+   ...makeDecor("flower",42),
+   ...makeDecor("sprout",24),
+   ...makeDecor("grass",38),
+   ...makeDecor("bush",24),
+   ...makeDecor("crop",28),
+   ...makeDecor("fern",18),
+   ...makeDecor("potted",10)
+  );
  }else if(theme==="animals"){
   world.nodes.push({x:15,z:-7,type:"habitat",label:"Habitat"},{x:-15,z:6,type:"tree"},{x:17,z:10,type:"tree"});
   world.animals=[{x:10,z:4,type:"butterfly",phase:0},{x:-9,z:-2,type:"butterfly",phase:2}];
@@ -299,10 +315,22 @@ function makeDecor(type,n){
  return a;
 }
 
+/*
+ * VISUAL WORLD SCALE ONLY
+ * Dunia kini menggunakan perspektif yang lebih luas dan jarak kamera yang
+ * lebih natural supaya pokok/dekorasi foreground tidak membesar secara
+ * ekstrem. Koordinat gameplay player dan dunia asal dikekalkan.
+ */
 function project(x,y,z){
- const rx=x-camera.x,rz=z-camera.z,focal=Math.min(W,H)*.82,depth=rz+18;
+ const rx=x-camera.x,rz=z-camera.z;
+ const focal=Math.min(W,H)*.62;
+ const depth=rz+28;
  if(depth<1)return null;
- return {x:W/2+rx*focal/depth,y:H*.53-y*focal/depth-depth*.18,s:focal/depth};
+ return {
+  x:W/2+rx*focal/depth,
+  y:H*.53-y*focal/depth-depth*.11,
+  s:focal/depth
+ };
 }
 function drawSky(){
  const theme=levels[state.level]?.theme||"plants";
@@ -383,10 +411,68 @@ function special(n,t){
   ctx.fillStyle="#ff9d45";ctx.beginPath();ctx.moveTo(p.x-7*p.s,p.y-6*p.s);ctx.lineTo(p.x,p.y+15*p.s+Math.sin(t/100)*4);ctx.lineTo(p.x+7*p.s,p.y-6*p.s);ctx.fill()}
  if(type==="habitat"){ctx.strokeStyle="#fff";ctx.lineWidth=3*p.s;ctx.beginPath();ctx.arc(p.x,p.y-25*p.s,25*p.s,0,7);ctx.stroke();ctx.fillStyle="#8ddf9e66";ctx.fill()}
 }
+function bush(n,t){
+ const p=project(n.x,0,n.z);if(!p)return;
+ const s=(.92+.08*Math.sin(t/900+n.phase))*p.s;
+ shadow(p,12,5,.10);
+ ctx.fillStyle="#2f9d59";
+ ctx.beginPath();
+ ctx.arc(p.x-8*s,p.y-7*s,10*s,0,7);
+ ctx.arc(p.x+3*s,p.y-11*s,13*s,0,7);
+ ctx.arc(p.x+12*s,p.y-5*s,9*s,0,7);
+ ctx.fill();
+ ctx.fillStyle="#55c978";
+ ctx.beginPath();
+ ctx.arc(p.x-4*s,p.y-13*s,6*s,0,7);
+ ctx.arc(p.x+8*s,p.y-17*s,5*s,0,7);
+ ctx.fill();
+}
+function crop(n,t){
+ const p=project(n.x,0,n.z);if(!p)return;
+ const s=p.s;
+ const sway=Math.sin(t/700+n.phase)*1.5*s;
+ ctx.strokeStyle="#3c9d54";ctx.lineWidth=Math.max(1,2*s);
+ ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+sway,p.y-17*s);ctx.stroke();
+ ctx.fillStyle="#43b85d";
+ ctx.beginPath();
+ ctx.ellipse(p.x-5*s+sway,p.y-13*s,7*s,3.8*s,-.45,0,7);
+ ctx.ellipse(p.x+5*s+sway,p.y-9*s,7*s,3.8*s,.45,0,7);
+ ctx.fill();
+ ctx.fillStyle="#f6b93b";
+ ctx.beginPath();ctx.arc(p.x+sway,p.y-19*s,3.5*s,0,7);ctx.fill();
+}
+function fern(n,t){
+ const p=project(n.x,0,n.z);if(!p)return;
+ const s=p.s;
+ ctx.strokeStyle="#2f9653";ctx.lineWidth=Math.max(1,2*s);
+ for(let i=0;i<4;i++){
+  const yy=p.y-(7+i*4)*s;
+  const lean=(i%2?-1:1)*(4+i)*s;
+  ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+lean,yy);ctx.stroke();
+  ctx.fillStyle=i%2?"#52c96f":"#3cad5c";
+  ctx.beginPath();ctx.ellipse(p.x+lean-3*s,yy,6*s,2.7*s,-.35,0,7);ctx.fill();
+  ctx.beginPath();ctx.ellipse(p.x+lean+3*s,yy-1*s,6*s,2.7*s,.35,0,7);ctx.fill();
+ }
+}
+function potted(n,t){
+ const p=project(n.x,0,n.z);if(!p)return;
+ const s=p.s;
+ shadow(p,9,4,.10);
+ ctx.fillStyle="#d58a52";
+ ctx.beginPath();ctx.moveTo(p.x-7*s,p.y-1*s);ctx.lineTo(p.x+7*s,p.y-1*s);ctx.lineTo(p.x+5*s,p.y-12*s);ctx.lineTo(p.x-5*s,p.y-12*s);ctx.closePath();ctx.fill();
+ ctx.fillStyle="#55a94f";
+ ctx.beginPath();ctx.arc(p.x,p.y-17*s,8*s,0,7);ctx.fill();
+ ctx.fillStyle="#77cf63";ctx.beginPath();ctx.arc(p.x-5*s,p.y-20*s,4*s,0,7);ctx.arc(p.x+5*s,p.y-21*s,4*s,0,7);ctx.fill();
+}
+
 function decor(n,t){
  const p=project(n.x,0,n.z);if(!p)return;
  if(n.type==="flower")flower(n,t);
  else if(n.type==="sprout")sprout(n,t);
+ else if(n.type==="bush")bush(n,t);
+ else if(n.type==="crop")crop(n,t);
+ else if(n.type==="fern")fern(n,t);
+ else if(n.type==="potted")potted(n,t);
  else if(n.type==="grass"){ctx.strokeStyle="#3e9e58";ctx.lineWidth=2*p.s;ctx.beginPath();
   for(let k=-1;k<=1;k++){ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+k*4*p.s,p.y-10*p.s)}ctx.stroke()}
  else if(n.type==="crystal"){ctx.fillStyle="#b695ff";ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-6*p.s,p.y-18*p.s);ctx.lineTo(p.x+2*p.s,p.y-28*p.s);ctx.lineTo(p.x+9*p.s,p.y);ctx.closePath();ctx.fill()}
@@ -593,15 +679,17 @@ let lastGLBTime=performance.now();
  * Hanya mengawal saiz dan kedudukan paparan GLB.
  * Gameplay, world, mission dan kawalan asal tidak diubah.
  */
-const GLB_HEIGHT_DESKTOP=105;
-const GLB_HEIGHT_MOBILE=88;
+const GLB_HEIGHT_DESKTOP=128;
+const GLB_HEIGHT_MOBILE=106;
 
 /*
  * Nilai positif = turun pada skrin.
+ * Anchor tambahan +18px digunakan untuk meletakkan watak di bahagian bawah tengah skrin,
+ * seperti framing character dalam simulator/game moden.
  * Nilai ini memastikan tapak/kaki character berada sedikit
  * di bawah titik player dunia supaya nampak seperti watak game.
  */
-const GLB_VERTICAL_OFFSET=18;
+const GLB_VERTICAL_OFFSET=8;
 
 /* Jika model GLB menghadap arah yang salah, ubah nilai ini sahaja. */
 const GLB_MODEL_ROTATION_Y=0;
@@ -914,7 +1002,7 @@ function updateGLB(){
    * Ini membetulkan masalah character berada terlalu tinggi.
    */
   const screenX=projected.x-(window.innerWidth/2);
-  const screenY=(window.innerHeight/2)-projected.y;
+  const screenY=(window.innerHeight/2)-projected.y+18;
 
   const mobile=window.innerWidth<=900;
   const desiredHeight=mobile
