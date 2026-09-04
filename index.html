@@ -300,7 +300,7 @@ function makeDecor(type,n){
 }
 
 function project(x,y,z){
- const rx=x-camera.x,rz=z-camera.z,focal=Math.min(W,H)*.82,depth=rz+18;
+ const rx=x-camera.x,rz=z-camera.z,focal=Math.min(W,H)*.40,depth=rz+55;
  if(depth<1)return null;
  return {x:W/2+rx*focal/depth,y:H*.53-y*focal/depth-depth*.18,s:focal/depth};
 }
@@ -329,6 +329,15 @@ function drawGround(){
  for(let z=-5;z<80;z+=5){let a=project(-50,0,z),b=project(50,0,z);if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}}
  for(let x=-50;x<=50;x+=5){let a=project(x,0,-5),b=project(x,0,70);if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}}
 }
+/* ===== WORLD SCALE / CAMERA PROPORTION =====
+ * Mengecilkan perspektif dunia supaya objek berhampiran tidak memenuhi skrin.
+ * Gameplay dan koordinat dunia asal dikekalkan.
+ */
+const WORLD_VISUAL_SCALE=0.82;
+function ws(p){
+ return p?Object.assign({},p,{s:p.s*WORLD_VISUAL_SCALE}):p;
+}
+
 function shadow(p,rx,ry,alpha=.14){
  if(!p)return;ctx.fillStyle=`rgba(24,54,74,${alpha})`;ctx.beginPath();
  ctx.ellipse(p.x,p.y+4*p.s,rx*p.s,ry*p.s,0,0,7);ctx.fill();
@@ -338,40 +347,41 @@ function glow(x,y,r,color,alpha=.3){
  g.addColorStop(1,color+"00");ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
 }
 function tree(n,t){
- const p=project(n.x,0,n.z);if(!p)return;shadow(p,15,6);
+ let p=project(n.x,0,n.z);if(!p)return;p=ws(p);shadow(p,15,6);
  const sway=Math.sin(t/650+n.phase)*2*p.s;
  ctx.fillStyle="#9b633b";ctx.fillRect(p.x-5*p.s+sway,p.y-42*p.s,10*p.s,42*p.s);
  ctx.fillStyle="#43ad62";ctx.beginPath();ctx.arc(p.x+sway,p.y-54*p.s,25*p.s,0,7);
  ctx.arc(p.x-20*p.s+sway,p.y-44*p.s,19*p.s,0,7);ctx.arc(p.x+20*p.s+sway,p.y-43*p.s,18*p.s,0,7);ctx.fill();
 }
-function rock(n){const p=project(n.x,0,n.z);if(!p)return;shadow(p,17,7);ctx.fillStyle="#8ca0ad";
+function rock(n){let p=project(n.x,0,n.z);if(!p)return;p=ws(p);shadow(p,17,7);ctx.fillStyle="#8ca0ad";
  ctx.beginPath();ctx.moveTo(p.x-20*p.s,p.y);ctx.lineTo(p.x-12*p.s,p.y-24*p.s);ctx.lineTo(p.x+8*p.s,p.y-31*p.s);
  ctx.lineTo(p.x+22*p.s,p.y-12*p.s);ctx.lineTo(p.x+16*p.s,p.y);ctx.closePath();ctx.fill()}
-function flower(n,t){const p=project(n.x,0,n.z);if(!p)return;
+function flower(n,t){let p=project(n.x,0,n.z);if(!p)return;p=ws(p);
  const sway=Math.sin(t/400+n.phase)*2*p.s;ctx.strokeStyle="#3f9e56";ctx.lineWidth=2*p.s;
  ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+sway,p.y-16*p.s);ctx.stroke();
  ctx.fillStyle="#ff7e9e";ctx.beginPath();ctx.arc(p.x+sway,p.y-18*p.s,5*p.s,0,7);ctx.fill()}
-function sprout(n,t){const p=project(n.x,0,n.z);if(!p)return;
+function sprout(n,t){let p=project(n.x,0,n.z);if(!p)return;p=ws(p);
  const s=(.9+.1*Math.sin(t/500+n.phase))*p.s;ctx.strokeStyle="#379b59";ctx.lineWidth=3*s;
  ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x,p.y-18*s);ctx.stroke();ctx.fillStyle="#55c978";
  ctx.beginPath();ctx.ellipse(p.x-5*s,p.y-17*s,7*s,4*s,-.5,0,7);ctx.ellipse(p.x+5*s,p.y-13*s,7*s,4*s,.5,0,7);ctx.fill()}
-function water(n,t){const p=project(n.x,0,n.z);if(!p)return;shadow(p,45,10,.08);
+function water(n,t){let p=project(n.x,0,n.z);if(!p)return;p=ws(p);shadow(p,45,10,.08);
  ctx.fillStyle="#56c8edaa";ctx.beginPath();ctx.ellipse(p.x,p.y,50*p.s,20*p.s,0,0,7);ctx.fill();
  ctx.strokeStyle="#ffffff88";ctx.lineWidth=2*p.s;
  for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(p.x-25*p.s+i*20*p.s,p.y+Math.sin(t/500+i)*3*p.s,9*p.s,3*p.s,0,0,7);ctx.stroke()}}
 function portal(n,t){
- const p=project(n.x,0,n.z);if(!p)return;shadow(p,25,8);const c=levels[state.level].color;
+ let p=project(n.x,0,n.z);if(!p)return;p=ws(p);shadow(p,25,8);const c=levels[state.level].color;
  glow(p.x,p.y-48*p.s,48*p.s,c,.22);
  ctx.save();ctx.translate(p.x,p.y-55*p.s);ctx.scale(p.s,p.s);
  ctx.rotate(Math.sin(t/900)*.03);ctx.strokeStyle=c;ctx.lineWidth=7;
  ctx.beginPath();ctx.arc(0,0,29,-Math.PI,0);ctx.stroke();ctx.strokeStyle="#fff8";
  ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,22,-Math.PI,0);ctx.stroke();
  ctx.fillStyle="#fff5";ctx.beginPath();ctx.arc(0,0,17,-Math.PI,0);ctx.fill();ctx.restore();
- ctx.fillStyle="#17364d";ctx.textAlign="center";ctx.font=`900 ${Math.max(10,14*p.s)}px Arial`;
+ ctx.fillStyle="#17364d";ctx.textAlign="center";
+ ctx.font=`900 ${Math.max(10,Math.min(16,14*p.s))}px Arial`;
  ctx.fillText(n.label,p.x,p.y+18*p.s);
 }
 function special(n,t){
- const p=project(n.x,0,n.z);if(!p)return;shadow(p,20,7);
+ let p=project(n.x,0,n.z);if(!p)return;p=ws(p);shadow(p,20,7);
  const type=n.type;
  if(type==="solar"){ctx.fillStyle="#315b9c";ctx.fillRect(p.x-25*p.s,p.y-32*p.s,50*p.s,27*p.s);
   ctx.strokeStyle="#7bdcff";ctx.lineWidth=2*p.s;for(let i=-1;i<2;i++){ctx.beginPath();ctx.moveTo(p.x+i*16*p.s,p.y-32*p.s);ctx.lineTo(p.x+i*16*p.s,p.y-5*p.s);ctx.stroke()}}
@@ -384,7 +394,7 @@ function special(n,t){
  if(type==="habitat"){ctx.strokeStyle="#fff";ctx.lineWidth=3*p.s;ctx.beginPath();ctx.arc(p.x,p.y-25*p.s,25*p.s,0,7);ctx.stroke();ctx.fillStyle="#8ddf9e66";ctx.fill()}
 }
 function decor(n,t){
- const p=project(n.x,0,n.z);if(!p)return;
+ let p=project(n.x,0,n.z);if(!p)return;p=ws(p);
  if(n.type==="flower")flower(n,t);
  else if(n.type==="sprout")sprout(n,t);
  else if(n.type==="grass"){ctx.strokeStyle="#3e9e58";ctx.lineWidth=2*p.s;ctx.beginPath();
@@ -396,7 +406,7 @@ function decor(n,t){
  else if(n.type==="star"){ctx.fillStyle="#fff";ctx.globalAlpha=.5+.3*Math.sin(t/400+n.phase);ctx.font=`${12*p.s}px Arial`;ctx.fillText("✦",p.x,p.y-10*p.s);ctx.globalAlpha=1}
  else if(n.type==="asteroid"){ctx.fillStyle="#7176a0";ctx.beginPath();ctx.arc(p.x,p.y-7*p.s,8*p.s,0,7);ctx.fill()}
 }
-function animal(a,t){const p=project(a.x,0,a.z);if(!p)return;
+function animal(a,t){let p=project(a.x,0,a.z);if(!p)return;p=ws(p);
  const bx=p.x+Math.sin(t/700+a.phase)*15*p.s,by=p.y-25*p.s+Math.cos(t/500+a.phase)*7*p.s;
  ctx.fillStyle="#ff7e9e";ctx.beginPath();ctx.ellipse(bx-5*p.s,by,7*p.s,10*p.s,.5,0,7);
  ctx.ellipse(bx+5*p.s,by,7*p.s,10*p.s,-.5,0,7);ctx.fill();
@@ -593,15 +603,15 @@ let lastGLBTime=performance.now();
  * Hanya mengawal saiz dan kedudukan paparan GLB.
  * Gameplay, world, mission dan kawalan asal tidak diubah.
  */
-const GLB_HEIGHT_DESKTOP=105;
-const GLB_HEIGHT_MOBILE=88;
+const GLB_HEIGHT_DESKTOP=118;
+const GLB_HEIGHT_MOBILE=102;
 
 /*
  * Nilai positif = turun pada skrin.
  * Nilai ini memastikan tapak/kaki character berada sedikit
  * di bawah titik player dunia supaya nampak seperti watak game.
  */
-const GLB_VERTICAL_OFFSET=18;
+const GLB_VERTICAL_OFFSET=-8;
 
 /* Jika model GLB menghadap arah yang salah, ubah nilai ini sahaja. */
 const GLB_MODEL_ROTATION_Y=0;
