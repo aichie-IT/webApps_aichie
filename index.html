@@ -108,6 +108,19 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
  #panel,#interaction,#complete,#start,#toast{z-index:30}
 }
 @media(min-width:901px){#mobileControls{display:none!important}}
+
+/* ===== LEVEL TELEPORT ANIMATION ===== */
+#teleportOverlay{position:fixed;inset:0;z-index:60;display:none;pointer-events:none;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.04),rgba(72,125,190,.28) 55%,rgba(10,35,60,.62));}
+#teleportOverlay.show{display:block}
+#teleportBeam{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:#fff;box-shadow:0 0 20px #fff,0 0 60px #7ee7ff,0 0 120px #8f7cff;opacity:0}
+#teleportOverlay.show #teleportBeam{animation:teleportBeam 1.65s ease-in-out forwards}
+#teleportRings{position:absolute;left:50%;top:50%;width:80px;height:80px;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 28px rgba(126,231,255,.85);opacity:0}
+#teleportOverlay.show #teleportRings{animation:teleportRings 1.65s ease-in-out forwards}
+#teleportText{position:absolute;left:50%;top:64%;transform:translate(-50%,-50%);color:#fff;font:900 18px Arial,sans-serif;text-shadow:0 3px 18px rgba(0,0,0,.55);opacity:0;white-space:nowrap}
+#teleportOverlay.show #teleportText{animation:teleportText 1.65s ease-in-out forwards}
+@keyframes teleportBeam{0%{width:14px;height:14px;opacity:0;transform:translate(-50%,-50%) scale(.3)}20%{opacity:1}58%{width:42px;height:42px;opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{width:320px;height:320px;opacity:0;transform:translate(-50%,-50%) scale(2.6)}}
+@keyframes teleportRings{0%{width:60px;height:60px;opacity:0;transform:translate(-50%,-50%) rotate(0) scale(.5)}25%{opacity:1}100%{width:520px;height:520px;opacity:0;transform:translate(-50%,-50%) rotate(300deg) scale(1.5)}}
+@keyframes teleportText{0%,28%{opacity:0;transform:translate(-50%,-50%) translateY(10px)}45%,72%{opacity:1;transform:translate(-50%,-50%) translateY(0)}100%{opacity:0;transform:translate(-50%,-50%) translateY(-12px)}}
 </style>
 </head>
 <body>
@@ -121,6 +134,7 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
   </div>
   <div id="mobileHint">Gerakkan joystick untuk meneroka • Tekan E bila dekat cahaya</div>
 </div>
+<div id="teleportOverlay" aria-hidden="true"><div id="teleportBeam"></div><div id="teleportRings"></div><div id="teleportText">✨ Teleport ke dunia seterusnya...</div></div>
 
 <div id="start">
  <div class="startbox">
@@ -231,6 +245,7 @@ const levels=[
 ];
 
 let state={score:0,stars:0,unlocked:1,completed:[],level:0,questionSolved:0,currentQuestion:-1};
+let teleporting=false,teleportStart=0;
 let running=false,keys={},last=0,interactCooldown=0,nearMission=false;
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 let W=innerWidth,H=innerHeight,dpr=1;
@@ -546,6 +561,7 @@ function drawParticles(t){
 }
 
 function update(dt,t){
+ if(teleporting)return;
  let dx=0,dz=0;
  if(keys.w||keys.arrowup)dz+=1;if(keys.s||keys.arrowdown)dz-=1;
  if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
@@ -641,13 +657,27 @@ function completeLevel(msg){
  const idx=state.level;
  if(!state.completed.includes(idx))state.completed.push(idx);
  if(idx+1<levels.length&&state.unlocked<idx+2)state.unlocked=idx+2;
- closeMission();
- document.getElementById("completeTitle").textContent=idx+1<levels.length?`Level ${idx+1} Selesai!`:"Pengembaraan Selesai!";
- document.getElementById("completeText").textContent=idx+1<levels.length?
-  `${msg} Level ${idx+2} kini dibuka. Teruskan meneroka!`:
-  `${msg} Anda telah melengkapkan semua 6 misi! 🏆`;
- document.getElementById("complete").style.display="flex";
- updateHUD();
+ closeMission();updateHUD();
+ if(idx+1<levels.length){
+  startLevelTeleport(idx+1,msg);
+ }else{
+  document.getElementById("completeTitle").textContent="Pengembaraan Selesai!";
+  document.getElementById("completeText").textContent=`${msg} Anda telah melengkapkan semua 6 misi! 🏆`;
+  document.getElementById("complete").style.display="flex";
+ }
+}
+function startLevelTeleport(nextIndex,msg){
+ if(teleporting)return;
+ teleporting=true;teleportStart=performance.now();
+ document.getElementById("complete").style.display="none";
+ const overlay=document.getElementById("teleportOverlay");
+ overlay.classList.remove("show");void overlay.offsetWidth;overlay.classList.add("show");
+ hint("✨ 5/5 selesai! Bersedia untuk teleport...",true);
+ setTimeout(()=>{
+  loadLevel(nextIndex);teleporting=false;overlay.classList.remove("show");
+  hint(`🌎 Selamat datang di Level ${nextIndex+1}: ${levels[nextIndex].name}! Cari cahaya soalan 1/5`,true);
+  setTimeout(()=>hint("",false),4200);
+ },1700);
 }
 function closeComplete(){
  document.getElementById("complete").style.display="none";
@@ -1158,6 +1188,21 @@ function updateCharacter(){
 
  if(gardenActive){
   /* Character kini berada secara fizikal di atas terrain. */
+  if(teleporting){
+   const lift=Math.min(1,(performance.now()-teleportStart)/1700);
+   const yLift=Math.sin(lift*Math.PI)*5.0;
+   const fade=lift<.38?1:Math.max(0,1-(lift-.38)/.62);
+   characterRoot.position.set(player.x,.025+yLift,player.z);
+   characterRoot.scale.setScalar((CHARACTER_WORLD_HEIGHT/modelHeight)*(1+.38*Math.sin(lift*Math.PI)));
+   characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;
+   characterRoot.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.transparent=true;m.opacity=fade})}});
+   camera3d.position.x+=(player.x-camera3d.position.x)*.08;
+   camera3d.position.z+=(player.z+10.5-camera3d.position.z)*.08;
+   camera3d.position.y+=((8.5+yLift*.35)-camera3d.position.y)*.08;
+   camera3d.lookAt(player.x,1.0+yLift*.25,player.z-2.5);
+   return;
+  }
+  characterRoot.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.transparent=true;m.opacity=1})}});
   characterRoot.position.set(player.x,.025,player.z);
   characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
   if(moving)characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;else characterRoot.rotation.y=GLB_MODEL_ROTATION_Y;
@@ -1193,8 +1238,16 @@ function moveJoystick(e){const r=base.getBoundingClientRect(),cx=r.left+r.width/
 function resetJoystick(){joyPointer=null;knob.style.transform="translate(0,0)";mobileStick.x=0;mobileStick.z=0;mobileStick.active=false}
 base.addEventListener("pointerdown",e=>{e.preventDefault();joyPointer=e.pointerId;base.setPointerCapture(e.pointerId);moveJoystick(e)});
 base.addEventListener("pointermove",e=>{if(e.pointerId===joyPointer)moveJoystick(e)});base.addEventListener("pointerup",resetJoystick);base.addEventListener("pointercancel",resetJoystick);
-document.getElementById("interactBtn").addEventListener("pointerdown",e=>{e.preventDefault();tryInteract()});
-document.getElementById("mapMobileBtn").addEventListener("pointerdown",e=>{e.preventDefault();openMap()});
+const mobileInteractButton=document.getElementById("interactBtn");
+const mobileMapButton=document.getElementById("mapMobileBtn");
+function mobileInteract(e){if(e){e.preventDefault();e.stopPropagation()}tryInteract()}
+function mobileMap(e){if(e){e.preventDefault();e.stopPropagation()}openMap()}
+mobileInteractButton.addEventListener("pointerdown",mobileInteract,{passive:false});
+mobileInteractButton.addEventListener("touchstart",mobileInteract,{passive:false});
+mobileInteractButton.addEventListener("click",mobileInteract);
+mobileMapButton.addEventListener("pointerdown",mobileMap,{passive:false});
+mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
+mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
 console.log("Pengembaraan Sains: Garden World 3D + GLB aktif.");
