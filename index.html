@@ -119,7 +119,7 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
     <button class="mobileAction" id="interactBtn">E<br><small>MISI</small></button>
     <button class="mobileAction" id="mapMobileBtn">🗺️<br><small>PETA</small></button>
   </div>
-  <div id="mobileHint">Gerakkan joystick untuk meneroka • Tekan E bila dekat portal</div>
+  <div id="mobileHint">Gerakkan joystick untuk meneroka • Tekan E bila dekat cahaya</div>
 </div>
 
 <div id="start">
@@ -174,26 +174,63 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 "use strict";
 
 const levels=[
- {name:"Taman Tumbuhan",icon:"🌱",color:"#5ed48b",desc:"Kenali bahagian tumbuhan dan fungsi asasnya.",
-  mission:"Bahagian tumbuhan",question:"Bahagian manakah menyerap air dan mineral dari tanah?",
-  choices:["Akar","Bunga","Buah","Daun"],answer:0,theme:"plants"},
- {name:"Makmal Haiwan",icon:"🦋",color:"#ffb85c",desc:"Kenali ciri dan pengelasan haiwan.",
-  mission:"Pengelasan haiwan",question:"Haiwan manakah merupakan mamalia?",
-  choices:["Ikan emas","Kucing","Katak","Rama-rama"],answer:1,theme:"animals"},
- {name:"Makmal Bahan",icon:"🧪",color:"#a984ff",desc:"Terokai sifat pepejal, cecair dan gas.",
-  mission:"Sifat bahan",question:"Apakah keadaan jirim bagi air yang membeku?",
-  choices:["Gas","Cecair","Pepejal","Plasma"],answer:2,theme:"matter"},
- {name:"Lembah Tenaga",icon:"⚡",color:"#ffd45c",desc:"Eksperimen dengan sumber dan bentuk tenaga.",
-  mission:"Sumber tenaga",question:"Yang manakah sumber tenaga boleh diperbaharui?",
-  choices:["Arang batu","Petroleum","Matahari","Gas asli"],answer:2,theme:"energy"},
- {name:"Kitaran Air",icon:"💧",color:"#55cfff",desc:"Susun proses utama kitaran air mengikut urutan.",
-  mission:"Kitaran air",sequence:["Penyejatan","Pemeluwapan","Hujan","Pengumpulan"],theme:"water"},
- {name:"Misi Angkasa",icon:"🚀",color:"#6877ff",desc:"Uji pengetahuan tentang sistem suria.",
-  mission:"Sistem suria",question:"Planet manakah paling hampir dengan Matahari?",
-  choices:["Bumi","Marikh","Zuhrah","Utarid"],answer:3,theme:"space"}
+ {name:"Taman Tumbuhan",icon:"🌱",color:"#5ed48b",desc:"Cari 5 cahaya ilmu di taman dan jawab soalan tentang tumbuhan.",
+  mission:"Cahaya Ilmu: Tumbuhan",theme:"plants",
+  questions:[
+   {question:"Bahagian manakah menyerap air dan mineral dari tanah?",choices:["Akar","Bunga","Buah","Daun"],answer:0,target:"Tumbuhan akar"},
+   {question:"Apakah fungsi utama daun pada kebanyakan tumbuhan?",choices:["Menyerap bunyi","Membuat makanan melalui fotosintesis","Menghasilkan batu","Menyimpan cahaya"],answer:1,target:"Daun hijau"},
+   {question:"Bahagian tumbuhan yang biasanya menghasilkan biji ialah…",choices:["Bunga","Akar","Batang","Duri"],answer:0,target:"Bunga"},
+   {question:"Apakah yang membantu tumbuhan berdiri tegak dan mengangkut air?",choices:["Batang","Kelopak","Buah","Biji"],answer:0,target:"Pokok"},
+   {question:"Antara berikut, yang manakah diperlukan tumbuhan untuk fotosintesis?",choices:["Cahaya matahari","Pasir sahaja","Batu","Garam"],answer:0,target:"Cahaya matahari"}
+  ]},
+ {name:"Makmal Haiwan",icon:"🦋",color:"#ffb85c",desc:"Cari 5 cahaya ilmu di habitat dan jawab soalan tentang haiwan.",
+  mission:"Cahaya Ilmu: Haiwan",theme:"animals",
+  questions:[
+   {question:"Haiwan manakah merupakan mamalia?",choices:["Ikan emas","Kucing","Katak","Rama-rama"],answer:1,target:"Habitat mamalia"},
+   {question:"Haiwan manakah mempunyai sayap dan mengalami metamorfosis?",choices:["Rama-rama","Kucing","Ikan","Kura-kura"],answer:0,target:"Rama-rama"},
+   {question:"Apakah yang kebanyakan ikan gunakan untuk bernafas di dalam air?",choices:["Insang","Paru-paru sahaja","Bulu","Kulit keras"],answer:0,target:"Air & ikan"},
+   {question:"Haiwan manakah termasuk dalam kumpulan amfibia?",choices:["Katak","Ayam","Kucing","Lebah"],answer:0,target:"Habitat katak"},
+   {question:"Apakah contoh haiwan yang mempunyai rangka luar?",choices:["Belalang","Kambing","Ikan paus","Ular"],answer:0,target:"Serangga"}
+  ]},
+ {name:"Makmal Bahan",icon:"🧪",color:"#a984ff",desc:"Cari 5 cahaya ilmu di makmal dan kenali sifat bahan.",
+  mission:"Cahaya Ilmu: Bahan",theme:"matter",
+  questions:[
+   {question:"Apakah keadaan jirim bagi air yang membeku?",choices:["Gas","Cecair","Pepejal","Plasma"],answer:2,target:"Pepejal"},
+   {question:"Bahan manakah biasanya mengalir dan mengambil bentuk bekas?",choices:["Batu","Air","Kayu","Besi"],answer:1,target:"Cecair"},
+   {question:"Apakah yang berlaku kepada ais apabila dipanaskan secukupnya?",choices:["Mencair","Membeku","Menjadi batu","Hilang tanpa perubahan"],answer:0,target:"Haba"},
+   {question:"Antara berikut, yang manakah contoh gas?",choices:["Udara","Batu","Air","Pasir"],answer:0,target:"Gas"},
+   {question:"Apakah sifat pepejal yang paling tepat?",choices:["Mempunyai bentuk sendiri","Sentiasa memenuhi seluruh ruang","Tidak mempunyai isipadu","Mengalir seperti air"],answer:0,target:"Bahan pepejal"}
+  ]},
+ {name:"Lembah Tenaga",icon:"⚡",color:"#ffd45c",desc:"Cari 5 cahaya ilmu di lembah tenaga dan jawab soalan tenaga.",
+  mission:"Cahaya Ilmu: Tenaga",theme:"energy",
+  questions:[
+   {question:"Yang manakah sumber tenaga boleh diperbaharui?",choices:["Arang batu","Petroleum","Matahari","Gas asli"],answer:2,target:"Matahari"},
+   {question:"Tenaga apakah yang kita terima daripada Matahari?",choices:["Tenaga cahaya dan haba","Tenaga bunyi sahaja","Tenaga magnet sahaja","Tenaga daripada batu"],answer:0,target:"Cahaya"},
+   {question:"Apakah alat yang boleh menukarkan cahaya matahari kepada tenaga elektrik?",choices:["Panel solar","Termometer","Mikroskop","Kompas"],answer:0,target:"Panel solar"},
+   {question:"Tenaga daripada angin boleh digunakan untuk menghasilkan…",choices:["Elektrik","Tanah","Air laut","Batu"],answer:0,target:"Angin"},
+   {question:"Mengapa kita perlu menjimatkan tenaga?",choices:["Untuk mengurangkan pembaziran sumber","Supaya lampu sentiasa menyala","Untuk menghasilkan lebih banyak sampah","Supaya air menjadi batu"],answer:0,target:"Jimat tenaga"}
+  ]},
+ {name:"Kitaran Air",icon:"💧",color:"#55cfff",desc:"Cari 5 cahaya ilmu di sekitar kolam dan jawab soalan berkaitan air.",
+  mission:"Cahaya Ilmu: Air",theme:"water",
+  questions:[
+   {question:"Apakah proses apabila air cecair berubah menjadi wap air?",choices:["Penyejatan","Pembekuan","Pemendapan","Peleburan"],answer:0,target:"Kolam: penyejatan"},
+   {question:"Apakah proses apabila wap air menyejuk dan membentuk titisan air?",choices:["Pemeluwapan","Penyejatan","Pembakaran","Pengaratan"],answer:0,target:"Kolam: pemeluwapan"},
+   {question:"Antara berikut, yang manakah boleh menjadi tempat pembiakan nyamuk?",choices:["Air bertakung","Batu kering","Pasir kering","Daun tanpa air"],answer:0,target:"Kolam: nyamuk"},
+   {question:"Mikroorganisma akuatik hidup terutamanya di…",choices:["Persekitaran berair","Api","Batu angkasa","Udara tanpa kelembapan"],answer:0,target:"Kolam: mikroorganisma"},
+   {question:"Apakah proses apabila air hujan berkumpul di tasik, sungai atau kolam?",choices:["Pengumpulan","Penyejatan","Pemeluwapan","Pembakaran"],answer:0,target:"Kolam: pengumpulan"}
+  ]},
+ {name:"Misi Angkasa",icon:"🚀",color:"#6877ff",desc:"Cari 5 cahaya ilmu di kawasan angkasa dan jawab soalan sistem suria.",
+  mission:"Cahaya Ilmu: Angkasa",theme:"space",
+  questions:[
+   {question:"Planet manakah paling hampir dengan Matahari?",choices:["Bumi","Marikh","Zuhrah","Utarid"],answer:3,target:"Utarid"},
+   {question:"Planet manakah dikenali sebagai Planet Merah?",choices:["Marikh","Musytari","Bumi","Zuhal"],answer:0,target:"Marikh"},
+   {question:"Apakah satelit semula jadi Bumi?",choices:["Bulan","Matahari","Marikh","Komet"],answer:0,target:"Bulan"},
+   {question:"Planet manakah mempunyai gelang yang sangat jelas?",choices:["Zuhal","Utarid","Bumi","Zuhrah"],answer:0,target:"Zuhal"},
+   {question:"Apakah Matahari?",choices:["Sebuah bintang","Sebuah planet","Sebuah bulan","Sebuah asteroid"],answer:0,target:"Matahari"}
+  ]}
 ];
 
-let state={score:0,stars:0,unlocked:1,completed:[],level:0};
+let state={score:0,stars:0,unlocked:1,completed:[],level:0,questionSolved:0,currentQuestion:-1};
 let running=false,keys={},last=0,interactCooldown=0,nearMission=false;
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 let W=innerWidth,H=innerHeight,dpr=1;
@@ -253,23 +290,51 @@ function closePanel(){document.getElementById("panel").classList.remove("show")}
 
 function loadLevel(i){
  if(i>=state.unlocked){toast("Level ini masih terkunci 🔒");return}
- state.level=i;player.x=0;player.z=0;player.targetX=null;player.targetZ=null;
+ state.level=i;state.questionSolved=0;state.currentQuestion=-1;player.x=0;player.z=0;player.targetX=null;player.targetZ=null;
  camera.x=0;camera.z=0;world.nodes=[];world.decor=[];world.particles=[];world.animals=[];
  const t=levels[i];
  document.getElementById("levelTitle").textContent=`${t.icon} Level ${i+1}: ${t.name}`;
  document.documentElement.style.setProperty("--accent",t.color);
  buildWorld(i);
  if(typeof window.setGarden3DLevel==="function")window.setGarden3DLevel(t.theme);
- updateHUD();hint("Dekati portal bercahaya • Tekan E untuk memulakan misi");
+ updateHUD();hint("Cari cahaya soalan 1/5 • Dekati dan tekan E");
  setTimeout(()=>hint("",false),4500);
+}
+
+function getQuestionPositions(theme){
+ if(theme==="plants")return[
+  {x:-20,z:-12}, // petak akar/tanaman
+  {x:20,z:-12},  // bunga/daun
+  {x:-21,z:12},  // bunga
+  {x:21,z:12},   // pokok
+  {x:-27,z:-10}  // kelompok pisang/tumbuhan
+ ];
+ if(theme==="animals")return[
+  {x:15,z:-7},{x:-15,z:6},{x:17,z:10},{x:10,z:4},{x:-9,z:-2}
+ ];
+ if(theme==="matter")return[
+  {x:15,z:-7},{x:-15,z:7},{x:12,z:-12},{x:-10,z:-8},{x:0,z:18}
+ ];
+ if(theme==="energy")return[
+  {x:15,z:-7},{x:-14,z:7},{x:18,z:12},{x:-18,z:-12},{x:0,z:20}
+ ];
+ if(theme==="water")return[
+  {x:10,z:-6},{x:13,z:-10},{x:17,z:-6},{x:13,z:-2},{x:9,z:-3}
+ ];
+ return[
+  {x:15,z:-7},{x:-15,z:7},{x:18,z:10},{x:-18,z:-10},{x:0,z:-22}
+ ];
 }
 
 function buildWorld(i){
  const theme=levels[i].theme;
- world.nodes=[
-  {x:0,z:0,type:"start",label:"Pangkalan"},
-  {x:0,z:-15,type:"mission",label:"Misi Sains",active:true}
- ];
+ world.nodes=[{x:0,z:0,type:"start",label:"Pangkalan"}];
+ const q=levels[i].questions;
+ const positions=getQuestionPositions(theme);
+ q.forEach((item,index)=>{
+  const p=positions[index];
+  world.nodes.push({x:p.x,z:p.z,type:"questionLight",label:`Cahaya ${index+1}`,questionIndex:index,target:item.target,active:true,solved:false});
+ });
  if(theme==="plants"){
   world.nodes.push({x:14,z:-8,type:"tree"},{x:-14,z:-7,type:"tree"},{x:17,z:8,type:"tree"});
   world.decor.push(...makeDecor("flower",26),...makeDecor("sprout",12));
@@ -295,6 +360,7 @@ function buildWorld(i){
   if(Math.random()<.45)world.decor.push({x:x+(Math.random()*3-1.5),z:z+(Math.random()*3-1.5),
    type:theme==="space"?"star":theme==="matter"?"crystal":"grass"});
  }
+ if(typeof window.setGardenQuestionLights==="function")window.setGardenQuestionLights(q,positions);
 }
 function makeDecor(type,n){
  const a=[];for(let i=0;i<n;i++)a.push({x:Math.random()*50-25,z:Math.random()*50-20,type,phase:Math.random()*7});
@@ -436,7 +502,7 @@ function drawWorld(t){
  arr.sort((a,b)=>b.z-a.z);
  arr.forEach(n=>{
   if(n.type==="tree")tree(n,t);else if(n.type==="rock")rock(n);
-  else if(["mission","start"].includes(n.type))portal(n,t);
+  else if(n.type==="questionLight")questionLight2D(n,t);else if(["mission","start"].includes(n.type))portal(n,t);
   else if(["water","solar","lab","planet","rocket","habitat"].includes(n.type))special(n,t);
   else decor(n,t);
  });
@@ -445,6 +511,24 @@ function drawWorld(t){
  ctx.fillStyle="#ffffffd9";ctx.roundRect(17,H-68,210,43,13);ctx.fill();
  ctx.fillStyle="#17364d";ctx.font="800 12px Arial";
  ctx.fillText("WASD / ↑↓←→ bergerak  •  E interaksi",28,H-42);
+}
+function questionLight2D(n,t){
+ const p=project(n.x,1.2,n.z);if(!p)return;
+ const solved=n.solved;
+ const pulse=1+Math.sin(t/220+n.questionIndex)*.12;
+ const r=Math.max(7,22*p.s)*pulse;
+ const grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*2.2);
+ grad.addColorStop(0,solved?"#8ff5b2aa":"#fff8a8ee");
+ grad.addColorStop(.35,solved?"#5ed48b55":"#ffd95c88");
+ grad.addColorStop(1,"#ffffff00");
+ ctx.fillStyle=grad;ctx.beginPath();ctx.arc(p.x,p.y,r*2.2,0,7);ctx.fill();
+ ctx.fillStyle=solved?"#5ed48b":"#ffe45c";
+ ctx.beginPath();ctx.arc(p.x,p.y,r*.35,0,7);ctx.fill();
+ ctx.strokeStyle="#fff";ctx.lineWidth=Math.max(1,2*p.s);
+ ctx.beginPath();ctx.arc(p.x,p.y,r*.62,0,7);ctx.stroke();
+ ctx.fillStyle="#17364d";ctx.font=`900 ${Math.max(10,12*p.s)}px Arial`;ctx.textAlign="center";
+ ctx.fillText(solved?"✓":`SOAL ${n.questionIndex+1}`,p.x,p.y-r*.85);
+ ctx.textAlign="start";
 }
 function spawnParticle(x,z,type){
  world.particles.push({x,z,y:Math.random()*2+1,v:Math.random()*.9+.3,life:1,type,phase:Math.random()*7});
@@ -463,7 +547,7 @@ function drawParticles(t){
 
 function update(dt,t){
  let dx=0,dz=0;
- if(keys.w||keys.arrowup)dz-=1;if(keys.s||keys.arrowdown)dz+=1;
+ if(keys.w||keys.arrowup)dz+=1;if(keys.s||keys.arrowdown)dz-=1;
  if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
  // Mobile joystick controls the same player movement.
  if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z;}
@@ -490,58 +574,68 @@ function loop(t){
  requestAnimationFrame(loop);
 }
 
+function getNearestQuestion(){
+ const nodes=world.nodes.filter(n=>n.type==="questionLight"&&!n.solved);
+ let best=null,bestD=Infinity;
+ for(const n of nodes){
+  const d=Math.hypot(player.x-n.x,player.z-n.z);
+  if(d<bestD){best=n;bestD=d}
+ }
+ return {node:best,distance:bestD};
+}
 function tryInteract(){
  if(interactCooldown>0)return;
- const n=world.nodes.find(n=>n.type==="mission"),d=n?Math.hypot(player.x-n.x,player.z-n.z):99;
- if(n&&d<6){interactCooldown=1;openMission()}else toast("Dekati portal misi bercahaya ✨");
+ const hit=getNearestQuestion();
+ if(hit.node&&hit.distance<5.2){
+  interactCooldown=1;openMission(hit.node.questionIndex);
+ }else{
+  const solved=world.nodes.filter(n=>n.type==="questionLight"&&n.solved).length;
+  toast(solved>=5?"Semua cahaya telah ditemui ✨":"Cari cahaya yang bercahaya di kawasan ini ✨");
+ }
 }
-function openMission(){
- const l=levels[state.level];
- document.getElementById("missionTitle").textContent=`${l.icon} ${l.mission}`;
- document.getElementById("missionText").textContent=l.desc;
+function openMission(questionIndex){
+ const l=levels[state.level],q=l.questions[questionIndex];
+ state.currentQuestion=questionIndex;
+ document.getElementById("missionTitle").textContent=`${l.icon} Soalan ${questionIndex+1}/5 • ${l.mission}`;
+ document.getElementById("missionText").textContent=`📍 ${q.target} — Terokai kawasan dan cari cahaya seterusnya selepas menjawab.`;
  document.querySelector("#missionProgress i").style.background=l.color;
+ document.querySelector("#missionProgress i").style.width=((state.questionSolved/5)*100)+"%";
  const body=document.getElementById("missionBody");body.innerHTML="";
- if(l.sequence)makeSequence(body,l);else makeQuiz(body,l);
+ makeQuiz(body,q,questionIndex);
  document.getElementById("interaction").classList.add("show");
 }
-function closeMission(){document.getElementById("interaction").classList.remove("show")}
-function makeQuiz(body,l){
- body.innerHTML=`<p><b>${l.question}</b></p><div id="choices"></div>`;
+function makeQuiz(body,q,questionIndex){
+ body.innerHTML=`<p><b>${q.question}</b></p><div id="choices"></div>`;
  const ch=body.querySelector("#choices");
- l.choices.forEach((x,i)=>{
+ q.choices.forEach((x,i)=>{
   const b=document.createElement("button");b.className="choice";b.textContent=x;
-  b.onclick=()=>answer(i===l.answer,b,ch);ch.appendChild(b)
+  b.onclick=()=>answer(i===q.answer,b,ch,questionIndex);ch.appendChild(b)
  });
 }
-function answer(ok,button,container){
+function answer(ok,button,container,questionIndex){
  [...container.children].forEach(b=>b.disabled=true);
+ const q=levels[state.level].questions[questionIndex];
  if(ok){
-  button.classList.add("correct");state.score+=100;state.stars++;
-  completeLevel("Betul! +100 mata ⭐");
+  button.classList.add("correct");
+  state.score+=100;state.stars++;state.questionSolved++;
+  const node=world.nodes.find(n=>n.type==="questionLight"&&n.questionIndex===questionIndex);
+  if(node)node.solved=true;
+  if(state.questionSolved>=5){
+   document.querySelector("#missionProgress i").style.width="100%";
+   completeLevel("Semua 5 cahaya berjaya ditemui! +100 mata ⭐");
+  }else{
+   document.querySelector("#missionProgress i").style.width=((state.questionSolved/5)*100)+"%";
+   closeMission();
+   toast(`Betul! Cahaya ${questionIndex+1} selesai. Cari cahaya ${state.questionSolved+1} ✨`);
+   hint(`✨ Cari cahaya soalan ${state.questionSolved+1}/5`);
+  }
  }else{
-  button.classList.add("wrong");state.score=Math.max(0,state.score-20);
-  [...container.children].forEach((b,i)=>{if(i===levels[state.level].answer)b.classList.add("correct")});
+  button.classList.add("wrong");
+  state.score=Math.max(0,state.score-20);
+  [...container.children].forEach((b,i)=>{if(i===q.answer)b.classList.add("correct")});
   toast("Belum tepat. Jawapan yang betul diserlahkan 💡");
  }
  updateHUD();
-}
-function makeSequence(body,l){
- body.innerHTML=`<p><b>Seret langkah untuk menyusun proses daripada awal hingga akhir.</b></p>
- <div class="dragzone"><div id="items"></div><div id="drop" class="drop">Letak urutan di sini 👇</div></div>
- <button class="primary" id="checkSeq">Semak Urutan</button>`;
- const items=body.querySelector("#items"),drop=body.querySelector("#drop");
- [...l.sequence].sort(()=>Math.random()-.5).forEach(text=>{
-  const d=document.createElement("div");d.className="item";d.textContent=text;d.draggable=true;
-  d.ondragstart=e=>e.dataTransfer.setData("text/plain",text);items.appendChild(d)
- });
- drop.ondragover=e=>e.preventDefault();
- drop.ondrop=e=>{e.preventDefault();const text=e.dataTransfer.getData("text/plain");
-  const el=[...items.children].find(x=>x.textContent===text);if(el){drop.appendChild(el);el.draggable=false}};
- body.querySelector("#checkSeq").onclick=()=>{
-  const got=[...drop.children].map(x=>x.textContent);
-  if(JSON.stringify(got)===JSON.stringify(l.sequence)){state.score+=150;state.stars++;completeLevel("Urutan tepat! +150 mata 💧")}
-  else toast("Urutan belum betul. Cuba susun semula 🔄");updateHUD();
- };
 }
 function completeLevel(msg){
  const idx=state.level;
@@ -615,6 +709,8 @@ let waterMesh=null;
 let waterTime=0;
 let flowerGroups=[];
 let animatedPlants=[];
+let questLights3D=[];
+let questLightPositions=[];
 
 /* GLB V4 values: dikekalkan supaya model anda kekal seperti V4. */
 const GLB_HEIGHT_DESKTOP=105;
@@ -950,9 +1046,59 @@ function buildStartGarden(){
  const sign=mesh(new THREE.BoxGeometry(3.2,.9,.12),MAT.white,true,true);sign.position.set(0,2.1,0);add(sign);
 }
 
+function clearQuestLights3D(){
+ questLights3D.forEach(item=>gardenGroup.remove(item.group));
+ questLights3D=[];
+}
+function createQuestLight3D(index,pos){
+ const g=new THREE.Group();
+ g.position.set(pos.x,1.45,pos.z);
+ const orbMat=new THREE.MeshStandardMaterial({
+  color:0xffe45c,emissive:0xffc928,emissiveIntensity:2.2,
+  roughness:.25,metalness:.05,transparent:true,opacity:.98
+ });
+ const orb=mesh(new THREE.SphereGeometry(.28,16,12),orbMat,true,false);g.add(orb);
+ const ringMat=new THREE.MeshStandardMaterial({
+  color:0xffffff,emissive:0xffe45c,emissiveIntensity:1.8,
+  transparent:true,opacity:.82,roughness:.3
+ });
+ const ring=mesh(new THREE.TorusGeometry(.55,.045,8,32),ringMat,false,false);
+ ring.rotation.x=Math.PI/2;g.add(ring);
+ const stem=mesh(new THREE.CylinderGeometry(.035,.055,.8,8),MAT.fence,false,true);
+ stem.position.y=-.65;g.add(stem);
+ const light=new THREE.PointLight(0xffd84d,2.4,5.5,2);
+ light.position.y=.1;g.add(light);
+ g.userData={index,orb,ring,light,phase:index*.9};
+ add(g);
+ questLights3D.push({group:g,orb,ring,light,index});
+}
+window.setGardenQuestionLights=function(questions,positions){
+ questLightPositions=positions||[];
+ if(!gardenGroup)return;
+ clearQuestLights3D();
+ if(levels[state.level]?.theme!=="plants")return;
+ questLightPositions.forEach((pos,i)=>createQuestLight3D(i,pos));
+};
+function updateQuestLights3D(t){
+ const qnodes=world.nodes.filter(n=>n.type==="questionLight");
+ questLights3D.forEach(item=>{
+  const node=qnodes.find(n=>n.questionIndex===item.index);
+  const solved=node?.solved;
+  const pulse=1+Math.sin(t*.004+item.group.userData.phase)*.14;
+  item.orb.scale.setScalar(pulse);
+  item.ring.rotation.z=t*.0012+item.group.userData.phase;
+  item.ring.scale.setScalar(1+.08*Math.sin(t*.003+item.group.userData.phase));
+  item.light.intensity=solved?.25:2.2+Math.sin(t*.005+item.group.userData.phase)*.45;
+  item.orb.material.color.setHex(solved?0x62d98a:0xffe45c);
+  item.orb.material.emissive.setHex(solved?0x2b9d58:0xffc928);
+  item.ring.material.emissive.setHex(solved?0x2b9d58:0xffc928);
+  item.group.position.y=(solved?.9:1.45)+Math.sin(t*.003+item.group.userData.phase)*.08;
+ });
+}
 function updateGardenVisual(t){
  if(!gardenWorldReady)return;
  gardenTime=t*.001;
+ updateQuestLights3D(t);
  animatedPlants.forEach((g,i)=>{
   const base=g.userData.phase||0;g.rotation.z=Math.sin(gardenTime*1.1+base)*.025;g.position.y=Math.sin(gardenTime*1.7+base)*.018;
  });
@@ -993,7 +1139,7 @@ function loadCharacter(){
 window.setGarden3DLevel=function(theme){
  gardenActive=theme==="plants";
  glbCanvas.style.display=gardenActive?"block":"none";
- if(gardenActive){camera3d.position.set(player.x,8.5,player.z+10.5);camera3d.lookAt(player.x,1.0,player.z-2.5)}
+ if(gardenActive){if(typeof window.setGardenQuestionLights==="function")window.setGardenQuestionLights(levels[state.level].questions,getQuestionPositions(levels[state.level].theme));camera3d.position.set(player.x,8.5,player.z+10.5);camera3d.lookAt(player.x,1.0,player.z-2.5)}
 };
 
 function resizeGLB(){
