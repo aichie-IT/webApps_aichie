@@ -560,21 +560,16 @@ resize();updateHUD();requestAnimationFrame(loop);
 </script>
 
 <!-- ===== MODERN THREE.JS + GLB PLAYER =====
-     Three.js + GLTFLoader menggunakan ES Module secara terus.
-     Ini mengelakkan konflik dengan versi lama THREE.GLTFLoader.
+     Three.js + GLTFLoader menggunakan ES Module URL penuh.
+     Tiada import map / bare specifier "three", untuk serasi dengan GitHub Pages.
 -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/"
-  }
-}
-</script>
-
 <script type="module">
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+/*
+  FIX V3: Jangan gunakan import map atau bare module specifier "three".
+  esm.sh akan menghasilkan URL module yang boleh terus diselesaikan oleh browser.
+*/
+import * as THREE from "https://esm.sh/three@0.152.2";
+import { GLTFLoader } from "https://esm.sh/three@0.152.2/examples/jsm/loaders/GLTFLoader.js?external=three";
 
 (function(){
 "use strict";
