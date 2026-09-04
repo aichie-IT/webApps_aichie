@@ -558,19 +558,49 @@ canvas.addEventListener("click",e=>{
 resize();updateHUD();requestAnimationFrame(loop);
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
-<script>
+<!-- ===== MODERN THREE.JS + GLB PLAYER =====
+     GLTFLoader digunakan sebagai ES Module kerana examples/js/loaders/GLTFLoader.js
+     tidak lagi tersedia untuk Three.js r152.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
 (function(){
 "use strict";
 
 const glbCanvas=document.getElementById("glbCanvas");
 const MODEL_URL="./player_character.glb";
-let renderer,scene,camera3d,character,characterRoot,mixer;
-let idleAction=null,walkAction=null,modelReady=false,lastGLBTime=performance.now();
+
+let renderer=null;
+let scene=null;
+let camera3d=null;
+let character=null;
+let characterRoot=null;
+let mixer=null;
+let idleAction=null;
+let walkAction=null;
+let modelReady=false;
+let modelHeight=1;
+let lastGLBTime=performance.now();
+
+/* Hanya mengawal saiz/paparan watak GLB. Bahagian game lain dikekalkan. */
+const GLB_HEIGHT_DESKTOP=105;
+const GLB_HEIGHT_MOBILE=88;
+const GLB_VERTICAL_OFFSET=0;
 
 function findClip(clips,names){
-  return clips.find(c=>names.some(n=>c.name.toLowerCase().includes(n)));
+  if(!clips||!clips.length)return null;
+  return clips.find(c=>names.some(n=>c.name.toLowerCase().includes(n)))||null;
 }
 
 function initGLB(){
@@ -581,104 +611,191 @@ function initGLB(){
       antialias:true,
       powerPreference:"high-performance"
     });
+
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-    renderer.setSize(innerWidth,innerHeight,false);
+    renderer.setSize(window.innerWidth,window.innerHeight,false);
     renderer.setClearColor(0x000000,0);
-    renderer.autoClear=true;
-    renderer.outputEncoding=THREE.sRGBEncoding;
+
+    // Three.js r152: outputColorSpace menggantikan outputEncoding.
+    renderer.outputColorSpace=THREE.SRGBColorSpace;
 
     scene=new THREE.Scene();
 
+    /*
+      GLB dipaparkan dalam screen-space supaya ia boleh mengikut
+      kedudukan player pseudo-3D sedia ada tanpa mengubah world/gameplay.
+    */
     camera3d=new THREE.OrthographicCamera(
-      0,innerWidth,0,innerHeight,-1000,1000
+      0,window.innerWidth,
+      window.innerHeight,0,
+      -1000,1000
     );
     camera3d.position.set(0,0,10);
+    camera3d.lookAt(0,0,0);
 
-    scene.add(new THREE.HemisphereLight(0xffffff,0x7890a0,2.1));
-    const light=new THREE.DirectionalLight(0xffffff,2.5);
-    light.position.set(-3,5,8);
-    scene.add(light);
+    scene.add(new THREE.HemisphereLight(0xffffff,0x7890a0,2.2));
 
-    const loader=new THREE.GLTFLoader();
+    const keyLight=new THREE.DirectionalLight(0xffffff,2.7);
+    keyLight.position.set(-3,6,8);
+    scene.add(keyLight);
+
+    const fillLight=new THREE.DirectionalLight(0x9fd8ff,0.8);
+    fillLight.position.set(4,2,5);
+    scene.add(fillLight);
+
+    // FIX: GLTFLoader ialah class yang diimport, bukan THREE.GLTFLoader.
+    const loader=new GLTFLoader();
 
     loader.load(
       MODEL_URL,
+
       function(gltf){
         character=gltf.scene;
 
-        character.traverse(function(o){
-          if(o.isMesh){
-            o.frustumCulled=false;
-            o.castShadow=false;
-            o.receiveShadow=false;
+        character.traverse(function(object){
+          if(object.isMesh){
+            object.visible=true;
+            object.frustumCulled=false;
+
+            if(object.material){
+              const materials=Array.isArray(object.material)
+                ? object.material
+                : [object.material];
+
+              materials.forEach(function(material){
+                material.needsUpdate=true;
+              });
+            }
           }
         });
 
-        // Put the model inside a root so its mesh origin can be centred
-        // without being overwritten when the player moves around the v2 world.
+        /*
+          FIX UTAMA KEDUDUKAN:
+          Jadikan origin characterRoot sebagai tapak/kaki watak.
+          Ini mengelakkan model berada terlalu tinggi atau hanya sebahagian
+          badan kelihatan.
+        */
+        character.updateMatrixWorld(true);
+
         const box=new THREE.Box3().setFromObject(character);
         const size=box.getSize(new THREE.Vector3());
         const center=box.getCenter(new THREE.Vector3());
 
-        characterRoot=new THREE.Group();
-        characterRoot.add(character);
-        character.position.set(-center.x,-box.min.y,-center.z);
-        character.userData.baseHeight=Math.max(size.y,0.001);
-        scene.add(characterRoot);
+        modelHeight=Math.max(size.y,0.001);
 
+        characterRoot=new THREE.Group();
+        scene.add(characterRoot);
+        characterRoot.add(character);
+
+        // X/Z = center, Y = tapak kaki.
+        character.position.set(
+          -center.x,
+          -box.min.y,
+          -center.z
+        );
+
+        characterRoot.position.set(0,0,0);
+        characterRoot.rotation.set(0,0,0);
+
+        // Sokongan animasi GLB.
         mixer=new THREE.AnimationMixer(character);
 
-        // The uploaded character contains "Idle" and "Walk".
-        const idleClip=findClip(gltf.animations,["idle","breath","stand"]);
-        const walkClip=findClip(gltf.animations,["walk","run","move"]);
+        const idleClip=findClip(gltf.animations,[
+          "idle","breath","stand","rest"
+        ]);
+
+        const walkClip=findClip(gltf.animations,[
+          "walk","walking","run","running","move","locomotion"
+        ]);
 
         if(idleClip){
           idleAction=mixer.clipAction(idleClip);
+          idleAction.setLoop(THREE.LoopRepeat);
           idleAction.play();
         }
+
         if(walkClip){
           walkAction=mixer.clipAction(walkClip);
+          walkAction.setLoop(THREE.LoopRepeat);
         }
 
         modelReady=true;
         window.modelReadyForFallback=true;
         glbCanvas.style.display="block";
-        console.log("player_character.glb berjaya dimuatkan.",gltf.animations.map(a=>a.name));
-        if(typeof toast==="function") toast("Watak 3D sedia digunakan ✨");
-      },
-      undefined,
-      function(error){
-        console.error("Gagal memuatkan player_character.glb:",error);
-        glbCanvas.style.display="none";
+
+        console.log(
+          "player_character.glb berjaya dimuatkan.",
+          "Animations:",
+          gltf.animations.map(a=>a.name)
+        );
+
         if(typeof toast==="function"){
-          toast("Watak 3D gagal dimuatkan — game v2 diteruskan.");
+          toast("Watak 3D berjaya dimuatkan ✨");
         }
+      },
+
+      function(xhr){
+        if(xhr.total){
+          console.log(
+            "GLB loading:",
+            Math.round((xhr.loaded/xhr.total)*100)+"%"
+          );
+        }
+      },
+
+      function(error){
+        modelReady=false;
+        window.modelReadyForFallback=false;
+        glbCanvas.style.display="none";
+
+        console.error(
+          "Gagal memuatkan ./player_character.glb.",
+          error
+        );
+
+        if(typeof toast==="function"){
+          toast("player_character.glb tidak ditemui / gagal dimuatkan.");
+        }
+
+        console.warn(
+          "Pastikan player_character.glb berada dalam folder yang sama dengan index.html."
+        );
       }
     );
+
   }catch(error){
+    modelReady=false;
+    window.modelReadyForFallback=false;
+    glbCanvas.style.display="none";
     console.error("Three.js initialization error:",error);
   }
 }
 
 function resizeGLB(){
   if(!renderer)return;
+
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  renderer.setSize(innerWidth,innerHeight,false);
-  renderer.setClearColor(0x000000,0);
+  renderer.setSize(window.innerWidth,window.innerHeight,false);
+
   if(camera3d){
-    camera3d.right=innerWidth;
-    camera3d.bottom=innerHeight;
+    camera3d.left=0;
+    camera3d.right=window.innerWidth;
+    camera3d.top=window.innerHeight;
+    camera3d.bottom=0;
+    camera3d.near=-1000;
+    camera3d.far=1000;
     camera3d.updateProjectionMatrix();
   }
 }
+
 window.addEventListener("resize",resizeGLB);
 
 function updateGLB(){
+  if(!modelReady||!character||!characterRoot)return;
+
   const now=performance.now();
   const delta=Math.min(0.05,(now-lastGLBTime)/1000);
   lastGLBTime=now;
-
-  if(!modelReady||!character)return;
 
   if(mixer)mixer.update(delta);
 
@@ -689,49 +806,70 @@ function updateGLB(){
     player.targetX!==null
   );
 
+  // Idle <-> Walk transition.
   if(idleAction&&walkAction){
     if(moving){
       if(!walkAction.isRunning()){
-        walkAction.reset().fadeIn(.16).play();
+        walkAction.reset().fadeIn(0.18).play();
       }
-      idleAction.fadeOut(.16);
+      idleAction.fadeOut(0.18);
     }else{
       if(!idleAction.isRunning()){
-        idleAction.reset().fadeIn(.16).play();
+        idleAction.reset().fadeIn(0.18).play();
       }
-      walkAction.fadeOut(.16);
+      walkAction.fadeOut(0.18);
     }
   }
 
+  const projected=project(player.x,0,player.z);
+  if(!projected)return;
+
+  /*
+    FIX KEDUDUKAN MENEGAK:
+    OrthographicCamera menggunakan koordinat Y positif ke atas.
+    Canvas pula menggunakan Y positif ke bawah.
+    Jadi screenY perlu diterbalikkan dengan H - projected.y.
+
+    Sebelum ini model diletakkan pada projected.y secara terus,
+    menyebabkan kedudukannya boleh nampak terlalu tinggi.
+  */
+  const screenX=projected.x;
+  const screenY=window.innerHeight-projected.y;
+
+  const mobile=window.innerWidth<=900;
+  const desiredHeight=mobile
+    ? GLB_HEIGHT_MOBILE
+    : GLB_HEIGHT_DESKTOP;
+
+  const scale=desiredHeight/modelHeight;
+  characterRoot.scale.setScalar(scale);
+
+  // Kaki watak tepat pada titik player dalam dunia asal.
+  characterRoot.position.x=screenX;
+  characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET;
+  characterRoot.position.z=0;
+
   if(moving){
-    // Adjust this sign if the model's front is opposite to movement.
     characterRoot.rotation.y=player.angle;
   }
 
-  // Put the GLB at the same projected position as the original v2 player.
-  const p=project(player.x,0,player.z);
-  if(!p)return;
-
-  // Use a stable screen-space height so the model stays readable on phone and desktop.
-  // The original v2 player is visually around 70-110 px on typical screens.
-  const desiredHeight=Math.max(62,Math.min(125,70*p.s));
-  const scale=desiredHeight/character.userData.baseHeight;
-  characterRoot.scale.setScalar(scale);
-
-  characterRoot.position.x=p.x;
-  characterRoot.position.y=p.y;
-  characterRoot.position.z=0;
+  // Animasi idle kecil supaya watak tidak statik.
+  if(!moving){
+    const idleBob=Math.sin(now/550)*1.2;
+    characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET+idleBob;
+  }
 }
 
 function renderGLB(){
   requestAnimationFrame(renderGLB);
+
   if(renderer&&scene&&camera3d){
     updateGLB();
     renderer.render(scene,camera3d);
   }
 }
 
-// ===== Professional-style mobile joystick =====
+// ===== Mobile joystick — dikekalkan seperti asal =====
 const base=document.getElementById("joystickBase");
 const knob=document.getElementById("joystickKnob");
 let joyPointer=null;
@@ -740,8 +878,10 @@ function moveJoystick(e){
   const r=base.getBoundingClientRect();
   const cx=r.left+r.width/2;
   const cy=r.top+r.height/2;
+
   let x=e.clientX-cx;
   let y=e.clientY-cy;
+
   const max=r.width*.34;
   const d=Math.hypot(x,y);
 
@@ -751,11 +891,11 @@ function moveJoystick(e){
   }
 
   knob.style.transform="translate("+x+"px,"+y+"px)";
+
   mobileStick.x=x/max;
   mobileStick.z=y/max;
   mobileStick.active=true;
 
-  // Joystick movement overrides click-to-move.
   player.targetX=null;
   player.targetZ=null;
 }
@@ -774,9 +914,11 @@ base.addEventListener("pointerdown",function(e){
   base.setPointerCapture(e.pointerId);
   moveJoystick(e);
 });
+
 base.addEventListener("pointermove",function(e){
   if(e.pointerId===joyPointer)moveJoystick(e);
 });
+
 base.addEventListener("pointerup",resetJoystick);
 base.addEventListener("pointercancel",resetJoystick);
 
@@ -784,6 +926,7 @@ document.getElementById("interactBtn").addEventListener("pointerdown",function(e
   e.preventDefault();
   tryInteract();
 });
+
 document.getElementById("mapMobileBtn").addEventListener("pointerdown",function(e){
   e.preventDefault();
   openMap();
@@ -793,8 +936,10 @@ initGLB();
 resizeGLB();
 renderGLB();
 
-// Keep the original v2 game running even if the 3D layer is unavailable.
-console.log("Pengembaraan Sains: 2D v2 aktif; GLB sedang dimuatkan dari", MODEL_URL);
+console.log(
+  "Pengembaraan Sains: GLB 3D aktif; model:",
+  MODEL_URL
+);
 
 })();
 </script>
