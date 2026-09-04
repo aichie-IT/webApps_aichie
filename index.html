@@ -258,7 +258,9 @@ function loadLevel(i){
  const t=levels[i];
  document.getElementById("levelTitle").textContent=`${t.icon} Level ${i+1}: ${t.name}`;
  document.documentElement.style.setProperty("--accent",t.color);
- buildWorld(i);updateHUD();hint("Dekati portal bercahaya • Tekan E untuk memulakan misi");
+ buildWorld(i);
+ if(typeof window.setGarden3DLevel==="function")window.setGarden3DLevel(t.theme);
+ updateHUD();hint("Dekati portal bercahaya • Tekan E untuk memulakan misi");
  setTimeout(()=>hint("",false),4500);
 }
 
@@ -269,51 +271,8 @@ function buildWorld(i){
   {x:0,z:-15,type:"mission",label:"Misi Sains",active:true}
  ];
  if(theme==="plants"){
-  /*
-   * TAMAN TUMBUHAN V2 — visual sahaja.
-   * Susun atur dibuat berlapis supaya taman terasa luas, padat dan hidup
-   * seperti garden simulator: laluan batu, petak tanah, pokok, pasu,
-   * bunga, buah, semak dan rumput.
-   */
-  world.nodes.push(
-   {x:14,z:-9,type:"tree",phase:.4},
-   {x:-15,z:-8,type:"tree",phase:1.2},
-   {x:19,z:4,type:"tree",phase:2.1},
-   {x:-20,z:6,type:"tree",phase:2.8},
-   {x:21,z:17,type:"tree",phase:3.6},
-   {x:-21,z:18,type:"tree",phase:4.1}
-  );
-
-  /* Laluan utama dan dua petak tanaman. */
-  world.decor.push(
-   {x:0,z:-8,type:"gardenPath"},
-   {x:0,z:1,type:"gardenPath"},
-   {x:0,z:10,type:"gardenPath"},
-   {x:0,z:19,type:"gardenPath"},
-   {x:-11,z:2,type:"soilBed"},
-   {x:11,z:2,type:"soilBed"},
-   {x:-11,z:15,type:"soilBed"},
-   {x:11,z:15,type:"soilBed"},
-   {x:-8,z:-13,type:"pond"},
-   {x:10,z:-14,type:"bench"},
-   {x:-20,z:-1,type:"fence"},
-   {x:20,z:-1,type:"fence"}
-  );
-
-  /* Pokok kecil dan tumbuhan utama. */
-  world.decor.push(
-   ...makeDecor("flower",42),
-   ...makeDecor("sprout",20),
-   ...makeDecor("grass",34),
-   ...makeDecor("bush",22),
-   ...makeDecor("pot",16),
-   ...makeDecor("sunflower",13),
-   ...makeDecor("blueberry",13),
-   ...makeDecor("banana",8),
-   ...makeDecor("cactus",7),
-   ...makeDecor("mushroom",9),
-   ...makeDecor("leaf",18)
-  );
+  world.nodes.push({x:14,z:-8,type:"tree"},{x:-14,z:-7,type:"tree"},{x:17,z:8,type:"tree"});
+  world.decor.push(...makeDecor("flower",26),...makeDecor("sprout",12));
  }else if(theme==="animals"){
   world.nodes.push({x:15,z:-7,type:"habitat",label:"Habitat"},{x:-15,z:6,type:"tree"},{x:17,z:10,type:"tree"});
   world.animals=[{x:10,z:4,type:"butterfly",phase:0},{x:-9,z:-2,type:"butterfly",phase:2}];
@@ -331,23 +290,10 @@ function buildWorld(i){
   world.nodes.push({x:15,z:-7,type:"planet",label:"Planet"},{x:-15,z:7,type:"rocket",label:"Roket"});
   world.decor.push(...makeDecor("star",35),...makeDecor("asteroid",12));
  }
-
- /* Fill tambahan hanya untuk tanaman supaya perimeter taman tidak kosong. */
- if(theme==="plants"){
-  for(let x=-24;x<=24;x+=6){
-   world.decor.push({x:x+(Math.random()*1.8-.9),z:-21+Math.random()*2,type:"bush",phase:Math.random()*7});
-   world.decor.push({x:x+(Math.random()*1.8-.9),z:24+Math.random()*2,type:"bush",phase:Math.random()*7});
-  }
-  for(let z=-17;z<=21;z+=6){
-   world.decor.push({x:-25+Math.random()*2,z,type:"flower",phase:Math.random()*7});
-   world.decor.push({x:25-Math.random()*2,z,type:"flower",phase:Math.random()*7});
-  }
- }
-
  for(let x=-24;x<=24;x+=8)for(let z=-20;z<=20;z+=8){
   if(Math.abs(x)<7&&Math.abs(z)<6)continue;
   if(Math.random()<.45)world.decor.push({x:x+(Math.random()*3-1.5),z:z+(Math.random()*3-1.5),
-   type:theme==="space"?"star":theme==="matter"?"crystal":theme==="plants"?"grass":"grass"});
+   type:theme==="space"?"star":theme==="matter"?"crystal":"grass"});
  }
 }
 function makeDecor(type,n){
@@ -366,7 +312,6 @@ function drawSky(){
  if(theme==="space"){g.addColorStop(0,"#11194d");g.addColorStop(1,"#354b9c")}
  else if(theme==="water"){g.addColorStop(0,"#5cc9ef");g.addColorStop(1,"#dffaff")}
  else if(theme==="energy"){g.addColorStop(0,"#7bdcff");g.addColorStop(1,"#fff3bf")}
- else if(theme==="plants"){g.addColorStop(0,"#6fd6f2");g.addColorStop(.52,"#c9f3d8");g.addColorStop(1,"#f4ffe9")}
  else {g.addColorStop(0,"#77d9ff");g.addColorStop(1,"#e8fbff")}
  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
  if(theme==="space"){
@@ -376,58 +321,12 @@ function drawSky(){
  }else{
   for(let i=0;i<5;i++){let x=(i*240-camera.x*3%1200+1200)%1200-100,y=82+(i%2)*58;
    ctx.fillStyle="#ffffff99";ctx.beginPath();ctx.arc(x,y,28,0,7);ctx.arc(x+35,y-8,36,0,7);ctx.arc(x+75,y,25,0,7);ctx.fill()}
-  if(theme==="plants"){
-   /* Jajaran pokok jauh memberi lapisan horizon. */
-   ctx.fillStyle="#4baf69aa";
-   for(let i=0;i<11;i++){
-    const x=i*(W/10)-20;
-    ctx.beginPath();ctx.arc(x,Math.max(150,H*.31),38,Math.PI,7);ctx.fill();
-   }
-  }
  }
 }
 function drawGround(){
  const theme=levels[state.level]?.theme;
- if(theme==="plants"){
-  /* Rumput asas dengan gradient supaya foreground lebih kaya daripada flat fill. */
-  const g=ctx.createLinearGradient(0,H*.48,0,H);
-  g.addColorStop(0,"#82d878");g.addColorStop(.55,"#69c66d");g.addColorStop(1,"#4fa85d");
-  ctx.fillStyle=g;
- }else{
-  ctx.fillStyle=theme==="space"?"#242f73":theme==="water"?"#66bd7b":"#73c96f";
- }
+ ctx.fillStyle=theme==="space"?"#242f73":theme==="water"?"#66bd7b":"#73c96f";
  ctx.beginPath();ctx.moveTo(0,H*.52);ctx.lineTo(W,H*.52);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
-
- if(theme==="plants"){
-  /* Bayangan lembut dan lorong tanah/batu dalam perspektif. */
-  const center=project(0,0,0);
-  const near=project(0,0,42);
-  if(center&&near){
-   ctx.fillStyle="#d6b978";
-   ctx.beginPath();
-   ctx.moveTo(center.x-13*center.s,center.y);
-   ctx.lineTo(center.x+13*center.s,center.y);
-   ctx.lineTo(near.x+35*near.s,near.y);
-   ctx.lineTo(near.x-35*near.s,near.y);
-   ctx.closePath();ctx.fill();
-   ctx.strokeStyle="#fff1bd99";ctx.lineWidth=2;
-   ctx.beginPath();ctx.moveTo(center.x-13*center.s,center.y);ctx.lineTo(near.x-35*near.s,near.y);ctx.moveTo(center.x+13*center.s,center.y);ctx.lineTo(near.x+35*near.s,near.y);ctx.stroke();
-  }
-  /* Petak tanaman sisi kiri/kanan. */
-  [-11,11].forEach(x=>{
-   const a=project(x-4,0,1),b=project(x+4,0,1),c=project(x+4,0,19),d=project(x-4,0,19);
-   if(a&&b&&c&&d){
-    ctx.fillStyle="#9a6038";ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.lineTo(c.x,c.y);ctx.lineTo(d.x,d.y);ctx.closePath();ctx.fill();
-    ctx.strokeStyle="#d69a5a88";ctx.lineWidth=2;
-    for(let k=1;k<5;k++){
-     const q1=project(x-4+k*1.6,0,2),q2=project(x-4+k*1.6,0,18);
-     if(q1&&q2){ctx.beginPath();ctx.moveTo(q1.x,q1.y);ctx.lineTo(q2.x,q2.y);ctx.stroke()}
-    }
-   }
-  });
- }
-
- /* Grid halus dikekalkan untuk membantu rasa kedalaman dunia. */
  ctx.lineWidth=1;ctx.strokeStyle="#ffffff22";
  for(let z=-5;z<80;z+=5){let a=project(-50,0,z),b=project(50,0,z);if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}}
  for(let x=-50;x<=50;x+=5){let a=project(x,0,-5),b=project(x,0,70);if(a&&b){ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke()}}
@@ -453,9 +352,7 @@ function rock(n){const p=project(n.x,0,n.z);if(!p)return;shadow(p,17,7);ctx.fill
 function flower(n,t){const p=project(n.x,0,n.z);if(!p)return;
  const sway=Math.sin(t/400+n.phase)*2*p.s;ctx.strokeStyle="#3f9e56";ctx.lineWidth=2*p.s;
  ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+sway,p.y-16*p.s);ctx.stroke();
- const petals=["#ff6f91","#ffcf4d","#b57cff","#ff8f4f","#62c8ff"];const c=petals[Math.floor((n.phase*10)%petals.length)];
- ctx.fillStyle=c;for(let i=0;i<5;i++){const a=i*Math.PI*2/5;ctx.beginPath();ctx.ellipse(p.x+sway+Math.cos(a)*5*p.s,p.y-18*p.s+Math.sin(a)*5*p.s,4*p.s,6*p.s,a,0,7);ctx.fill()}
- ctx.fillStyle="#ffd84f";ctx.beginPath();ctx.arc(p.x+sway,p.y-18*p.s,3*p.s,0,7);ctx.fill()}
+ ctx.fillStyle="#ff7e9e";ctx.beginPath();ctx.arc(p.x+sway,p.y-18*p.s,5*p.s,0,7);ctx.fill()}
 function sprout(n,t){const p=project(n.x,0,n.z);if(!p)return;
  const s=(.9+.1*Math.sin(t/500+n.phase))*p.s;ctx.strokeStyle="#379b59";ctx.lineWidth=3*s;
  ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x,p.y-18*s);ctx.stroke();ctx.fillStyle="#55c978";
@@ -464,76 +361,6 @@ function water(n,t){const p=project(n.x,0,n.z);if(!p)return;shadow(p,45,10,.08);
  ctx.fillStyle="#56c8edaa";ctx.beginPath();ctx.ellipse(p.x,p.y,50*p.s,20*p.s,0,0,7);ctx.fill();
  ctx.strokeStyle="#ffffff88";ctx.lineWidth=2*p.s;
  for(let i=0;i<3;i++){ctx.beginPath();ctx.ellipse(p.x-25*p.s+i*20*p.s,p.y+Math.sin(t/500+i)*3*p.s,9*p.s,3*p.s,0,0,7);ctx.stroke()}}
-
-function gardenPath(n){
- const p=project(n.x,0,n.z);if(!p)return;
- ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.s,p.s);
- ctx.fillStyle="#d5b77a";ctx.beginPath();ctx.roundRect(-18,-5,36,10,5);ctx.fill();
- ctx.fillStyle="#b89561";ctx.beginPath();ctx.roundRect(-15,-3,13,6,3);ctx.roundRect(3,-3,12,6,3);ctx.fill();ctx.restore();
-}
-function soilBed(n){
- const p=project(n.x,0,n.z);if(!p)return;
- ctx.save();ctx.translate(p.x,p.y);ctx.scale(p.s,p.s);
- ctx.fillStyle="#7d492f";ctx.beginPath();ctx.roundRect(-26,-6,52,12,5);ctx.fill();
- ctx.strokeStyle="#b56e3f";ctx.lineWidth=2;for(let x=-20;x<=20;x+=10){ctx.beginPath();ctx.moveTo(x,-3);ctx.lineTo(x+4,3);ctx.stroke()}
- ctx.fillStyle="#6b3d29";for(let x=-18;x<=18;x+=9){ctx.beginPath();ctx.arc(x,0,2,0,7);ctx.fill()}
- ctx.restore();
-}
-function bush(n,t){
- const p=project(n.x,0,n.z);if(!p)return;shadow(p,18,6,.1);const s=p.s;
- ctx.fillStyle="#278b50";ctx.beginPath();ctx.arc(p.x-10*s,p.y-10*s,12*s,0,7);ctx.arc(p.x+2*s,p.y-14*s,15*s,0,7);ctx.arc(p.x+13*s,p.y-9*s,11*s,0,7);ctx.fill();
- ctx.fillStyle="#4dbd69";ctx.beginPath();ctx.arc(p.x-4*s,p.y-17*s,7*s,0,7);ctx.arc(p.x+11*s,p.y-15*s,6*s,0,7);ctx.fill();
-}
-function pot(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;shadow(p,8,4,.1);
- ctx.fillStyle="#d97945";ctx.beginPath();ctx.moveTo(p.x-7*s,p.y-12*s);ctx.lineTo(p.x+7*s,p.y-12*s);ctx.lineTo(p.x+5*s,p.y);ctx.lineTo(p.x-5*s,p.y);ctx.closePath();ctx.fill();
- ctx.fillStyle="#6c4a32";ctx.beginPath();ctx.ellipse(p.x,p.y-13*s,7*s,3*s,0,0,7);ctx.fill();
- const sway=Math.sin(t/500+n.phase)*2*s;ctx.strokeStyle="#3c9b56";ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(p.x,p.y-13*s);ctx.lineTo(p.x+sway,p.y-29*s);ctx.stroke();
- ctx.fillStyle="#5acb72";ctx.beginPath();ctx.ellipse(p.x+sway-5*s,p.y-27*s,6*s,3*s,-.4,0,7);ctx.ellipse(p.x+sway+5*s,p.y-24*s,6*s,3*s,.4,0,7);ctx.fill();
-}
-function sunflower(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s,sw=Math.sin(t/650+n.phase)*1.5*s;
- ctx.strokeStyle="#3c9b56";ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+sw,p.y-25*s);ctx.stroke();
- ctx.fillStyle="#ffcb3d";for(let i=0;i<10;i++){const a=i*Math.PI*2/10;ctx.beginPath();ctx.ellipse(p.x+sw+Math.cos(a)*7*s,p.y-27*s+Math.sin(a)*7*s,3.5*s,7*s,a,0,7);ctx.fill()}
- ctx.fillStyle="#74462d";ctx.beginPath();ctx.arc(p.x+sw,p.y-27*s,4*s,0,7);ctx.fill();
-}
-function blueberry(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;shadow(p,12,4,.08);
- ctx.fillStyle="#2c9855";ctx.beginPath();ctx.arc(p.x,p.y-10*s,12*s,0,7);ctx.fill();
- ctx.fillStyle="#3459c9";for(let i=0;i<7;i++){const a=i*1.1;const x=p.x+Math.cos(a)*8*s,y=p.y-12*s+Math.sin(a)*5*s;ctx.beginPath();ctx.arc(x,y,3.5*s,0,7);ctx.fill();ctx.fillStyle="#607ee5";ctx.beginPath();ctx.arc(x-1*s,y-1*s,1*s,0,7);ctx.fill();ctx.fillStyle="#3459c9"}
-}
-function banana(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;shadow(p,13,5,.09);
- ctx.strokeStyle="#3a9b55";ctx.lineWidth=2*s;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x,p.y-28*s);ctx.stroke();
- ctx.fillStyle="#f7d34b";for(let i=0;i<5;i++){const a=-Math.PI*.9+i*.45;ctx.beginPath();ctx.arc(p.x+Math.cos(a)*9*s,p.y-30*s+Math.sin(a)*7*s,5*s,0,Math.PI*1.7);ctx.strokeStyle="#e0ad2d";ctx.lineWidth=3*s;ctx.stroke()}
-}
-function cactus(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;shadow(p,8,4,.08);ctx.fillStyle="#4cbf70";
- ctx.beginPath();ctx.roundRect(p.x-5*s,p.y-27*s,10*s,27*s,5*s);ctx.roundRect(p.x-12*s,p.y-20*s,7*s,10*s,4*s);ctx.roundRect(p.x+5*s,p.y-17*s,7*s,9*s,4*s);ctx.fill();
- ctx.fillStyle="#ffe18a";ctx.beginPath();ctx.arc(p.x-2*s,p.y-23*s,1*s,0,7);ctx.arc(p.x+3*s,p.y-12*s,1*s,0,7);ctx.fill();
-}
-function mushroom(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;ctx.fillStyle="#f3e6cf";ctx.fillRect(p.x-3*s,p.y-10*s,6*s,10*s);
- ctx.fillStyle="#ed6b5a";ctx.beginPath();ctx.arc(p.x,p.y-10*s,9*s,Math.PI,0);ctx.fill();ctx.fillStyle="#fff4d2";ctx.beginPath();ctx.arc(p.x-3*s,p.y-12*s,1.5*s,0,7);ctx.arc(p.x+3*s,p.y-9*s,1.3*s,0,7);ctx.fill();
-}
-function leaf(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;const sw=Math.sin(t/500+n.phase)*2*s;
- ctx.fillStyle="#55b967";ctx.beginPath();ctx.ellipse(p.x-5*s+sw,p.y-6*s,7*s,3*s,-.5,0,7);ctx.ellipse(p.x+5*s+sw,p.y-12*s,8*s,3*s,.5,0,7);ctx.fill();
-}
-function pond(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;shadow(p,30,8,.08);
- ctx.fillStyle="#52c7e7";ctx.beginPath();ctx.ellipse(p.x,p.y,34*s,13*s,0,0,7);ctx.fill();
- ctx.fillStyle="#8ce9f1";for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(p.x+(i-1.5)*10*s,p.y+(i%2?2:-2)*s,2*s,0,7);ctx.fill()}
-}
-function bench(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;shadow(p,16,5,.12);
- ctx.fillStyle="#9b633b";ctx.fillRect(p.x-16*s,p.y-17*s,32*s,5*s);ctx.fillRect(p.x-13*s,p.y-24*s,26*s,5*s);
- ctx.fillStyle="#69432b";ctx.fillRect(p.x-12*s,p.y-12*s,4*s,12*s);ctx.fillRect(p.x+8*s,p.y-12*s,4*s,12*s);
-}
-function fence(n,t){
- const p=project(n.x,0,n.z);if(!p)return;const s=p.s;ctx.strokeStyle="#f1dfb3";ctx.lineWidth=3*s;
- ctx.beginPath();ctx.moveTo(p.x-12*s,p.y);ctx.lineTo(p.x-12*s,p.y-18*s);ctx.moveTo(p.x+12*s,p.y);ctx.lineTo(p.x+12*s,p.y-18*s);ctx.moveTo(p.x-13*s,p.y-11*s);ctx.lineTo(p.x+13*s,p.y-11*s);ctx.moveTo(p.x-13*s,p.y-5*s);ctx.lineTo(p.x+13*s,p.y-5*s);ctx.stroke();
-}
 function portal(n,t){
  const p=project(n.x,0,n.z);if(!p)return;shadow(p,25,8);const c=levels[state.level].color;
  glow(p.x,p.y-48*p.s,48*p.s,c,.22);
@@ -570,21 +397,7 @@ function decor(n,t){
  else if(n.type==="drop"){ctx.fillStyle="#55cfff99";ctx.beginPath();ctx.arc(p.x,p.y-12*p.s,5*p.s,0,7);ctx.fill()}
  else if(n.type==="star"){ctx.fillStyle="#fff";ctx.globalAlpha=.5+.3*Math.sin(t/400+n.phase);ctx.font=`${12*p.s}px Arial`;ctx.fillText("✦",p.x,p.y-10*p.s);ctx.globalAlpha=1}
  else if(n.type==="asteroid"){ctx.fillStyle="#7176a0";ctx.beginPath();ctx.arc(p.x,p.y-7*p.s,8*p.s,0,7);ctx.fill()}
- else if(n.type==="gardenPath")gardenPath(n);
- else if(n.type==="soilBed")soilBed(n);
- else if(n.type==="bush")bush(n,t);
- else if(n.type==="pot")pot(n,t);
- else if(n.type==="sunflower")sunflower(n,t);
- else if(n.type==="blueberry")blueberry(n,t);
- else if(n.type==="banana")banana(n,t);
- else if(n.type==="cactus")cactus(n,t);
- else if(n.type==="mushroom")mushroom(n,t);
- else if(n.type==="leaf")leaf(n,t);
- else if(n.type==="pond")pond(n,t);
- else if(n.type==="bench")bench(n,t);
- else if(n.type==="fence")fence(n,t);
 }
-
 function animal(a,t){const p=project(a.x,0,a.z);if(!p)return;
  const bx=p.x+Math.sin(t/700+a.phase)*15*p.s,by=p.y-25*p.s+Math.cos(t/500+a.phase)*7*p.s;
  ctx.fillStyle="#ff7e9e";ctx.beginPath();ctx.ellipse(bx-5*p.s,by,7*p.s,10*p.s,.5,0,7);
@@ -607,6 +420,17 @@ function drawPlayer(t){
   ctx.restore();
 }
 function drawWorld(t){
+ /*
+  * Level 1 menggunakan Garden World sebenar dalam Three.js.
+  * Semua level lain kekal menggunakan renderer Canvas V4 asal.
+  */
+ if(levels[state.level]?.theme==="plants"){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle="#ffffffd9";ctx.roundRect(17,H-68,210,43,13);ctx.fill();
+  ctx.fillStyle="#17364d";ctx.font="800 12px Arial";
+  ctx.fillText("WASD / ↑↓←→ bergerak  •  E interaksi",28,H-42);
+  return;
+ }
  drawSky();drawGround();
  const arr=[...world.decor,...world.nodes];
  arr.sort((a,b)=>b.z-a.z);
@@ -754,9 +578,14 @@ resize();updateHUD();requestAnimationFrame(loop);
 -->
 <script type="module">
 /*
-  FIX V3: Jangan gunakan import map atau bare module specifier "three".
-  esm.sh akan menghasilkan URL module yang boleh terus diselesaikan oleh browser.
-*/
+ * THREE.JS GARDEN WORLD + GLB PLAYER
+ *
+ * IMPORTANT:
+ * - V4 GLB loader/import yang telah terbukti berfungsi dikekalkan.
+ * - Level 1 sahaja menggunakan dunia 3D sebenar.
+ * - Logic game, mission, quiz, score, level unlock, movement dan UI asal
+ *   tidak diubah. Dunia 3D hanya membaca player.x / player.z yang sedia ada.
+ */
 import * as THREE from "https://esm.sh/three@0.152.2";
 import { GLTFLoader } from "https://esm.sh/three@0.152.2/examples/jsm/loaders/GLTFLoader.js?bundle";
 
@@ -777,23 +606,59 @@ let walkAction=null;
 let modelReady=false;
 let modelHeight=1;
 let lastGLBTime=performance.now();
+let gardenGroup=null;
+let gardenActive=false;
+let gardenTime=0;
+let gardenWorldReady=false;
+let groundMesh=null;
+let waterMesh=null;
+let waterTime=0;
+let flowerGroups=[];
+let animatedPlants=[];
 
-/*
- * Hanya mengawal saiz dan kedudukan paparan GLB.
- * Gameplay, world, mission dan kawalan asal tidak diubah.
- */
+/* GLB V4 values: dikekalkan supaya model anda kekal seperti V4. */
 const GLB_HEIGHT_DESKTOP=105;
 const GLB_HEIGHT_MOBILE=88;
-
-/*
- * Nilai positif = turun pada skrin.
- * Nilai ini memastikan tapak/kaki character berada sedikit
- * di bawah titik player dunia supaya nampak seperti watak game.
- */
 const GLB_VERTICAL_OFFSET=18;
-
-/* Jika model GLB menghadap arah yang salah, ubah nilai ini sahaja. */
 const GLB_MODEL_ROTATION_Y=0;
+
+/* ===== REAL-WORLD GARDEN SCALE =====
+   1 Three.js unit ~= 1 meter.
+   Terrain: 72m x 72m. Character: ~1.8m tall.
+*/
+const GARDEN_SIZE=72;
+const CHARACTER_WORLD_HEIGHT=1.8;
+const GROUND_Y=0;
+
+const MAT={
+  grass:new THREE.MeshStandardMaterial({color:0x63b85d,roughness:.96,metalness:0}),
+  grass2:new THREE.MeshStandardMaterial({color:0x78c967,roughness:.95,metalness:0}),
+  soil:new THREE.MeshStandardMaterial({color:0x8b5737,roughness:1,metalness:0}),
+  soilDark:new THREE.MeshStandardMaterial({color:0x6f412b,roughness:1,metalness:0}),
+  path:new THREE.MeshStandardMaterial({color:0xd9bd7a,roughness:.9,metalness:0}),
+  stone:new THREE.MeshStandardMaterial({color:0xb5b9ae,roughness:.95,metalness:0}),
+  wood:new THREE.MeshStandardMaterial({color:0x8a5a38,roughness:.9,metalness:0}),
+  leaf:new THREE.MeshStandardMaterial({color:0x319b55,roughness:.9,metalness:0}),
+  leafLight:new THREE.MeshStandardMaterial({color:0x62c96b,roughness:.9,metalness:0}),
+  leafDark:new THREE.MeshStandardMaterial({color:0x207644,roughness:.92,metalness:0}),
+  flowerPink:new THREE.MeshStandardMaterial({color:0xff6f9f,roughness:.7,metalness:0}),
+  flowerYellow:new THREE.MeshStandardMaterial({color:0xffc928,roughness:.7,metalness:0}),
+  flowerOrange:new THREE.MeshStandardMaterial({color:0xff8b22,roughness:.7,metalness:0}),
+  flowerBlue:new THREE.MeshStandardMaterial({color:0x4e82ff,roughness:.7,metalness:0}),
+  flowerWhite:new THREE.MeshStandardMaterial({color:0xfff8e8,roughness:.7,metalness:0}),
+  flowerPurple:new THREE.MeshStandardMaterial({color:0xa56cff,roughness:.7,metalness:0}),
+  flowerCenter:new THREE.MeshStandardMaterial({color:0x6e4325,roughness:.85,metalness:0}),
+  water:new THREE.MeshPhysicalMaterial({color:0x39bfe5,roughness:.12,metalness:.05,transparent:true,opacity:.82}),
+  fence:new THREE.MeshStandardMaterial({color:0x9b683e,roughness:.9,metalness:0}),
+  white:new THREE.MeshStandardMaterial({color:0xf7f3df,roughness:.8,metalness:0}),
+  red:new THREE.MeshStandardMaterial({color:0xe94b45,roughness:.75,metalness:0}),
+  orange:new THREE.MeshStandardMaterial({color:0xf39a2e,roughness:.75,metalness:0}),
+  blue:new THREE.MeshStandardMaterial({color:0x3d78d8,roughness:.75,metalness:0}),
+  berry:new THREE.MeshStandardMaterial({color:0x365bd8,roughness:.65,metalness:0}),
+  banana:new THREE.MeshStandardMaterial({color:0xffdc42,roughness:.7,metalness:0}),
+  cactus:new THREE.MeshStandardMaterial({color:0x39a85a,roughness:.82,metalness:0}),
+  mushroom:new THREE.MeshStandardMaterial({color:0xef5146,roughness:.75,metalness:0})
+};
 
 function findClip(clips,names){
   if(!clips||!clips.length)return null;
@@ -802,426 +667,391 @@ function findClip(clips,names){
     return names.some(n=>name.includes(n));
   })||null;
 }
-
-function playAction(action){
-  if(!action)return;
-  action.reset().fadeIn(0.18).play();
-}
+function playAction(action){if(!action)return;action.reset().fadeIn(.18).play()}
 
 function initGLB(){
-  try{
-    renderer=new THREE.WebGLRenderer({
-      canvas:glbCanvas,
-      alpha:true,
-      antialias:true,
-      powerPreference:"high-performance"
-    });
+ try{
+  renderer=new THREE.WebGLRenderer({canvas:glbCanvas,alpha:true,antialias:true,powerPreference:"high-performance"});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setSize(innerWidth,innerHeight,false);
+  renderer.setClearColor(0x000000,0);
+  renderer.outputColorSpace=THREE.SRGBColorSpace;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=1.12;
+  renderer.shadowMap.enabled=true;
+  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-    renderer.setSize(window.innerWidth,window.innerHeight,false);
-    renderer.setClearColor(0x000000,0);
+  scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x9bdff4);
+  scene.fog=new THREE.Fog(0x9bdff4,42,105);
 
-    /*
-     * Three.js r152:
-     * outputColorSpace menggantikan outputEncoding.
-     */
-    renderer.outputColorSpace=THREE.SRGBColorSpace;
+  camera3d=new THREE.PerspectiveCamera(46,innerWidth/innerHeight,.1,180);
+  camera3d.position.set(0,9,11);
 
-    scene=new THREE.Scene();
+  const hemi=new THREE.HemisphereLight(0xbfefff,0x54734b,2.0);
+  scene.add(hemi);
+  const sun=new THREE.DirectionalLight(0xfff5d6,3.1);
+  sun.position.set(-18,30,16);
+  sun.castShadow=true;
+  sun.shadow.mapSize.set(2048,2048);
+  sun.shadow.camera.left=-40;sun.shadow.camera.right=40;
+  sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;
+  sun.shadow.camera.near=.5;sun.shadow.camera.far=100;
+  sun.shadow.bias=-.0004;
+  scene.add(sun);
+  const fill=new THREE.DirectionalLight(0x9bdcff,.7);
+  fill.position.set(22,10,-18);scene.add(fill);
 
-    /*
-     * Kamera 2D screen-space.
-     *
-     * World Three.js:
-     *   X = kiri/kanan
-     *   Y = bawah/atas
-     *
-     * Mapping dibuat dengan pusat (0,0) di tengah skrin supaya
-     * koordinat pixel tidak terbalik dan model tidak "terangkat".
-     */
-    camera3d=new THREE.OrthographicCamera(
-      -window.innerWidth/2,
-       window.innerWidth/2,
-       window.innerHeight/2,
-      -window.innerHeight/2,
-      -1000,
-       1000
-    );
-    camera3d.position.set(0,0,10);
-    camera3d.lookAt(0,0,0);
-
-    scene.add(new THREE.HemisphereLight(0xffffff,0x7890a0,2.2));
-
-    const keyLight=new THREE.DirectionalLight(0xffffff,2.7);
-    keyLight.position.set(-3,6,8);
-    scene.add(keyLight);
-
-    const fillLight=new THREE.DirectionalLight(0x9fd8ff,0.8);
-    fillLight.position.set(4,2,5);
-    scene.add(fillLight);
-
-    /*
-     * PENTING:
-     * GLTFLoader diimport sebagai class.
-     * Jangan gunakan THREE.GLTFLoader.
-     */
-    const loader=new GLTFLoader();
-
-    loader.load(
-      MODEL_URL,
-
-      function(gltf){
-        character=gltf.scene;
-
-        character.traverse(function(object){
-          if(object.isMesh){
-            object.visible=true;
-            object.frustumCulled=false;
-
-            if(object.material){
-              const materials=Array.isArray(object.material)
-                ? object.material
-                : [object.material];
-
-              materials.forEach(function(material){
-                material.needsUpdate=true;
-
-                /*
-                 * Sesetengah GLB lama tidak menetapkan colorSpace
-                 * pada texture dengan betul.
-                 */
-                if(material.map){
-                  material.map.colorSpace=THREE.SRGBColorSpace;
-                }
-              });
-            }
-          }
-        });
-
-        /*
-         * Cari bounding box SEBELUM character dimasukkan ke root.
-         * Kemudian normalise:
-         *   - X/Z berpusat
-         *   - Y bermula tepat di tapak kaki
-         *
-         * Ini mengelakkan model hanya nampak kaki atau badan
-         * berada jauh di atas titik player.
-         */
-        character.updateMatrixWorld(true);
-
-        const box=new THREE.Box3().setFromObject(character);
-        const size=box.getSize(new THREE.Vector3());
-        const center=box.getCenter(new THREE.Vector3());
-
-        modelHeight=Math.max(size.y,0.001);
-
-        characterRoot=new THREE.Group();
-        scene.add(characterRoot);
-        characterRoot.add(character);
-
-        character.position.set(
-          -center.x,
-          -box.min.y,
-          -center.z
-        );
-
-        characterRoot.position.set(0,0,0);
-        characterRoot.rotation.set(0,GLB_MODEL_ROTATION_Y,0);
-
-        /*
-         * AnimationMixer mesti menggunakan scene character.
-         */
-        if(gltf.animations&&gltf.animations.length){
-          mixer=new THREE.AnimationMixer(character);
-
-          const idleClip=findClip(gltf.animations,[
-            "idle","breath","stand","rest"
-          ]);
-
-          const walkClip=findClip(gltf.animations,[
-            "walk","walking","run","running","move","locomotion"
-          ]);
-
-          /*
-           * Jika GLB hanya mempunyai satu animation, gunakan clip
-           * pertama sebagai fallback supaya model tetap bergerak.
-           */
-          const fallbackClip=gltf.animations[0];
-
-          const selectedIdle=idleClip||(!walkClip?fallbackClip:null);
-          const selectedWalk=walkClip||(!idleClip?fallbackClip:null);
-
-          if(selectedIdle){
-            idleAction=mixer.clipAction(selectedIdle);
-            idleAction.setLoop(THREE.LoopRepeat);
-            idleAction.play();
-          }
-
-          if(selectedWalk&&selectedWalk!==selectedIdle){
-            walkAction=mixer.clipAction(selectedWalk);
-            walkAction.setLoop(THREE.LoopRepeat);
-          }
-        }
-
-        modelReady=true;
-
-        /*
-         * Hentikan fallback 2D hanya selepas GLB benar-benar siap.
-         */
-        window.modelReadyForFallback=true;
-        glbCanvas.style.display="block";
-
-        console.log(
-          "player_character.glb berjaya dimuatkan.",
-          "Animations:",
-          gltf.animations.map(a=>a.name)
-        );
-
-        if(typeof toast==="function"){
-          toast("Watak 3D berjaya dimuatkan ✨");
-        }
-      },
-
-      function(xhr){
-        if(xhr.total){
-          console.log(
-            "GLB loading:",
-            Math.round((xhr.loaded/xhr.total)*100)+"%"
-          );
-        }
-      },
-
-      function(error){
-        modelReady=false;
-        window.modelReadyForFallback=false;
-        glbCanvas.style.display="none";
-
-        console.error(
-          "Gagal memuatkan ./player_character.glb.",
-          error
-        );
-
-        if(typeof toast==="function"){
-          toast("player_character.glb tidak ditemui / gagal dimuatkan.");
-        }
-
-        console.warn(
-          "Pastikan player_character.glb berada dalam folder yang sama dengan index.html."
-        );
-      }
-    );
-
-  }catch(error){
-    modelReady=false;
-    window.modelReadyForFallback=false;
-    glbCanvas.style.display="none";
-
-    console.error(
-      "Three.js initialization error:",
-      error
-    );
-  }
+  buildGardenWorld();
+  loadCharacter();
+  resizeGLB();
+  renderGLB();
+ }catch(error){console.error("Three.js initialization error:",error)}
 }
+
+function mesh(geometry,material,cast=true,receive=true){
+ const m=new THREE.Mesh(geometry,material);m.castShadow=cast;m.receiveShadow=receive;return m;
+}
+function add(obj){gardenGroup.add(obj);return obj}
+function rand(a,b){return a+Math.random()*(b-a)}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+
+function buildGardenWorld(){
+ gardenGroup=new THREE.Group();
+ gardenGroup.name="TamanTumbuhan3D";
+ scene.add(gardenGroup);
+
+ /* Terrain sebenar: sedikit beralun tetapi character kekal berpijak. */
+ const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,48,48);
+ const pos=terrainGeo.attributes.position;
+ for(let i=0;i<pos.count;i++){
+   const x=pos.getX(i),z=pos.getY(i);
+   const edge=Math.max(Math.abs(x),Math.abs(z));
+   const h=(Math.sin(x*.23)*.035+Math.cos(z*.19)*.035)*Math.max(0,1-edge/36);
+   pos.setZ(i,h);
+ }
+ terrainGeo.computeVertexNormals();
+ groundMesh=mesh(terrainGeo,MAT.grass,false,true);
+ groundMesh.rotation.x=-Math.PI/2;
+ groundMesh.position.y=GROUND_Y;
+ add(groundMesh);
+
+ buildPaths();
+ buildPlantBeds();
+ buildPond();
+ buildFences();
+ buildTrees();
+ buildFlowerFields();
+ buildShrubsAndCrops();
+ buildBananaGroves();
+ buildCactusGarden();
+ buildRocksAndLogs();
+ buildGardenFurniture();
+ buildBackgroundGarden();
+ buildMissionGarden();
+ buildStartGarden();
+ gardenWorldReady=true;
+}
+
+function buildPaths(){
+ const path=mesh(new THREE.BoxGeometry(9,.10,70),MAT.path,false,true);
+ path.position.set(0,.035,0);add(path);
+ for(let z=-30;z<=30;z+=4){
+   const stone=mesh(new THREE.BoxGeometry(7.8,.12,2.3),MAT.stone,false,true);
+   stone.position.set(rand(-.35,.35),.105,z+rand(-.25,.25));
+   stone.rotation.y=rand(-.035,.035);add(stone);
+ }
+ /* side paths */
+ [-1,1].forEach(side=>{
+  const p=mesh(new THREE.BoxGeometry(13,.08,3.2),MAT.path,false,true);
+  p.position.set(side*22,.04,-9);p.rotation.y=side*.12;add(p);
+ });
+}
+
+function buildPlantBeds(){
+ const beds=[[-22,-18,14,18],[22,-18,14,18],[-22,18,14,16],[22,18,14,16]];
+ beds.forEach(([x,z,w,d])=>{
+  const soil=mesh(new THREE.BoxGeometry(w,.18,d),MAT.soil,false,true);
+  soil.position.set(x,.08,z);add(soil);
+  for(let row=-2;row<=2;row++){
+   for(let col=-3;col<=3;col++){
+    const px=x+col*1.7+rand(-.18,.18),pz=z+row*2.2+rand(-.18,.18);
+    const stem=mesh(new THREE.CylinderGeometry(.035,.05,.55,7),MAT.leafDark,true,true);
+    stem.position.set(px,.42,pz);add(stem);
+    const leaves=mesh(new THREE.SphereGeometry(.28,7,5),Math.random()>.5?MAT.leaf:MAT.leafLight,true,true);
+    leaves.scale.set(1.25,.55,1.25);leaves.position.set(px,.67,pz);add(leaves);
+   }
+  }
+ });
+}
+
+function buildPond(){
+ const rim=mesh(new THREE.CylinderGeometry(7.6,8.2,.35,48),MAT.stone,false,true);
+ rim.scale.z=.72;rim.position.set(-18,.12,1);add(rim);
+ waterMesh=mesh(new THREE.CylinderGeometry(7.2,7.2,.12,48),MAT.water,false,true);
+ waterMesh.scale.z=.72;waterMesh.position.set(-18,.30,1);add(waterMesh);
+ for(let i=0;i<7;i++){
+  const lily=mesh(new THREE.CircleGeometry(rand(.28,.55),16),MAT.leafLight,false,false);
+  lily.rotation.x=-Math.PI/2;lily.position.set(-18+rand(-4.5,4.5),.39,1+rand(-3,3));add(lily);
+ }
+}
+
+function buildFences(){
+ const segments=[{x:-30,z:-26,len:60,rot:0},{x:-30,z:26,len:60,rot:0},{x:-32,z:0,len:52,rot:Math.PI/2},{x:32,z:0,len:52,rot:Math.PI/2}];
+ segments.forEach(seg=>{
+  const count=Math.floor(seg.len/4);
+  for(let i=0;i<=count;i++){
+   const d=-seg.len/2+i*4;
+   const x=seg.rot===0?seg.x+d:seg.x;
+   const z=seg.rot===0?seg.z:seg.z+d;
+   const post=mesh(new THREE.BoxGeometry(.28,1.1,.28),MAT.fence,true,true);post.position.set(x,.55,z);add(post);
+  }
+  const rail=mesh(new THREE.BoxGeometry(seg.len,.18,.18),MAT.fence,true,true);
+  rail.position.set(seg.x,.78,seg.z);rail.rotation.y=seg.rot;add(rail);
+ });
+}
+
+function createTree(x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);
+ const trunk=mesh(new THREE.CylinderGeometry(.42,.58,3.8,9),MAT.wood,true,true);trunk.position.y=1.9;g.add(trunk);
+ const crownMat=Math.random()>.5?MAT.leaf:MAT.leafDark;
+ for(let i=0;i<7;i++){
+  const crown=mesh(new THREE.IcosahedronGeometry(rand(1.4,2.0),1),crownMat,true,true);
+  crown.position.set(rand(-1.3,1.3),rand(3.5,5.2),rand(-1.2,1.2));g.add(crown);
+ }
+ add(g);return g;
+}
+function buildTrees(){
+ const trees=[[-30,-22,1.35],[-18,-28,1.05],[18,-28,1.1],[30,-21,1.35],[-31,18,1.25],[31,18,1.3],[-28,4,.9],[28,6,.95],[-7,-30,.8],[8,-30,.85]];
+ trees.forEach(t=>createTree(...t));
+}
+
+function createFlower(x,z,colorMat,height=1){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const stem=mesh(new THREE.CylinderGeometry(.025,.035,.55*height,7),MAT.leafDark,true,true);stem.position.y=.28*height;g.add(stem);
+ const center=mesh(new THREE.SphereGeometry(.075*height,8,6),MAT.flowerCenter,true,true);center.position.y=.58*height;g.add(center);
+ for(let i=0;i<7;i++){
+  const petal=mesh(new THREE.SphereGeometry(.10*height,8,6),colorMat,true,true);
+  const a=i*Math.PI*2/7;petal.scale.set(.65,1.15,.42);petal.position.set(Math.cos(a)*.16*height,.58*height+Math.sin(a)*.02,Math.sin(a)*.16*height);g.add(petal);
+ }
+ g.userData.baseY=0;g.userData.phase=Math.random()*Math.PI*2;animatedPlants.push(g);add(g);return g;
+}
+function createSunflower(x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);
+ const stem=mesh(new THREE.CylinderGeometry(.045,.065,1.45,8),MAT.leafDark,true,true);stem.position.y=.72;g.add(stem);
+ for(let i=0;i<4;i++){
+  const leaf=mesh(new THREE.SphereGeometry(.16,7,5),MAT.leafLight,true,true);leaf.scale.set(1.8,.35,.65);
+  leaf.position.set((i%2?1:-1)*.2,.55+i*.13,(i<2?-.12:.12));g.add(leaf);
+ }
+ const c=mesh(new THREE.SphereGeometry(.32,12,8),MAT.flowerCenter,true,true);c.position.y=1.58;g.add(c);
+ for(let i=0;i<12;i++){
+  const a=i*Math.PI*2/12,p=mesh(new THREE.SphereGeometry(.13,8,6),MAT.flowerYellow,true,true);
+  p.scale.set(.55,1.3,.45);p.position.set(Math.cos(a)*.32,1.58,Math.sin(a)*.32);g.add(p);
+ }
+ animatedPlants.push(g);add(g);
+}
+function buildFlowerFields(){
+ const mats=[MAT.flowerPink,MAT.flowerYellow,MAT.flowerOrange,MAT.flowerBlue,MAT.flowerWhite,MAT.flowerPurple];
+ for(let i=0;i<95;i++){
+  const side=i%2?1:-1;
+  const x=side*rand(10,30),z=rand(-25,24);
+  if(Math.abs(z)<5&&Math.abs(x)<12)continue;
+  createFlower(x,z,mats[Math.floor(Math.random()*mats.length)],rand(.7,1.25));
+ }
+ for(let i=0;i<24;i++)createSunflower(rand(-29,29),rand(-24,24),rand(.65,1.15));
+}
+
+function createBerryBush(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ for(let i=0;i<5;i++){
+  const leaf=mesh(new THREE.IcosahedronGeometry(rand(.35,.58),1),MAT.leaf,true,true);
+  leaf.position.set(rand(-.65,.65),rand(.3,.8),rand(-.55,.55));g.add(leaf);
+ }
+ for(let i=0;i<9;i++){
+  const b=mesh(new THREE.SphereGeometry(.10,8,6),MAT.berry,true,true);
+  b.position.set(rand(-.7,.7),rand(.45,1.0),rand(-.65,.65));g.add(b);
+ }
+ add(g);
+}
+function createPottedPlant(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const pot=mesh(new THREE.CylinderGeometry(.28,.38,.42,12),MAT.orange,true,true);pot.position.y=.21;g.add(pot);
+ for(let i=0;i<5;i++){
+  const leaf=mesh(new THREE.SphereGeometry(.22,7,5),MAT.leafLight,true,true);leaf.scale.set(.55,1.5,.32);leaf.position.set(rand(-.25,.25),.72+rand(0,.3),rand(-.25,.25));g.add(leaf);
+ }
+ add(g);
+}
+function buildShrubsAndCrops(){
+ for(let i=0;i<32;i++)createBerryBush(rand(-30,30),rand(-26,26));
+ for(let i=0;i<20;i++)createPottedPlant(rand(-30,30),rand(-25,25));
+}
+function createBananaPlant(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const stem=mesh(new THREE.CylinderGeometry(.25,.32,2.4,9),MAT.wood,true,true);stem.position.y=1.2;g.add(stem);
+ for(let i=0;i<9;i++){
+  const a=i*Math.PI*2/9;
+  const leaf=mesh(new THREE.CapsuleGeometry(.13,1.6,5,10),MAT.leafLight,true,true);
+  leaf.scale.set(1.2,.75,.55);leaf.position.set(Math.cos(a)*.65,2.25+Math.sin(i)*.15,Math.sin(a)*.65);leaf.rotation.z=.65*Math.cos(a);leaf.rotation.x=.25*Math.sin(a);g.add(leaf);
+ }
+ for(let i=0;i<4;i++){
+  const b=mesh(new THREE.CapsuleGeometry(.10,.65,5,8),MAT.banana,true,true);b.position.set(.15+i*.18,1.7,.1);b.rotation.z=-.8;g.add(b);
+ }
+ add(g);
+}
+function buildBananaGroves(){
+ for(let i=0;i<10;i++)createBananaPlant(-30+rand(0,5),-10+rand(-7,7));
+ for(let i=0;i<7;i++)createBananaPlant(26+rand(0,5),10+rand(-7,7));
+}
+function createCactus(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const body=mesh(new THREE.CapsuleGeometry(.32,1.5,6,10),MAT.cactus,true,true);body.position.y=.9;g.add(body);
+ for(const s of [-1,1]){
+  const arm=mesh(new THREE.CapsuleGeometry(.18,.65,6,8),MAT.cactus,true,true);arm.position.set(s*.42,1.05,0);arm.rotation.z=s*1.15;g.add(arm);
+ }
+ add(g);
+}
+function buildCactusGarden(){for(let i=0;i<18;i++)createCactus(rand(-8,8),rand(-27,27))}
+function buildRocksAndLogs(){
+ for(let i=0;i<30;i++){
+  const r=mesh(new THREE.IcosahedronGeometry(rand(.25,.85),1),MAT.stone,true,true);
+  r.scale.y=rand(.45,.9);r.position.set(rand(-32,32),rand(.15,.4),rand(-31,31));add(r);
+ }
+ for(let i=0;i<10;i++){
+  const log=mesh(new THREE.CylinderGeometry(.22,.3,2.2,8),MAT.wood,true,true);
+  log.position.set(rand(-28,28),.28,rand(-28,28));log.rotation.z=Math.PI/2;log.rotation.y=rand(0,Math.PI);add(log);
+ }
+}
+function buildGardenFurniture(){
+ const bench= new THREE.Group();bench.position.set(15,.1,-3);
+ for(const y of [.65,1.05]){const b=mesh(new THREE.BoxGeometry(3.2,.18,.48),MAT.wood,true,true);b.position.y=y;bench.add(b)}
+ for(const x of [-1.2,1.2]){const leg=mesh(new THREE.BoxGeometry(.18,.7,.18),MAT.wood,true,true);leg.position.set(x,.35,0);bench.add(leg)}
+ add(bench);
+}
+function buildBackgroundGarden(){
+ for(let i=0;i<35;i++){
+  const x=rand(-35,35),z=rand(-35,35),s=rand(.45,.8);
+  if(Math.abs(x)<12&&Math.abs(z)<14)continue;
+  createTree(x,z,s);
+ }
+}
+function createArch(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ for(const sx of [-2.2,2.2]){const p=mesh(new THREE.CylinderGeometry(.16,.2,3.2,10),MAT.fence,true,true);p.position.set(sx,1.6,0);g.add(p)}
+ const top=mesh(new THREE.TorusGeometry(2.2,.16,8,24,Math.PI),MAT.fence,true,true);top.rotation.z=Math.PI;top.position.y=3.2;g.add(top);
+ return g;
+}
+function buildMissionGarden(){
+ const arch=createArch(0,-15);add(arch);
+ const sign=mesh(new THREE.BoxGeometry(3.6,1.1,.12),MAT.white,true,true);sign.position.set(0,2.5,-15);add(sign);
+ const portalRing=mesh(new THREE.TorusGeometry(1.2,.12,10,32),MAT.flowerYellow,true,true);portalRing.position.set(0,1.25,-14.82);portalRing.rotation.x=Math.PI/2;add(portalRing);
+}
+function buildStartGarden(){
+ const arch=createArch(0,0);arch.scale.setScalar(.8);add(arch);
+ const sign=mesh(new THREE.BoxGeometry(3.2,.9,.12),MAT.white,true,true);sign.position.set(0,2.1,0);add(sign);
+}
+
+function updateGardenVisual(t){
+ if(!gardenWorldReady)return;
+ gardenTime=t*.001;
+ animatedPlants.forEach((g,i)=>{
+  const base=g.userData.phase||0;g.rotation.z=Math.sin(gardenTime*1.1+base)*.025;g.position.y=Math.sin(gardenTime*1.7+base)*.018;
+ });
+ if(waterMesh){waterMesh.position.y=.30+Math.sin(gardenTime*1.4)*.025;waterMesh.scale.x=.995+Math.sin(gardenTime*1.8)*.008}
+}
+
+function loadCharacter(){
+ const loader=new GLTFLoader();
+ loader.load(MODEL_URL,function(gltf){
+  character=gltf.scene;
+  character.traverse(object=>{
+   if(object.isMesh){object.visible=true;object.frustumCulled=false;object.castShadow=true;object.receiveShadow=true;
+    if(object.material){const ms=Array.isArray(object.material)?object.material:[object.material];ms.forEach(material=>{material.needsUpdate=true;if(material.map)material.map.colorSpace=THREE.SRGBColorSpace})}
+   }
+  });
+  character.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(character);
+  const size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
+  modelHeight=Math.max(size.y,.001);
+  characterRoot=new THREE.Group();scene.add(characterRoot);characterRoot.add(character);
+  character.position.set(-center.x,-box.min.y,-center.z);
+  characterRoot.rotation.set(0,GLB_MODEL_ROTATION_Y,0);
+  /* Real-world scale: character ~1.8m. */
+  characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
+  if(gltf.animations?.length){
+   mixer=new THREE.AnimationMixer(character);
+   const idle=findClip(gltf.animations,["idle","breath","stand","rest"]);
+   const walk=findClip(gltf.animations,["walk","walking","run","running","move","locomotion"]);
+   const fallback=gltf.animations[0];
+   const selectedIdle=idle||(!walk?fallback:null),selectedWalk=walk||(!idle?fallback:null);
+   if(selectedIdle){idleAction=mixer.clipAction(selectedIdle);idleAction.setLoop(THREE.LoopRepeat);idleAction.play()}
+   if(selectedWalk&&selectedWalk!==selectedIdle){walkAction=mixer.clipAction(selectedWalk);walkAction.setLoop(THREE.LoopRepeat)}
+  }
+  modelReady=true;window.modelReadyForFallback=true;console.log("player_character.glb berjaya dimuatkan.","Animations:",gltf.animations.map(a=>a.name));
+ },undefined,function(error){modelReady=false;window.modelReadyForFallback=false;console.error("Gagal memuatkan ./player_character.glb.",error);});
+}
+
+window.setGarden3DLevel=function(theme){
+ gardenActive=theme==="plants";
+ glbCanvas.style.display=gardenActive?"block":"none";
+ if(gardenActive){camera3d.position.set(player.x,8.5,player.z+10.5);camera3d.lookAt(player.x,1.0,player.z-2.5)}
+};
 
 function resizeGLB(){
-  if(!renderer)return;
+ if(!renderer)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight,false);
+ if(camera3d){camera3d.aspect=innerWidth/innerHeight;camera3d.updateProjectionMatrix()}
+}
+addEventListener("resize",resizeGLB);
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  renderer.setSize(window.innerWidth,window.innerHeight,false);
+function updateCharacter(){
+ if(!modelReady||!characterRoot)return;
+ const now=performance.now(),delta=Math.min(.05,(now-lastGLBTime)/1000);lastGLBTime=now;
+ if(mixer)mixer.update(delta);
+ const moving=mobileStick.active||keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||player.targetX!==null;
+ if(idleAction&&walkAction){if(moving){if(!walkAction.isRunning())playAction(walkAction);idleAction.fadeOut(.18)}else{if(!idleAction.isRunning())playAction(idleAction);walkAction.fadeOut(.18)}}
+ else if(idleAction&&!moving){if(!idleAction.isRunning())playAction(idleAction)}else if(walkAction&&moving){if(!walkAction.isRunning())playAction(walkAction)}
 
-  if(camera3d){
-    camera3d.left=-window.innerWidth/2;
-    camera3d.right=window.innerWidth/2;
-    camera3d.top=window.innerHeight/2;
-    camera3d.bottom=-window.innerHeight/2;
-    camera3d.near=-1000;
-    camera3d.far=1000;
-    camera3d.updateProjectionMatrix();
-  }
+ if(gardenActive){
+  /* Character kini berada secara fizikal di atas terrain. */
+  characterRoot.position.set(player.x,.025,player.z);
+  characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
+  if(moving)characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;else characterRoot.rotation.y=GLB_MODEL_ROTATION_Y;
+  const bob=!moving?Math.sin(now/550)*.012:0;characterRoot.position.y=.025+bob;
+  camera3d.position.x+=(player.x-camera3d.position.x)*.08;
+  camera3d.position.z+=(player.z+10.5-camera3d.position.z)*.08;
+  camera3d.position.y+=(8.5-camera3d.position.y)*.08;
+  camera3d.lookAt(player.x,1.0,player.z-2.5);
+ }else{
+  /* Level selain plants: kekalkan paparan GLB V4. */
+  const projected=project(player.x,0,player.z);if(!projected)return;
+  const screenX=projected.x-innerWidth/2,screenY=innerHeight/2-projected.y;
+  const mobile=innerWidth<=900,desiredHeight=mobile?GLB_HEIGHT_MOBILE:GLB_HEIGHT_DESKTOP;
+  characterRoot.scale.setScalar(desiredHeight/modelHeight);
+  characterRoot.position.x=screenX;characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET;characterRoot.position.z=0;
+  characterRoot.rotation.y=moving?GLB_MODEL_ROTATION_Y+player.angle:GLB_MODEL_ROTATION_Y;
+  if(!moving)characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET+Math.sin(now/550)*1.2;
+ }
 }
 
-window.addEventListener("resize",resizeGLB);
-
-function updateGLB(){
-  if(!modelReady||!character||!characterRoot)return;
-
-  const now=performance.now();
-  const delta=Math.min(0.05,(now-lastGLBTime)/1000);
-  lastGLBTime=now;
-
-  if(mixer){
-    mixer.update(delta);
-  }
-
-  const moving=(
-    mobileStick.active ||
-    keys.w||keys.a||keys.s||keys.d||
-    keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||
-    player.targetX!==null
-  );
-
-  /*
-   * Idle <-> Walk transition.
-   */
-  if(idleAction&&walkAction){
-    if(moving){
-      if(!walkAction.isRunning()){
-        playAction(walkAction);
-      }
-      idleAction.fadeOut(0.18);
-    }else{
-      if(!idleAction.isRunning()){
-        playAction(idleAction);
-      }
-      walkAction.fadeOut(0.18);
-    }
-  }else if(idleAction&&!moving){
-    if(!idleAction.isRunning()){
-      playAction(idleAction);
-    }
-  }else if(walkAction&&moving){
-    if(!walkAction.isRunning()){
-      playAction(walkAction);
-    }
-  }
-
-  const projected=project(player.x,0,player.z);
-  if(!projected)return;
-
-  /*
-   * project() menghasilkan koordinat canvas:
-   *   projected.x = dari kiri
-   *   projected.y = dari atas
-   *
-   * Kamera Three.js pula menggunakan:
-   *   +Y = ke atas
-   *
-   * Jadi:
-   *   screenX = projected.x - W/2
-   *   screenY = H/2 - projected.y
-   *
-   * Ini membetulkan masalah character berada terlalu tinggi.
-   */
-  const screenX=projected.x-(window.innerWidth/2);
-  const screenY=(window.innerHeight/2)-projected.y;
-
-  const mobile=window.innerWidth<=900;
-  const desiredHeight=mobile
-    ? GLB_HEIGHT_MOBILE
-    : GLB_HEIGHT_DESKTOP;
-
-  const scale=desiredHeight/modelHeight;
-
-  characterRoot.scale.setScalar(scale);
-
-  /*
-   * Kaki/tapak model tepat pada titik player.
-   * Offset positif menurunkan keseluruhan watak sedikit.
-   */
-  characterRoot.position.x=screenX;
-  characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET;
-  characterRoot.position.z=0;
-
-  /*
-   * Jangan ubah paksi X/Z model ketika idle.
-   * Ketika bergerak, model menghadap arah pergerakan.
-   */
-  if(moving){
-    characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;
-  }else{
-    characterRoot.rotation.y=GLB_MODEL_ROTATION_Y;
-  }
-
-  /*
-   * Bob kecil hanya ketika idle.
-   */
-  if(!moving){
-    const idleBob=Math.sin(now/550)*1.2;
-    characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET+idleBob;
-  }
+function renderGLB(t){
+ requestAnimationFrame(renderGLB);
+ if(!renderer||!scene||!camera3d)return;
+ updateGardenVisual(t||0);updateCharacter();
+ if(gardenActive){scene.background=new THREE.Color(0x9bdff4);scene.fog.color.set(0x9bdff4);renderer.render(scene,camera3d)}
+ else if(modelReady){scene.background=null;renderer.render(scene,camera3d)}
 }
 
-function renderGLB(){
-  requestAnimationFrame(renderGLB);
-
-  if(renderer&&scene&&camera3d){
-    updateGLB();
-    renderer.render(scene,camera3d);
-  }
-}
-
-/* ===== Mobile joystick — dikekalkan seperti asal ===== */
-const base=document.getElementById("joystickBase");
-const knob=document.getElementById("joystickKnob");
+/* V4 mobile joystick — dikekalkan. */
+const base=document.getElementById("joystickBase"),knob=document.getElementById("joystickKnob");
 let joyPointer=null;
-
-function moveJoystick(e){
-  const r=base.getBoundingClientRect();
-  const cx=r.left+r.width/2;
-  const cy=r.top+r.height/2;
-
-  let x=e.clientX-cx;
-  let y=e.clientY-cy;
-
-  const max=r.width*.34;
-  const d=Math.hypot(x,y);
-
-  if(d>max){
-    x=x/d*max;
-    y=y/d*max;
-  }
-
-  knob.style.transform="translate("+x+"px,"+y+"px)";
-
-  mobileStick.x=x/max;
-  mobileStick.z=y/max;
-  mobileStick.active=true;
-
-  player.targetX=null;
-  player.targetZ=null;
-}
-
-function resetJoystick(){
-  joyPointer=null;
-  knob.style.transform="translate(0,0)";
-  mobileStick.x=0;
-  mobileStick.z=0;
-  mobileStick.active=false;
-}
-
-base.addEventListener("pointerdown",function(e){
-  e.preventDefault();
-  joyPointer=e.pointerId;
-  base.setPointerCapture(e.pointerId);
-  moveJoystick(e);
-});
-
-base.addEventListener("pointermove",function(e){
-  if(e.pointerId===joyPointer)moveJoystick(e);
-});
-
-base.addEventListener("pointerup",resetJoystick);
-base.addEventListener("pointercancel",resetJoystick);
-
-document.getElementById("interactBtn").addEventListener("pointerdown",function(e){
-  e.preventDefault();
-  tryInteract();
-});
-
-document.getElementById("mapMobileBtn").addEventListener("pointerdown",function(e){
-  e.preventDefault();
-  openMap();
-});
+function moveJoystick(e){const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let x=e.clientX-cx,y=e.clientY-cy,max=r.width*.34,d=Math.hypot(x,y);if(d>max){x=x/d*max;y=y/d*max}knob.style.transform="translate("+x+"px,"+y+"px)";mobileStick.x=x/max;mobileStick.z=y/max;mobileStick.active=true;player.targetX=null;player.targetZ=null}
+function resetJoystick(){joyPointer=null;knob.style.transform="translate(0,0)";mobileStick.x=0;mobileStick.z=0;mobileStick.active=false}
+base.addEventListener("pointerdown",e=>{e.preventDefault();joyPointer=e.pointerId;base.setPointerCapture(e.pointerId);moveJoystick(e)});
+base.addEventListener("pointermove",e=>{if(e.pointerId===joyPointer)moveJoystick(e)});base.addEventListener("pointerup",resetJoystick);base.addEventListener("pointercancel",resetJoystick);
+document.getElementById("interactBtn").addEventListener("pointerdown",e=>{e.preventDefault();tryInteract()});
+document.getElementById("mapMobileBtn").addEventListener("pointerdown",e=>{e.preventDefault();openMap()});
 
 initGLB();
-resizeGLB();
-renderGLB();
-
-console.log(
-  "Pengembaraan Sains: GLB 3D aktif; model:",
-  MODEL_URL
-);
-
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif.");
 })();
 </script>
 </body>
