@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- V18.1: Level 2 sahaja; syntax createLowPolyAnimal diperbaiki; haiwan babi/pig dibuang. Sistem lain dikekalkan. -->
+<!-- V19: Level 3 Makmal Bahan 3D sebenar + 5 cahaya ilmu + format soalan makmal; Level 1/2 dan sistem lain dikekalkan. Sistem lain dikekalkan. -->
 <title>Pengembaraan Sains 3D — Pro v2</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧑‍🔬</text></svg>">
 <style>
@@ -54,6 +54,10 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 #interaction.show{display:block;pointer-events:auto;touch-action:auto}
 @keyframes panelIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 #choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.quizMode{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#6b57c8;background:#f1edff;border:1px solid #d8ccff;border-radius:999px;padding:7px 10px;display:inline-block;margin-bottom:8px}
+.matterChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.matterChoice{min-height:58px;text-align:left;font-weight:800}
+@media(max-width:620px){.matterChoices{grid-template-columns:1fr}.matterChoice{min-height:52px}}
 .choice{padding:11px;border-radius:12px;background:#eef5fa;font-weight:800;border:2px solid transparent;transition:.15s}
 .choice:hover{background:#dceeff;border-color:#74b8ff;transform:translateY(-2px)}
 .choice.correct{background:#dff8e8;border-color:#5ed48b}
@@ -210,11 +214,11 @@ const levels=[
  {name:"Makmal Bahan",icon:"🧪",color:"#a984ff",desc:"Cari 5 cahaya ilmu di makmal dan kenali sifat bahan.",
   mission:"Cahaya Ilmu: Bahan",theme:"matter",
   questions:[
-   {question:"Apakah keadaan jirim bagi air yang membeku?",choices:["Gas","Cecair","Pepejal","Plasma"],answer:2,target:"Pepejal"},
-   {question:"Bahan manakah biasanya mengalir dan mengambil bentuk bekas?",choices:["Batu","Air","Kayu","Besi"],answer:1,target:"Cecair"},
-   {question:"Apakah yang berlaku kepada ais apabila dipanaskan secukupnya?",choices:["Mencair","Membeku","Menjadi batu","Hilang tanpa perubahan"],answer:0,target:"Haba"},
-   {question:"Antara berikut, yang manakah contoh gas?",choices:["Udara","Batu","Air","Pasir"],answer:0,target:"Gas"},
-   {question:"Apakah sifat pepejal yang paling tepat?",choices:["Mempunyai bentuk sendiri","Sentiasa memenuhi seluruh ruang","Tidak mempunyai isipadu","Mengalir seperti air"],answer:0,target:"Bahan pepejal"}
+   {format:"observe",question:"🧊 Stesen pemerhatian: Air diletakkan di dalam peti sejuk sehingga membeku. Keadaan jirim yang manakah anda patut pilih?",choices:["Gas","Cecair","Pepejal","Plasma"],answer:2,target:"Stesen Pepejal"},
+   {format:"scenario",question:"🧪 Eksperimen: Anda menuang air dari bikar ke dalam kelalang. Air mengalir dan mengambil bentuk bekas. Apakah keadaan jirimnya?",choices:["Batu","Air","Kayu","Besi"],answer:1,target:"Stesen Cecair"},
+   {format:"sequence",question:"🔥 Cabaran perubahan jirim: Apabila ais menerima haba yang mencukupi, apakah perubahan yang berlaku?",choices:["Mencair","Membeku","Menjadi batu","Hilang tanpa perubahan"],answer:0,target:"Stesen Haba"},
+   {format:"identify",question:"💨 Pilih sampel yang mewakili GAS di dalam makmal.",choices:["Udara","Batu","Air","Pasir"],answer:0,target:"Stesen Gas"},
+   {format:"inspect",question:"🔬 Pemerhatian terakhir: Anda memegang bongkah bahan yang mengekalkan bentuknya sendiri. Apakah sifat pepejal yang paling tepat?",choices:["Mempunyai bentuk sendiri","Sentiasa memenuhi seluruh ruang","Tidak mempunyai isipadu","Mengalir seperti air"],answer:0,target:"Stesen Bahan Pepejal"}
   ]},
  {name:"Lembah Tenaga",icon:"⚡",color:"#ffd45c",desc:"Cari 5 cahaya ilmu di lembah tenaga dan jawab soalan tenaga.",
   mission:"Cahaya Ilmu: Tenaga",theme:"energy",
@@ -313,7 +317,7 @@ function loadLevel(i){
  document.documentElement.style.setProperty("--accent",t.color);
  buildWorld(i);
  if(typeof window.setGarden3DLevel==="function")window.setGarden3DLevel(t.theme);
- updateHUD();hint(t.theme==="animals"?"Terokai habitat haiwan • Cari mana-mana cahaya ilmu dan tekan E":"Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
+ updateHUD();hint(t.theme==="animals"?"Terokai habitat haiwan • Cari mana-mana cahaya ilmu dan tekan E":t.theme==="matter"?"Terokai makmal • Cari cahaya ilmu di setiap stesen bahan dan tekan E":"Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
  setTimeout(()=>hint("",false),4500);
 }
 
@@ -633,10 +637,23 @@ function openMission(questionIndex){
  document.getElementById("interaction").classList.add("show");
 }
 function makeQuiz(body,q,questionIndex){
- body.innerHTML=`<p><b>${q.question}</b></p><div id="choices"></div>`;
+ const isMatter=levels[state.level]?.theme==="matter";
+ if(isMatter){
+  const labels={
+   observe:"🔎 PEMERHATIAN MAKMAL",
+   scenario:"🧪 SITUASI EKSPERIMEN",
+   sequence:"🔥 CABARAN PERUBAHAN",
+   identify:"💨 KENAL PASTI SAMPEL",
+   inspect:"🔬 PEMERIKSAAN BAHAN"
+  };
+  const label=labels[q.format]||"🧫 CABARAN MAKMAL";
+  body.innerHTML=`<div class="quizMode">${label}</div><p><b>${q.question}</b></p><div id="choices" class="matterChoices"></div>`;
+ }else{
+  body.innerHTML=`<p><b>${q.question}</b></p><div id="choices"></div>`;
+ }
  const ch=body.querySelector("#choices");
  q.choices.forEach((x,i)=>{
-  const b=document.createElement("button");b.className="choice";b.textContent=x;
+  const b=document.createElement("button");b.className=isMatter?"choice matterChoice":"choice";b.textContent=x;
   b.onclick=()=>answer(i===q.answer,b,ch,questionIndex);ch.appendChild(b)
  });
 }
@@ -813,6 +830,24 @@ const MAT={
   hay:new THREE.MeshStandardMaterial({color:0xd8ae42,roughness:1,metalness:0}),
   hayLight:new THREE.MeshStandardMaterial({color:0xf0cc65,roughness:1,metalness:0}),
   waterFoam:new THREE.MeshStandardMaterial({color:0xe8fbff,roughness:.55,metalness:0}),
+
+  labWall:new THREE.MeshStandardMaterial({color:0xdbe7f3,roughness:.78,metalness:.02}),
+  labWallDark:new THREE.MeshStandardMaterial({color:0x9fb5ca,roughness:.82,metalness:.02}),
+  labFloor:new THREE.MeshStandardMaterial({color:0x5c7182,roughness:.72,metalness:.12}),
+  labFloorLight:new THREE.MeshStandardMaterial({color:0xbfcbd5,roughness:.76,metalness:.04}),
+  labSteel:new THREE.MeshStandardMaterial({color:0x9aa8b2,roughness:.28,metalness:.72}),
+  labSteelDark:new THREE.MeshStandardMaterial({color:0x43515b,roughness:.32,metalness:.65}),
+  labGlass:new THREE.MeshPhysicalMaterial({color:0xbdefff,roughness:.08,metalness:.02,transparent:true,opacity:.42,transmission:.25}),
+  labBlue:new THREE.MeshStandardMaterial({color:0x3b82d0,roughness:.42,metalness:.15}),
+  labCyan:new THREE.MeshStandardMaterial({color:0x35c6e8,emissive:0x0b5c78,emissiveIntensity:.35,roughness:.32,metalness:.1}),
+  labPurple:new THREE.MeshStandardMaterial({color:0x9a6cff,emissive:0x3a1d80,emissiveIntensity:.25,roughness:.36,metalness:.08}),
+  labOrange:new THREE.MeshStandardMaterial({color:0xff9d45,roughness:.4,metalness:.08}),
+  labRed:new THREE.MeshStandardMaterial({color:0xed5b5b,roughness:.4,metalness:.08}),
+  labGreen:new THREE.MeshStandardMaterial({color:0x52c77a,roughness:.42,metalness:.08}),
+  labYellow:new THREE.MeshStandardMaterial({color:0xffd34e,roughness:.4,metalness:.08}),
+  labGlassBlue:new THREE.MeshPhysicalMaterial({color:0x66d8ff,roughness:.04,metalness:0,transparent:true,opacity:.7,transmission:.2}),
+  labLiquid:new THREE.MeshPhysicalMaterial({color:0x5bc8ff,roughness:.12,metalness:0,transparent:true,opacity:.82}),
+  labLiquidPurple:new THREE.MeshPhysicalMaterial({color:0xa875ff,roughness:.12,metalness:0,transparent:true,opacity:.82}),
 
   cowWhite:new THREE.MeshStandardMaterial({color:0xf4f0df,roughness:.9,metalness:0}),
   cowBlack:new THREE.MeshStandardMaterial({color:0x403c3b,roughness:.9,metalness:0}),
@@ -1380,6 +1415,193 @@ function updateAnimalVisual(t){
  animalWaterRipples.forEach((r,i)=>{r.scale.setScalar(1+.12*Math.sin(sec*1.8+i));r.rotation.z=sec*.12+i*.3})
 }
 
+
+/* ===== LEVEL 3: MAKMAL BAHAN 3D SEBENAR ===== */
+let matterAnimated=[];
+let matterFluids=[];
+let matterMachines=[];
+
+function matterAdd(obj){gardenGroup.add(obj);return obj}
+function labBox(x,y,z,w,h,d,mat,rotY=0){
+ const o=mesh(new THREE.BoxGeometry(w,h,d),mat,true,true);
+ o.position.set(x,y,z);o.rotation.y=rotY;return matterAdd(o);
+}
+function labCylinder(x,y,z,r,h,mat,radial=16){
+ const o=mesh(new THREE.CylinderGeometry(r,r,h,radial),mat,true,true);o.position.set(x,y,z);return matterAdd(o);
+}
+function labGlow(x,y,z,color=0x6feaff,intensity=1.6,distance=6){
+ const l=new THREE.PointLight(color,intensity,distance,2);l.position.set(x,y,z);matterAdd(l);return l
+}
+function createLabTube(x,z,scale=1,mat=MAT.labGlassBlue){
+ const g=new THREE.Group();g.position.set(x,.72,z);g.scale.setScalar(scale);
+ const tube=mesh(new THREE.CylinderGeometry(.25,.25,1.35,18,1,true),MAT.labGlass,true,false);g.add(tube);
+ const liquid=mesh(new THREE.CylinderGeometry(.19,.19,.72,18),mat,true,false);liquid.position.y=-.18;g.add(liquid);
+ const base=mesh(new THREE.CylinderGeometry(.34,.34,.12,18),MAT.labSteel,true,true);base.position.y=-.73;g.add(base);
+ matterAdd(g);matterAnimated.push({group:g,type:"tube",phase:Math.random()*7});matterFluids.push(liquid);return g
+}
+function createBeaker(x,z,scale=1,mat=MAT.labLiquid){
+ const g=new THREE.Group();g.position.set(x,.68,z);g.scale.setScalar(scale);
+ const glass=mesh(new THREE.CylinderGeometry(.38,.28,.75,18,1,true),MAT.labGlassBlue,true,false);g.add(glass);
+ const liquid=mesh(new THREE.CylinderGeometry(.30,.24,.30,18),mat,true,false);liquid.position.y=-.12;g.add(liquid);
+ const rim=mesh(new THREE.TorusGeometry(.38,.035,8,24),MAT.labSteel,false,true);g.add(rim);
+ matterAdd(g);matterAnimated.push({group:g,type:"beaker",phase:Math.random()*7});matterFluids.push(liquid);return g
+}
+function createFlask(x,z,scale=1,mat=MAT.labLiquidPurple){
+ const g=new THREE.Group();g.position.set(x,.72,z);g.scale.setScalar(scale);
+ const bulb=mesh(new THREE.SphereGeometry(.34,16,12),MAT.labGlassBlue,true,false);bulb.scale.set(1,1,.92);g.add(bulb);
+ const neck=mesh(new THREE.CylinderGeometry(.13,.13,.55,14),MAT.labGlassBlue,true,false);neck.position.y=.42;g.add(neck);
+ const liquid=mesh(new THREE.SphereGeometry(.26,14,10),mat,true,false);liquid.scale.set(1,.7,.9);liquid.position.y=-.06;g.add(liquid);
+ const stopper=mesh(new THREE.CylinderGeometry(.14,.14,.08,14),MAT.labSteelDark,true,true);stopper.position.y=.72;g.add(stopper);
+ matterAdd(g);matterAnimated.push({group:g,type:"flask",phase:Math.random()*7});return g
+}
+function createLabBench(x,z,w=7){
+ const top=labBox(x,1.35,z,w,.28,1.65,MAT.labSteelDark);
+ const wood=labBox(x,.72,z,w,.18,1.5,MAT.labFloorLight);
+ for(const sx of [-1,1])for(const sz of [-.55,.55])labBox(x+sx*(w/2-.35),.62,z+sz,.22,1.35,.22,MAT.labSteel);
+ labBox(x,.17,z,w+.35,.12,1.95,MAT.labFloorLight);
+ return top
+}
+function createShelf(x,z){
+ for(let y=1.1;y<=4.2;y+=1.05)labBox(x,y,z,7,.13,.65,MAT.labSteelDark);
+ for(const sx of [-3.35,3.35])labBox(x+sx,2.5,z,.14,4.9,.72,MAT.labSteel);
+}
+function createCabinet(x,z){
+ labBox(x,1.25,z,3.0,2.5,1.2,MAT.labWallDark);
+ for(const sx of [-.75,.75]){
+  labBox(x+sx,1.25,z-.62,1.3,2.05,.06,MAT.labSteel);
+  labBox(x+sx,1.25,z-.67,.78,.06,.08,MAT.labBlue);
+ }
+}
+function createBunsen(x,z){
+ labCylinder(x,.28,z,.23,.16,MAT.labSteelDark,16);
+ labCylinder(x,.62,z,.09,.65,MAT.labSteel,12);
+ const flameMat=new THREE.MeshStandardMaterial({color:0xffc44d,emissive:0xff6b16,emissiveIntensity:1.8});
+ const flame=mesh(new THREE.ConeGeometry(.16,.48,10),flameMat,true,false);flame.position.set(x,.98,z);matterAdd(flame);
+ matterAnimated.push({group:flame,type:"flame",phase:Math.random()*7});
+ labGlow(x,1.0,z,0xff8b28,1.0,3.5)
+}
+function createScaleStation(x,z){
+ labBox(x,.72,z,1.65,1.3,1.15,MAT.labSteel);
+ labBox(x,1.43,z-.03,1.15,.08,.72,MAT.labSteelDark);
+ labBox(x,1.7,z-.03,.75,.12,.55,MAT.labGlassBlue);
+ const pan=mesh(new THREE.CylinderGeometry(.42,.42,.08,20),MAT.labSteel,true,true);pan.position.set(x,1.78,z-.03);matterAdd(pan);
+}
+function createSolidStation(x,z){
+ createLabBench(x,z,6.8);
+ for(let i=0;i<5;i++){
+  const mat=[MAT.stone,MAT.wood,MAT.labSteel,MAT.soilDark,MAT.labWallDark][i];
+  const cube=mesh(new THREE.BoxGeometry(.62,.62,.62),mat,true,true);
+  cube.position.set(x-2.5+i*1.25,1.82,z);cube.rotation.set(rand(-.15,.15),rand(0,Math.PI),rand(-.15,.15));matterAdd(cube);
+ }
+}
+function createLiquidStation(x,z){
+ createLabBench(x,z,7.2);
+ createBeaker(x-2.5,z,.8,MAT.labLiquid);
+ createFlask(x,z,.9,MAT.labLiquidPurple);
+ createBeaker(x+2.3,z,.85,MAT.labGreen);
+ createBunsen(x+.8,z-.15);
+}
+function createGasStation(x,z){
+ createLabBench(x,z,7.2);
+ for(let i=0;i<4;i++){
+  const bulb=mesh(new THREE.SphereGeometry(.45,16,12),MAT.labGlassBlue,true,false);bulb.position.set(x-2.2+i*1.45,1.85,z);
+  const gas=mesh(new THREE.SphereGeometry(.33,14,10),[MAT.labCyan,MAT.labPurple,MAT.labOrange,MAT.labGreen][i],true,false);gas.position.copy(bulb.position);matterAdd(bulb);matterAdd(gas);
+  const neck=mesh(new THREE.CylinderGeometry(.12,.12,.35,12),MAT.labSteelDark,true,true);neck.position.set(bulb.position.x,2.2,z);matterAdd(neck);
+ }
+}
+function createHeatStation(x,z){
+ createLabBench(x,z,7.4);
+ createBunsen(x-1.9,z);
+ createBeaker(x+.15,z,.9,MAT.labLiquidPurple);
+ createScaleStation(x+2.15,z);
+}
+function createMatterRoom(){
+ // Main laboratory building shell.
+ labBox(0,.25,0,62,.25,62,MAT.labFloor,false);
+ labBox(0,5.5,-30,62,11,.35,MAT.labWall);
+ labBox(-30,5.5,0,.35,11,60,MAT.labWall);
+ labBox(30,5.5,0,.35,11,60,MAT.labWall);
+ labBox(0,5.5,30,62,11,.35,MAT.labWall);
+ // Large clean ceiling beams and skylights.
+ for(let x=-24;x<=24;x+=12)labBox(x,10.6,0,.28,.45,58,MAT.labSteelDark);
+ for(let x=-24;x<=24;x+=12){
+  const skylight=labBox(x,10.85,0,7.5,.08,8,MAT.labGlassBlue);
+  skylight.castShadow=false;
+ }
+ // Floor lanes.
+ for(let z=-25;z<=25;z+=5)labBox(0,.08,z,58,.06,.12,MAT.labFloorLight);
+ for(let x=-25;x<=25;x+=5)labBox(x,.085,0,.12,.065,58,MAT.labFloorLight);
+ // Door/entrance frame.
+ labBox(0,2.6,29.7,8,.35,.5,MAT.labSteelDark);
+ labBox(-4,2.5,29.4,.45,5,.55,MAT.labBlue);
+ labBox(4,2.5,29.4,.45,5,.55,MAT.labBlue);
+ // Interior partitions.
+ labBox(-9,3.2,-1,.18,6.4,52,MAT.labWallDark);
+ labBox(9,3.2,-1,.18,6.4,52,MAT.labWallDark);
+ // Ceiling lights.
+ for(const x of [-24,-12,0,12,24])for(const z of [-24,-8,8,24]){
+  const panel=labBox(x,10.25,z,3.2,.12,.7,MAT.labCyan);panel.castShadow=false;labGlow(x,10.0,z,0x66ddff,.55,7);
+ }
+}
+function createMatterDecor(){
+ // Left/right shelves make the lab visually dense but organized.
+ createShelf(-25,-12);createShelf(-25,12);createShelf(25,-12);createShelf(25,12);
+ createCabinet(-25,22);createCabinet(25,22);
+ for(const p of [[-23,-24],[-18,-24],[18,-24],[23,-24],[15,23],[-15,23]])createBeaker(p[0],p[1],.7,[MAT.labLiquid,MAT.labLiquidPurple,MAT.labGreen][Math.floor(Math.random()*3)]);
+ // Safety/observation consoles.
+ for(const x of [-18,18]){
+  labBox(x,.8,0,4.5,1.55,1.0,MAT.labSteelDark);
+  labBox(x,1.65,0,3.7,.10,.72,MAT.labCyan);
+  labGlow(x,1.8,-.1,0x43d9ff,.7,4);
+ }
+ // Periodic-table style wall tiles.
+ for(let r=0;r<3;r++)for(let c=0;c<8;c++){
+  const tile=labBox(-21+c*1.25,6.8,-29.72,.92,.92,.06,[MAT.labBlue,MAT.labPurple,MAT.labCyan,MAT.labGreen][(r+c)%4]);
+  tile.castShadow=false;
+ }
+ // Floating dust/spark particles around active workbenches.
+ for(let i=0;i<24;i++){
+  const p=mesh(new THREE.SphereGeometry(.035,6,5),i%2?MAT.labCyan:MAT.labYellow,false,false);
+  p.position.set(rand(-26,26),rand(1.5,6.5),rand(-25,25));matterAdd(p);
+  matterAnimated.push({group:p,type:"spark",phase:Math.random()*7});
+ }
+}
+function createMatterWorld(){
+ gardenGroup=new THREE.Group();gardenGroup.name="MakmalBahan3D_Realistic";scene.add(gardenGroup);
+ const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,32,32);
+ const pos=terrainGeo.attributes.position;
+ for(let i=0;i<pos.count;i++){
+  const x=pos.getX(i),z=pos.getY(i);
+  pos.setZ(i,(Math.sin(x*.17)*.035+Math.cos(z*.15)*.03));
+ }
+ terrainGeo.computeVertexNormals();
+ const floor=mesh(terrainGeo,MAT.labFloorLight,false,true);floor.rotation.x=-Math.PI/2;floor.position.y=-.02;matterAdd(floor);
+ createMatterRoom();
+ createSolidStation(-18,-8);
+ createLiquidStation(15,-7);
+ createHeatStation(12,-12);
+ createGasStation(-15,7);
+ createScaleStation(0,18);
+ createMatterDecor();
+ buildMissionGarden();buildStartGarden();
+ matterAnimated.forEach(a=>{if(a.group.userData)a.group.userData.baseY=a.group.position.y});
+ gardenWorldReady=true;
+}
+function updateMatterVisual(t){
+ if(!gardenWorldReady)return;
+ const sec=t*.001;
+ matterAnimated.forEach(a=>{
+  const g=a.group,ph=a.phase;
+  if(a.type==="tube"||a.type==="beaker"||a.type==="flask"){
+   g.rotation.y=Math.sin(sec*.55+ph)*.035;
+  }else if(a.type==="flame"){
+   g.scale.y=.88+.18*Math.sin(sec*10+ph);g.scale.x=.92+.08*Math.sin(sec*8+ph);
+  }else if(a.type==="spark"){
+   g.position.y+=Math.sin(sec*1.8+ph)*.003;
+  }
+ });
+ matterFluids.forEach((m,i)=>{m.position.y+=Math.sin(sec*1.5+i)*.0008});
+}
 function clearQuestLights3D(){
  questLights3D.forEach(item=>gardenGroup.remove(item.group));
  questLights3D=[];
@@ -1411,7 +1633,7 @@ window.setGardenQuestionLights=function(questions,positions){
  if(!gardenGroup)return;
  clearQuestLights3D();
  const theme=levels[state.level]?.theme;
- if(theme!=="plants"&&theme!=="animals")return;
+ if(theme!=="plants"&&theme!=="animals"&&theme!=="matter")return;
  questLightPositions.forEach((pos,i)=>createQuestLight3D(i,pos));
 };
 function updateQuestLights3D(t){
@@ -1436,6 +1658,7 @@ function updateGardenVisual(t){
  gardenTime=t*.001;
  updateQuestLights3D(t);
  if(levels[state.level]?.theme==="animals")updateAnimalVisual(t);
+ if(levels[state.level]?.theme==="matter")updateMatterVisual(t);
  animatedPlants.forEach((g,i)=>{
   const base=g.userData.phase||0;g.rotation.z=Math.sin(gardenTime*1.1+base)*.025;g.position.y=Math.sin(gardenTime*1.7+base)*.018;
  });
@@ -1474,7 +1697,7 @@ function loadCharacter(){
 }
 
 window.setGarden3DLevel=function(theme){
- const shouldUse3D=theme==="plants"||theme==="animals";
+ const shouldUse3D=theme==="plants"||theme==="animals"||theme==="matter";
  gardenActive=shouldUse3D;
  glbCanvas.style.display=gardenActive?"block":"none";
  if(!scene||!camera3d)return;
@@ -1484,7 +1707,7 @@ window.setGarden3DLevel=function(theme){
   gardenGroup=null;
  }
  questLights3D=[];questLightPositions=[];animatedPlants=[];animalCreatures=[];
- animalWaterMesh=null;gardenWorldReady=false;
+ matterAnimated=[];matterFluids=[];matterMachines=[];animalWaterMesh=null;gardenWorldReady=false;
 
  if(theme==="animals"){
   scene.background=new THREE.Color(0x8edff4);
@@ -1494,6 +1717,10 @@ window.setGarden3DLevel=function(theme){
   scene.background=new THREE.Color(0x9bdff4);
   scene.fog.color.set(0x9bdff4);
   buildGardenWorld();
+ }else if(theme==="matter"){
+  scene.background=new THREE.Color(0x8aa7bd);
+  scene.fog.color.set(0x8aa7bd);
+  buildMatterWorld();
  }
 
  if(shouldUse3D){
@@ -1561,7 +1788,7 @@ function renderGLB(t){
  updateGardenVisual(t||0);updateCharacter();
  if(gardenActive){
   const theme=levels[state.level]?.theme;
-  const bg=theme==="animals"?0x8edff4:0x9bdff4;
+  const bg=theme==="animals"?0x8edff4:(theme==="matter"?0x8aa7bd:0x9bdff4);
   scene.background=new THREE.Color(bg);scene.fog.color.set(bg);
   renderer.render(scene,camera3d)
  }
