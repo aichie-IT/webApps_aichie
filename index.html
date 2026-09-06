@@ -312,7 +312,7 @@ function loadLevel(i){
  document.documentElement.style.setProperty("--accent",t.color);
  buildWorld(i);
  if(typeof window.setGarden3DLevel==="function")window.setGarden3DLevel(t.theme);
- updateHUD();hint("Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
+ updateHUD();hint(t.theme==="animals"?"Terokai habitat haiwan • Cari mana-mana cahaya ilmu dan tekan E":"Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
  setTimeout(()=>hint("",false),4500);
 }
 
@@ -325,7 +325,11 @@ function getQuestionPositions(theme){
   {x:-27,z:-10}  // kelompok pisang/tumbuhan
  ];
  if(theme==="animals")return[
-  {x:15,z:-7},{x:-15,z:6},{x:17,z:10},{x:10,z:4},{x:-9,z:-2}
+  {x:18,z:-10},
+  {x:-18,z:-8},
+  {x:0,z:17},
+  {x:16,z:12},
+  {x:-12,z:15}
  ];
  if(theme==="matter")return[
   {x:15,z:-7},{x:-15,z:7},{x:12,z:-12},{x:-10,z:-8},{x:0,z:18}
@@ -354,8 +358,8 @@ function buildWorld(i){
   world.nodes.push({x:14,z:-8,type:"tree"},{x:-14,z:-7,type:"tree"},{x:17,z:8,type:"tree"});
   world.decor.push(...makeDecor("flower",26),...makeDecor("sprout",12));
  }else if(theme==="animals"){
-  world.nodes.push({x:15,z:-7,type:"habitat",label:"Habitat"},{x:-15,z:6,type:"tree"},{x:17,z:10,type:"tree"});
-  world.animals=[{x:10,z:4,type:"butterfly",phase:0},{x:-9,z:-2,type:"butterfly",phase:2}];
+  world.nodes.push({x:18,z:-10,type:"habitat",label:"Habitat Mamalia"},{x:0,z:17,type:"water",label:"Kolam Air"},{x:-18,z:-8,type:"flowerHabitat",label:"Taman Rama-rama"});
+  world.animals=[{x:-18,z:-8,type:"butterfly",phase:0},{x:-12,z:15,type:"butterfly",phase:2}];
   world.decor.push(...makeDecor("flower",22),...makeDecor("grass",15));
  }else if(theme==="matter"){
   world.nodes.push({x:15,z:-7,type:"lab",label:"Makmal"},{x:-15,z:7,type:"rock"});
@@ -790,7 +794,18 @@ const MAT={
   berry:new THREE.MeshStandardMaterial({color:0x365bd8,roughness:.65,metalness:0}),
   banana:new THREE.MeshStandardMaterial({color:0xffdc42,roughness:.7,metalness:0}),
   cactus:new THREE.MeshStandardMaterial({color:0x39a85a,roughness:.82,metalness:0}),
-  mushroom:new THREE.MeshStandardMaterial({color:0xef5146,roughness:.75,metalness:0})
+  mushroom:new THREE.MeshStandardMaterial({color:0xef5146,roughness:.75,metalness:0}),
+  animalBrown:new THREE.MeshStandardMaterial({color:0x9a623c,roughness:.9,metalness:0}),
+  animalLight:new THREE.MeshStandardMaterial({color:0xd9a66f,roughness:.88,metalness:0}),
+  animalDark:new THREE.MeshStandardMaterial({color:0x4b352a,roughness:.9,metalness:0}),
+  animalWhite:new THREE.MeshStandardMaterial({color:0xf6f2df,roughness:.82,metalness:0}),
+  animalBlack:new THREE.MeshStandardMaterial({color:0x20252b,roughness:.8,metalness:0}),
+  fishBlue:new THREE.MeshStandardMaterial({color:0x3e8eea,roughness:.6,metalness:0}),
+  fishOrange:new THREE.MeshStandardMaterial({color:0xff8a32,roughness:.6,metalness:0}),
+  waterDeep:new THREE.MeshPhysicalMaterial({color:0x1b9ed0,roughness:.08,metalness:.04,transparent:true,opacity:.86}),
+  habitatWood:new THREE.MeshStandardMaterial({color:0x7a4e32,roughness:.92,metalness:0}),
+  habitatStone:new THREE.MeshStandardMaterial({color:0x8f9690,roughness:.96,metalness:0}),
+  habitatSand:new THREE.MeshStandardMaterial({color:0xd8bb82,roughness:1,metalness:0})
 };
 
 function findClip(clips,names){
@@ -1083,6 +1098,213 @@ function buildStartGarden(){
  const sign=mesh(new THREE.BoxGeometry(3.2,.9,.12),MAT.white,true,true);sign.position.set(0,2.1,0);add(sign);
 }
 
+
+/* ===== LEVEL 2: DUNIA HAIWAN 3D SEBENAR ===== */
+let animalCreatures=[];
+let animalWaterMesh=null;
+
+function animalAdd(obj){gardenGroup.add(obj);return obj}
+
+function createLowPolyAnimal(x,z,scale=1,type="rabbit"){
+ const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);
+ let bodyMat=MAT.animalBrown,bellyMat=MAT.animalLight;
+ if(type==="rabbit"){bodyMat=MAT.animalWhite;bellyMat=MAT.animalLight}
+ if(type==="fox"){bodyMat=MAT.orange;bellyMat=MAT.animalWhite}
+ const body=mesh(new THREE.SphereGeometry(.75,12,8),bodyMat,true,true);
+ body.scale.set(1.35,.85,1.65);body.position.y=.82;g.add(body);
+ const belly=mesh(new THREE.SphereGeometry(.56,10,7),bellyMat,true,true);
+ belly.scale.set(1.05,.85,.85);belly.position.set(0,.76,-.38);g.add(belly);
+ const head=mesh(new THREE.SphereGeometry(.48,12,8),bodyMat,true,true);
+ head.position.set(0,1.35,.72);g.add(head);
+ const snout=mesh(new THREE.SphereGeometry(.25,10,7),bellyMat,true,true);
+ snout.scale.set(1,.75,1.2);snout.position.set(0,1.27,1.08);g.add(snout);
+ for(const sx of [-.17,.17]){
+  const eye=mesh(new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,true,false);
+  eye.position.set(sx,1.49,1.12);g.add(eye);
+ }
+ for(const sx of [-.42,.42]){
+  const ear=mesh(new THREE.ConeGeometry(.15,.48,8),bodyMat,true,true);
+  ear.position.set(sx,1.78,.68);ear.rotation.z=sx<0?.22:-.22;g.add(ear);
+ }
+ for(const sx of [-.45,.45])for(const sz of [-.48,.48]){
+  const leg=mesh(new THREE.CylinderGeometry(.105,.13,.62,8),bodyMat,true,true);
+  leg.position.set(sx,.43,sz);g.add(leg);
+  const foot=mesh(new THREE.SphereGeometry(.14,8,6),bellyMat,true,true);
+  foot.scale.set(1,.55,1.15);foot.position.set(sx,.13,sz+.06);g.add(foot);
+ }
+ const tail=mesh(new THREE.SphereGeometry(.25,9,7),bodyMat,true,true);
+ tail.scale.set(.7,1,1.7);tail.position.set(0,.98,-1.35);g.add(tail);
+ g.userData.phase=Math.random()*Math.PI*2;
+ animalCreatures.push({group:g,type,phase:g.userData.phase});
+ return animalAdd(g);
+}
+
+function createFish(x,z,scale=1,colorMat=MAT.fishBlue){
+ const g=new THREE.Group();g.position.set(x,.55,z);g.scale.setScalar(scale);
+ const body=mesh(new THREE.SphereGeometry(.42,12,8),colorMat,true,true);
+ body.scale.set(1.65,.72,1);g.add(body);
+ const tail=mesh(new THREE.ConeGeometry(.28,.55,6),colorMat,true,true);
+ tail.rotation.z=Math.PI/2;tail.position.x=-.65;g.add(tail);
+ const eye=mesh(new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,true,false);
+ eye.position.set(.48,.13,.25);g.add(eye);
+ const fin=mesh(new THREE.ConeGeometry(.14,.38,6),MAT.flowerYellow,true,true);
+ fin.rotation.z=-Math.PI/2;fin.position.set(.05,.34,0);g.add(fin);
+ g.userData.phase=Math.random()*Math.PI*2;
+ animalCreatures.push({group:g,type:"fish",phase:g.userData.phase});
+ return animalAdd(g);
+}
+
+function createFrog(x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,.12,z);g.scale.setScalar(scale);
+ const body=mesh(new THREE.SphereGeometry(.52,12,8),MAT.leafDark,true,true);
+ body.scale.set(1.25,.65,1.35);body.position.y=.45;g.add(body);
+ const head=mesh(new THREE.SphereGeometry(.43,12,8),MAT.leaf,true,true);
+ head.scale.set(1.2,.7,1.05);head.position.set(0,.76,.22);g.add(head);
+ for(const sx of [-.18,.18]){
+  const eye=mesh(new THREE.SphereGeometry(.13,10,7),MAT.flowerWhite,true,true);
+  eye.position.set(sx,.99,.46);g.add(eye);
+  const pupil=mesh(new THREE.SphereGeometry(.045,8,6),MAT.animalBlack,true,false);
+  pupil.position.set(sx,.99,.56);g.add(pupil);
+ }
+ animalCreatures.push({group:g,type:"frog",phase:Math.random()*Math.PI*2});
+ return animalAdd(g);
+}
+
+function createButterfly3D(x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,rand(1.4,2.6),z);g.scale.setScalar(scale);
+ const body=mesh(new THREE.CapsuleGeometry(.055,.42,5,8),MAT.animalDark,true,true);
+ body.rotation.x=Math.PI/2;g.add(body);
+ for(const side of [-1,1]){
+  const wing=mesh(new THREE.SphereGeometry(.28,10,7),side<0?MAT.flowerPink:MAT.flowerPurple,true,true);
+  wing.scale.set(1.15,.18,.8);wing.position.set(side*.22,.08,0);g.add(wing);
+  const wing2=mesh(new THREE.SphereGeometry(.19,10,7),MAT.flowerYellow,true,true);
+  wing2.scale.set(1,.16,.7);wing2.position.set(side*.18,-.12,.12);g.add(wing2);
+ }
+ animalCreatures.push({group:g,type:"butterfly",phase:Math.random()*Math.PI*2});
+ return animalAdd(g);
+}
+
+function createBird3D(x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,rand(4,6),z);g.scale.setScalar(scale);
+ const body=mesh(new THREE.SphereGeometry(.38,10,7),MAT.fishBlue,true,true);
+ body.scale.set(1.35,.7,1);g.add(body);
+ const head=mesh(new THREE.SphereGeometry(.25,10,7),MAT.animalWhite,true,true);
+ head.position.set(.35,.16,.12);g.add(head);
+ const beak=mesh(new THREE.ConeGeometry(.08,.28,6),MAT.flowerYellow,true,true);
+ beak.rotation.z=-Math.PI/2;beak.position.set(.61,.16,.12);g.add(beak);
+ for(const side of [-1,1]){
+  const wing=mesh(new THREE.SphereGeometry(.32,9,7),MAT.fishBlue,true,true);
+  wing.scale.set(1.15,.15,.65);wing.position.set(-.05,0,side*.35);g.add(wing);
+ }
+ animalCreatures.push({group:g,type:"bird",phase:Math.random()*Math.PI*2});
+ return animalAdd(g);
+}
+
+function buildAnimalPond(){
+ const rim=mesh(new THREE.CylinderGeometry(10.5,11.2,.45,56),MAT.habitatStone,false,true);
+ rim.scale.z=.72;rim.position.set(0,.12,17);animalAdd(rim);
+ animalWaterMesh=mesh(new THREE.CylinderGeometry(10,10,.18,56),MAT.waterDeep,false,true);
+ animalWaterMesh.scale.z=.72;animalWaterMesh.position.set(0,.34,17);animalAdd(animalWaterMesh);
+ for(let i=0;i<18;i++)createFish(rand(-6.5,6.5),17+rand(-4.4,4.4),rand(.55,.9),i%2?MAT.fishBlue:MAT.fishOrange);
+ for(let i=0;i<8;i++){
+  const lily=mesh(new THREE.CircleGeometry(rand(.3,.65),16),MAT.leafLight,false,false);
+  lily.rotation.x=-Math.PI/2;lily.position.set(rand(-6.5,6.5),.48,17+rand(-4.5,4.5));animalAdd(lily);
+ }
+}
+
+function buildAnimalHabitat(){
+ const soil=mesh(new THREE.BoxGeometry(18,.18,15),MAT.habitatSand,false,true);
+ soil.position.set(18,.09,-10);animalAdd(soil);
+ for(const x of [14,22]){
+  const post=mesh(new THREE.BoxGeometry(.35,2,.35),MAT.habitatWood,true,true);
+  post.position.set(x,.95,-14);animalAdd(post);
+ }
+ const roof=mesh(new THREE.BoxGeometry(10,.35,3.5),MAT.habitatWood,true,true);
+ roof.position.set(18,2.25,-14);animalAdd(roof);
+ for(let i=0;i<5;i++)createLowPolyAnimal(14+rand(0,8),-10+rand(-5,5),rand(.7,1.05),i%3===0?"deer":i%3===1?"fox":"rabbit");
+}
+
+function buildButterflyGarden(){
+ const bed=mesh(new THREE.BoxGeometry(18,.15,14),MAT.grass2,false,true);
+ bed.position.set(-18,.08,-8);animalAdd(bed);
+ const mats=[MAT.flowerPink,MAT.flowerYellow,MAT.flowerOrange,MAT.flowerBlue,MAT.flowerPurple];
+ for(let i=0;i<45;i++)createFlower(-18+rand(-8,8),-8+rand(-6,6),mats[Math.floor(Math.random()*mats.length)],rand(.7,1.3));
+ for(let i=0;i<10;i++)createButterfly3D(-18+rand(-8,8),-8+rand(-6,6),rand(.7,1.05));
+}
+
+function buildAnimalGrassland(){
+ const bed=mesh(new THREE.BoxGeometry(18,.12,14),MAT.grass2,false,true);
+ bed.position.set(-12,.06,15);animalAdd(bed);
+ for(let i=0;i<36;i++){
+  const tuft=mesh(new THREE.ConeGeometry(rand(.07,.16),rand(.45,.85),6),MAT.leafLight,true,true);
+  tuft.position.set(-12+rand(-9,9),.35,15+rand(-7,7));animalAdd(tuft);
+ }
+ for(let i=0;i<7;i++)createFrog(rand(7,19),rand(11,20),rand(.7,1.05));
+}
+
+function buildAnimalWorld(){
+ gardenGroup=new THREE.Group();gardenGroup.name="DuniaHaiwan3D";scene.add(gardenGroup);
+ const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,48,48);
+ const pos=terrainGeo.attributes.position;
+ for(let i=0;i<pos.count;i++){
+  const x=pos.getX(i),z=pos.getY(i),edge=Math.max(Math.abs(x),Math.abs(z));
+  pos.setZ(i,(Math.sin(x*.18)*.045+Math.cos(z*.22)*.035)*Math.max(0,1-edge/36));
+ }
+ terrainGeo.computeVertexNormals();
+ const terrain=mesh(terrainGeo,MAT.grass2,false,true);
+ terrain.rotation.x=-Math.PI/2;terrain.position.y=GROUND_Y;animalAdd(terrain);
+
+ const path=mesh(new THREE.BoxGeometry(7,.10,64),MAT.path,false,true);
+ path.position.set(0,.05,0);animalAdd(path);
+ for(let z=-27;z<=27;z+=4){
+  const stone=mesh(new THREE.BoxGeometry(5.8,.12,2.15),MAT.stone,false,true);
+  stone.position.set(rand(-.3,.3),.12,z+rand(-.18,.18));animalAdd(stone);
+ }
+ buildAnimalPond();
+ buildAnimalHabitat();
+ buildButterflyGarden();
+ buildAnimalGrassland();
+
+ const trees=[[-30,-24,1.2],[-20,-29,.9],[20,-29,1], [30,-22,1.25],[-31,4,.95],[31,5,1.0],[-28,25,1.05],[28,25,1.15],[8,-30,.75],[-8,-30,.8]];
+ trees.forEach(t=>createTree(...t));
+ for(let i=0;i<8;i++)createBird3D(rand(-27,27),rand(-24,24),rand(.7,1.05));
+ buildAnimalFences();
+ buildMissionGarden();
+ buildStartGarden();
+ gardenWorldReady=true;
+}
+
+function buildAnimalFences(){
+ for(const x of [-33,33]){
+  for(let z=-29;z<=29;z+=4){
+   const p=mesh(new THREE.BoxGeometry(.3,1.1,.3),MAT.habitatWood,true,true);
+   p.position.set(x,.55,z);animalAdd(p);
+  }
+  const rail=mesh(new THREE.BoxGeometry(.18,.18,58),MAT.habitatWood,true,true);
+  rail.position.set(x,.78,0);animalAdd(rail);
+ }
+}
+
+function updateAnimalVisual(t){
+ if(!gardenWorldReady)return;
+ const sec=t*.001;
+ animalCreatures.forEach(a=>{
+  const g=a.group,ph=a.phase;
+  if(a.type==="butterfly"){
+   g.position.y+=Math.sin(sec*4+ph)*.003;
+   g.rotation.y=sec*.55+ph;
+  }else if(a.type==="bird"){
+   g.position.y+=Math.sin(sec*2+ph)*.008;
+   g.rotation.z=Math.sin(sec*2+ph)*.05;
+  }else if(a.type==="fish"){
+   g.position.y=.55+Math.sin(sec*2.4+ph)*.07;
+  }else if(a.type==="frog"){
+   g.position.y=.12+Math.max(0,Math.sin(sec*1.2+ph))*.035;
+  }
+ });
+ if(animalWaterMesh)animalWaterMesh.position.y=.34+Math.sin(sec*1.35)*.025;
+}
+
 function clearQuestLights3D(){
  questLights3D.forEach(item=>gardenGroup.remove(item.group));
  questLights3D=[];
@@ -1113,7 +1335,8 @@ window.setGardenQuestionLights=function(questions,positions){
  questLightPositions=positions||[];
  if(!gardenGroup)return;
  clearQuestLights3D();
- if(levels[state.level]?.theme!=="plants")return;
+ const theme=levels[state.level]?.theme;
+ if(theme!=="plants"&&theme!=="animals")return;
  questLightPositions.forEach((pos,i)=>createQuestLight3D(i,pos));
 };
 function updateQuestLights3D(t){
@@ -1126,9 +1349,10 @@ function updateQuestLights3D(t){
   item.ring.rotation.z=t*.0012+item.group.userData.phase;
   item.ring.scale.setScalar(1+.08*Math.sin(t*.003+item.group.userData.phase));
   item.light.intensity=solved?.25:2.2+Math.sin(t*.005+item.group.userData.phase)*.45;
-  item.orb.material.color.setHex(solved?0x62d98a:0xffe45c);
-  item.orb.material.emissive.setHex(solved?0x2b9d58:0xffc928);
-  item.ring.material.emissive.setHex(solved?0x2b9d58:0xffc928);
+  const animalTheme=levels[state.level]?.theme==="animals";
+  item.orb.material.color.setHex(solved?0x62d98a:(animalTheme?0x73e8ff:0xffe45c));
+  item.orb.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:0xffc928));
+  item.ring.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:0xffc928));
   item.group.position.y=(solved?.9:1.45)+Math.sin(t*.003+item.group.userData.phase)*.08;
  });
 }
@@ -1136,6 +1360,7 @@ function updateGardenVisual(t){
  if(!gardenWorldReady)return;
  gardenTime=t*.001;
  updateQuestLights3D(t);
+ if(levels[state.level]?.theme==="animals")updateAnimalVisual(t);
  animatedPlants.forEach((g,i)=>{
   const base=g.userData.phase||0;g.rotation.z=Math.sin(gardenTime*1.1+base)*.025;g.position.y=Math.sin(gardenTime*1.7+base)*.018;
  });
@@ -1174,9 +1399,34 @@ function loadCharacter(){
 }
 
 window.setGarden3DLevel=function(theme){
- gardenActive=theme==="plants";
+ const shouldUse3D=theme==="plants"||theme==="animals";
+ gardenActive=shouldUse3D;
  glbCanvas.style.display=gardenActive?"block":"none";
- if(gardenActive){if(typeof window.setGardenQuestionLights==="function")window.setGardenQuestionLights(levels[state.level].questions,getQuestionPositions(levels[state.level].theme));camera3d.position.set(player.x,8.5,player.z+10.5);camera3d.lookAt(player.x,1.0,player.z-2.5)}
+ if(!scene||!camera3d)return;
+
+ if(gardenGroup){
+  scene.remove(gardenGroup);
+  gardenGroup=null;
+ }
+ questLights3D=[];questLightPositions=[];animatedPlants=[];animalCreatures=[];
+ animalWaterMesh=null;gardenWorldReady=false;
+
+ if(theme==="animals"){
+  scene.background=new THREE.Color(0x8edff4);
+  scene.fog.color.set(0x8edff4);
+  buildAnimalWorld();
+ }else if(theme==="plants"){
+  scene.background=new THREE.Color(0x9bdff4);
+  scene.fog.color.set(0x9bdff4);
+  buildGardenWorld();
+ }
+
+ if(shouldUse3D){
+  const positions=getQuestionPositions(theme);
+  window.setGardenQuestionLights(levels[state.level].questions,positions);
+  camera3d.position.set(player.x,8.5,player.z+10.5);
+  camera3d.lookAt(player.x,1.0,player.z-2.5);
+ }
 };
 
 function resizeGLB(){
@@ -1234,7 +1484,12 @@ function renderGLB(t){
  requestAnimationFrame(renderGLB);
  if(!renderer||!scene||!camera3d)return;
  updateGardenVisual(t||0);updateCharacter();
- if(gardenActive){scene.background=new THREE.Color(0x9bdff4);scene.fog.color.set(0x9bdff4);renderer.render(scene,camera3d)}
+ if(gardenActive){
+  const theme=levels[state.level]?.theme;
+  const bg=theme==="animals"?0x8edff4:0x9bdff4;
+  scene.background=new THREE.Color(bg);scene.fog.color.set(bg);
+  renderer.render(scene,camera3d)
+ }
  else if(modelReady){scene.background=null;renderer.render(scene,camera3d)}
 }
 
@@ -1267,7 +1522,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V15: closeMission diperbaiki + teleport selepas 5/5 boleh diteruskan.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V16: Level 2 Dunia Haiwan 3D + 5 cahaya ilmu aktif; V15 systems preserved.");
 })();
 </script>
 </body>
