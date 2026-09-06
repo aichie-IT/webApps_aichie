@@ -612,7 +612,7 @@ function tryInteract(){
  if(interactCooldown>0)return;
  const hit=getNearestQuestion();
  if(hit.node&&hit.distance<5.2){
-  interactCooldown=.35;openMission(hit.node.questionIndex);
+  interactCooldown=1;openMission(hit.node.questionIndex);
  }else{
   const solved=world.nodes.filter(n=>n.type==="questionLight"&&n.solved).length;
   toast(solved>=5?"Semua cahaya telah ditemui ✨":"Cari cahaya yang bercahaya di kawasan ini ✨");
@@ -1817,29 +1817,17 @@ if(missionCloseButton){
 /* V19.1: Mobile E — gunakan satu laluan Pointer Events sahaja.
    Elak pointerdown + touchstart + click menembak tryInteract() berulang pada satu sentuhan. */
 let lastMobileInteractAt=0;
-function mobileInteract(e){
-  if(e){e.preventDefault();e.stopPropagation()}
-  const now=performance.now();
-  if(now-lastMobileInteractAt<250)return;
-  lastMobileInteractAt=now;
-  tryInteract();
-}
-function mobileMap(e){
-  if(e){e.preventDefault();e.stopPropagation()}
-  const now=performance.now();
-  if(now-lastMobileInteractAt<250)return;
-  lastMobileInteractAt=now;
-  openMap();
-}
-if(mobileInteractButton){
-  mobileInteractButton.addEventListener("pointerup",mobileInteract,{passive:false});
-}
-if(mobileMapButton){
-  mobileMapButton.addEventListener("pointerup",mobileMap,{passive:false});
-}
+function mobileInteract(e){if(e){e.preventDefault();e.stopPropagation()}tryInteract()}
+function mobileMap(e){if(e){e.preventDefault();e.stopPropagation()}openMap()}
+mobileInteractButton.addEventListener("pointerdown",mobileInteract,{passive:false});
+mobileInteractButton.addEventListener("touchstart",mobileInteract,{passive:false});
+mobileInteractButton.addEventListener("click",mobileInteract);
+mobileMapButton.addEventListener("pointerdown",mobileMap,{passive:false});
+mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
+mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V19.1: Mobile E pointer handling diperbaiki; Level 3 systems dikekalkan.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V19.3: Button E dikembalikan ke fungsi asal; Level 3 fix dikekalkan.");
 })();
 </script>
 </body>
