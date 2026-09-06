@@ -609,6 +609,13 @@ function tryInteract(){
   toast(solved>=5?"Semua cahaya telah ditemui ✨":"Cari cahaya yang bercahaya di kawasan ini ✨");
  }
 }
+function closeMission(){
+ const panel=document.getElementById("interaction");
+ if(panel)panel.classList.remove("show");
+}
+// Fungsi ini turut diekspos ke window kerana butang X HTML asal menggunakan onclick="closeMission()".
+window.closeMission=closeMission;
+
 function openMission(questionIndex){
  const l=levels[state.level],q=l.questions[questionIndex];
  state.currentQuestion=questionIndex;
@@ -1248,9 +1255,7 @@ function closeMissionMobile(e){
   closeMission();
 }
 if(missionCloseButton){
-  missionCloseButton.addEventListener("pointerdown",closeMissionMobile,{passive:false});
-  missionCloseButton.addEventListener("touchstart",closeMissionMobile,{passive:false});
-  missionCloseButton.addEventListener("click",closeMissionMobile);
+  missionCloseButton.addEventListener("pointerup",closeMissionMobile,{passive:false});
 }
 function mobileInteract(e){if(e){e.preventDefault();e.stopPropagation()}tryInteract()}
 function mobileMap(e){if(e){e.preventDefault();e.stopPropagation()}openMap()}
@@ -1262,7 +1267,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V14: cahaya boleh dipilih secara rawak + close panel mobile diperbaiki.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V15: closeMission diperbaiki + teleport selepas 5/5 boleh diteruskan.");
 })();
 </script>
 </body>
