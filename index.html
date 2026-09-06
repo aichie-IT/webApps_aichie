@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- V18: Level 2 sahaja; haiwan babi/pig dibuang. Sistem lain dikekalkan. -->
 <title>Pengembaraan Sains 3D — Pro v2</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧑‍🔬</text></svg>">
 <style>
@@ -805,7 +806,20 @@ const MAT={
   waterDeep:new THREE.MeshPhysicalMaterial({color:0x1b9ed0,roughness:.08,metalness:.04,transparent:true,opacity:.86}),
   habitatWood:new THREE.MeshStandardMaterial({color:0x7a4e32,roughness:.92,metalness:0}),
   habitatStone:new THREE.MeshStandardMaterial({color:0x8f9690,roughness:.96,metalness:0}),
-  habitatSand:new THREE.MeshStandardMaterial({color:0xd8bb82,roughness:1,metalness:0})
+  habitatSand:new THREE.MeshStandardMaterial({color:0xd8bb82,roughness:1,metalness:0}),
+  barnRed:new THREE.MeshStandardMaterial({color:0xb8433c,roughness:.88,metalness:0}),
+  barnCream:new THREE.MeshStandardMaterial({color:0xf1d8a8,roughness:.9,metalness:0}),
+  roofBlue:new THREE.MeshStandardMaterial({color:0x3977a9,roughness:.78,metalness:0}),
+  hay:new THREE.MeshStandardMaterial({color:0xd8ae42,roughness:1,metalness:0}),
+  hayLight:new THREE.MeshStandardMaterial({color:0xf0cc65,roughness:1,metalness:0}),
+  waterFoam:new THREE.MeshStandardMaterial({color:0xe8fbff,roughness:.55,metalness:0}),
+
+  cowWhite:new THREE.MeshStandardMaterial({color:0xf4f0df,roughness:.9,metalness:0}),
+  cowBlack:new THREE.MeshStandardMaterial({color:0x403c3b,roughness:.9,metalness:0}),
+  sheepCream:new THREE.MeshStandardMaterial({color:0xece7d6,roughness:1,metalness:0}),
+  chickenWhite:new THREE.MeshStandardMaterial({color:0xf7f4e9,roughness:.9,metalness:0}),
+  duckYellow:new THREE.MeshStandardMaterial({color:0xf1c542,roughness:.82,metalness:0}),
+  wingWhite:new THREE.MeshStandardMaterial({color:0xffffff,roughness:.85,metalness:0})
 };
 
 function findClip(clips,names){
@@ -1099,210 +1113,274 @@ function buildStartGarden(){
 }
 
 
-/* ===== LEVEL 2: DUNIA HAIWAN 3D SEBENAR ===== */
+/* ===== LEVEL 2: DUNIA HAIWAN 3D — REALISTIK / PADAT =====
+   Semua perubahan di bawah ini hanya untuk dunia Level 2 (theme: animals).
+   Sistem quiz, 5 cahaya, player GLB, movement, score dan Level 1 dikekalkan.
+*/
 let animalCreatures=[];
 let animalWaterMesh=null;
+let animalWaterRipples=[];
+let animalWorldDecor=[];
 
 function animalAdd(obj){gardenGroup.add(obj);return obj}
+function animalTrack(obj,type,homeX,homeZ,opts={}){
+ const rec={group:obj,type,homeX,homeZ,phase:Math.random()*Math.PI*2,
+   speed:opts.speed||.45,roamX:opts.roamX||2.5,roamZ:opts.roamZ||2.5,
+   baseY:opts.baseY||0,walk:opts.walk||[],wing:opts.wing||[],children:opts.children||{}};
+ animalCreatures.push(rec);return rec;
+}
+function animalPart(g,geometry,material,pos,scale,rot){
+ const m=mesh(geometry,material,true,true);if(pos)m.position.set(...pos);if(scale)m.scale.set(...scale);if(rot)m.rotation.set(...rot);g.add(m);return m;
+}
+function animalEye(g,x,y,z){return animalPart(g,new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,[x,y,z],[1,1,1])}
 
-function createLowPolyAnimal(x,z,scale=1,type="rabbit"){
+function createLowPolyAnimal(x,z,scale=1,type="rabbit",opts={}){
  const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);
- let bodyMat=MAT.animalBrown,bellyMat=MAT.animalLight;
- if(type==="rabbit"){bodyMat=MAT.animalWhite;bellyMat=MAT.animalLight}
- if(type==="fox"){bodyMat=MAT.orange;bellyMat=MAT.animalWhite}
- const body=mesh(new THREE.SphereGeometry(.75,12,8),bodyMat,true,true);
- body.scale.set(1.35,.85,1.65);body.position.y=.82;g.add(body);
- const belly=mesh(new THREE.SphereGeometry(.56,10,7),bellyMat,true,true);
- belly.scale.set(1.05,.85,.85);belly.position.set(0,.76,-.38);g.add(belly);
- const head=mesh(new THREE.SphereGeometry(.48,12,8),bodyMat,true,true);
- head.position.set(0,1.35,.72);g.add(head);
- const snout=mesh(new THREE.SphereGeometry(.25,10,7),bellyMat,true,true);
- snout.scale.set(1,.75,1.2);snout.position.set(0,1.27,1.08);g.add(snout);
- for(const sx of [-.17,.17]){
-  const eye=mesh(new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,true,false);
-  eye.position.set(sx,1.49,1.12);g.add(eye);
+ let body=MAT.animalBrown,belly=MAT.animalLight;
+ if(type==="rabbit"){body=MAT.animalWhite;belly=MAT.animalLight}
+ if(type==="fox"){body=MAT.orange;belly=MAT.animalWhite}
+ if(type==="cow"){body=MAT.cowWhite;belly=MAT.animalWhite}
+
+ if(type==="sheep"){body=MAT.sheepCream;belly=MAT.sheepCream}
+ if(type==="deer"){body=MAT.animalBrown;belly=MAT.animalLight}
+
+ const bodyM=animalPart(g,new THREE.SphereGeometry(.72,14,10),body,[0,.9,0],[1.38,.84,1.65]);
+ const bellyM=animalPart(g,new THREE.SphereGeometry(.48,12,8),belly,[0,.77,.58],[1.05,.82,.8]);
+ const head=animalPart(g,new THREE.SphereGeometry(.48,13,9),body,[0,1.45,.78],[1,1,1]);
+ animalPart(g,new THREE.SphereGeometry(.25,10,7),belly,[0,1.32,1.15],[1,.75,1.15]);
+ animalEye(g,-.17,1.59,1.16);animalEye(g,.17,1.59,1.16);
+ const legs=[];
+ for(const sx of [-.46,.46])for(const sz of [-.48,.48]){
+   const leg=animalPart(g,new THREE.CylinderGeometry(.105,.14,.65,8),body,[sx,.47,sz]);legs.push(leg);
+   animalPart(g,new THREE.SphereGeometry(.14,8,6),belly,[sx,.13,sz+.07],[1,.55,1.2]);
  }
- for(const sx of [-.42,.42]){
-  const ear=mesh(new THREE.ConeGeometry(.15,.48,8),bodyMat,true,true);
-  ear.position.set(sx,1.78,.68);ear.rotation.z=sx<0?.22:-.22;g.add(ear);
+ const tail=animalPart(g,new THREE.SphereGeometry(type==="cow"?.17:.25,10,7),body,[0,1.02,-1.36],[.72,1,1.65]);
+ const ears=[];
+ for(const sx of [-.4,.4]){
+   const ear=animalPart(g,new THREE.ConeGeometry(.15,.48,8),body,[sx,1.88,.72],[1,1,1],[0,0,sx<0?.22:-.22]);ears.push(ear);
  }
- for(const sx of [-.45,.45])for(const sz of [-.48,.48]){
-  const leg=mesh(new THREE.CylinderGeometry(.105,.13,.62,8),bodyMat,true,true);
-  leg.position.set(sx,.43,sz);g.add(leg);
-  const foot=mesh(new THREE.SphereGeometry(.14,8,6),bellyMat,true,true);
-  foot.scale.set(1,.55,1.15);foot.position.set(sx,.13,sz+.06);g.add(foot);
+ if(type==="rabbit"){
+   ears.forEach(e=>e.scale.set(.85,1.65,.85));
  }
- const tail=mesh(new THREE.SphereGeometry(.25,9,7),bodyMat,true,true);
- tail.scale.set(.7,1,1.7);tail.position.set(0,.98,-1.35);g.add(tail);
- g.userData.phase=Math.random()*Math.PI*2;
- animalCreatures.push({group:g,type,phase:g.userData.phase});
+ if(type==="deer"){
+   ears.forEach(e=>e.scale.set(.9,1.15,.9));
+   const antlerMat=MAT.habitatWood;
+   for(const sx of [-.25,.25]){
+     const a=animalPart(g,new THREE.CylinderGeometry(.035,.055,.65,6),antlerMat,[sx,2.12,.7]);a.rotation.z=sx<0?.28:-.28;
+     animalPart(g,new THREE.CylinderGeometry(.025,.04,.32,6),antlerMat,[sx+(sx<0?.1:-.1),2.35,.7],[1,1,1],[0,0,sx<0?.55:-.55]);
+   }
+ }
+ if(type==="cow"){
+   const hornMat=MAT.habitatSand;
+   for(const sx of [-.22,.22])animalPart(g,new THREE.ConeGeometry(.08,.3,8),hornMat,[sx,1.91,.72],[1,1,1],[0,0,sx<0?.4:-.4]);
+   for(let i=0;i<3;i++){
+     const patch=animalPart(g,new THREE.SphereGeometry(.22,9,7),MAT.cowBlack,[rand(-.55,.55),.92,rand(-.45,.7)],[1.3,.65,.8]);patch.rotation.y=rand(0,Math.PI);
+   }
+ }
+
+   const snout=animalPart(g,new THREE.SphereGeometry(.17,10,7),MAT.animalLight,[0,1.35,1.38],[1.15,.75,.7]);
+   animalEye(g,-.14,1.51,1.18);animalEye(g,.14,1.51,1.18);
+ }
+ if(type==="sheep"){
+   for(let i=0;i<9;i++)animalPart(g,new THREE.SphereGeometry(rand(.18,.28),9,7),MAT.sheepCream,[rand(-.65,.65),rand(.55,1.35),rand(-.55,.65)],[1.2,.8,1]);
+ }
+ animalTrack(g,type,x,z,{speed:opts.speed||rand(.22,.5),roamX:opts.roamX||rand(2,5),roamZ:opts.roamZ||rand(2,5),walk:legs,children:{body:bodyM,belly:bellyM,head,tail,ears}});
  return animalAdd(g);
 }
 
 function createFish(x,z,scale=1,colorMat=MAT.fishBlue){
- const g=new THREE.Group();g.position.set(x,.55,z);g.scale.setScalar(scale);
- const body=mesh(new THREE.SphereGeometry(.42,12,8),colorMat,true,true);
- body.scale.set(1.65,.72,1);g.add(body);
- const tail=mesh(new THREE.ConeGeometry(.28,.55,6),colorMat,true,true);
- tail.rotation.z=Math.PI/2;tail.position.x=-.65;g.add(tail);
- const eye=mesh(new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,true,false);
- eye.position.set(.48,.13,.25);g.add(eye);
- const fin=mesh(new THREE.ConeGeometry(.14,.38,6),MAT.flowerYellow,true,true);
- fin.rotation.z=-Math.PI/2;fin.position.set(.05,.34,0);g.add(fin);
- g.userData.phase=Math.random()*Math.PI*2;
- animalCreatures.push({group:g,type:"fish",phase:g.userData.phase});
+ const g=new THREE.Group();g.position.set(x,.58,z);g.scale.setScalar(scale);
+ const body=animalPart(g,new THREE.SphereGeometry(.42,14,9),colorMat,[0,0,0],[1.65,.72,1]);
+ const tail=animalPart(g,new THREE.ConeGeometry(.28,.58,7),colorMat,[-.67,0,0],[1,1,1],[0,Math.PI/2,0]);
+ const eye=animalPart(g,new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,[.48,.14,.25]);
+ animalPart(g,new THREE.ConeGeometry(.14,.38,7),MAT.flowerYellow,[.04,.34,0],[1,1,1],[0,0,-Math.PI/2]);
+ animalTrack(g,"fish",x,z,{speed:rand(.35,.75),roamX:rand(2,5),roamZ:rand(1,3),baseY:.58,children:{body,tail,eye}});
  return animalAdd(g);
 }
 
 function createFrog(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,.12,z);g.scale.setScalar(scale);
- const body=mesh(new THREE.SphereGeometry(.52,12,8),MAT.leafDark,true,true);
- body.scale.set(1.25,.65,1.35);body.position.y=.45;g.add(body);
- const head=mesh(new THREE.SphereGeometry(.43,12,8),MAT.leaf,true,true);
- head.scale.set(1.2,.7,1.05);head.position.set(0,.76,.22);g.add(head);
- for(const sx of [-.18,.18]){
-  const eye=mesh(new THREE.SphereGeometry(.13,10,7),MAT.flowerWhite,true,true);
-  eye.position.set(sx,.99,.46);g.add(eye);
-  const pupil=mesh(new THREE.SphereGeometry(.045,8,6),MAT.animalBlack,true,false);
-  pupil.position.set(sx,.99,.56);g.add(pupil);
- }
- animalCreatures.push({group:g,type:"frog",phase:Math.random()*Math.PI*2});
+ const g=new THREE.Group();g.position.set(x,.1,z);g.scale.setScalar(scale);
+ const body=animalPart(g,new THREE.SphereGeometry(.52,13,9),MAT.leafDark,[0,.45,0],[1.3,.68,1.35]);
+ const head=animalPart(g,new THREE.SphereGeometry(.43,13,9),MAT.leaf,[0,.78,.22],[1.2,.72,1.05]);
+ for(const sx of [-.18,.18]){animalPart(g,new THREE.SphereGeometry(.13,10,7),MAT.flowerWhite,[sx,1.02,.46]);animalEye(g,sx,1.02,.56)}
+ animalTrack(g,"frog",x,z,{speed:.28,roamX:3.5,roamZ:2.5,baseY:.1,children:{body,head}});
  return animalAdd(g);
 }
 
 function createButterfly3D(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,rand(1.4,2.6),z);g.scale.setScalar(scale);
- const body=mesh(new THREE.CapsuleGeometry(.055,.42,5,8),MAT.animalDark,true,true);
- body.rotation.x=Math.PI/2;g.add(body);
+ const g=new THREE.Group();g.position.set(x,rand(1.5,3),z);g.scale.setScalar(scale);
+ const body=animalPart(g,new THREE.CapsuleGeometry(.055,.42,5,8),MAT.animalDark,[0,0,0],[1,1,1],[Math.PI/2,0,0]);
+ const wings=[];
  for(const side of [-1,1]){
-  const wing=mesh(new THREE.SphereGeometry(.28,10,7),side<0?MAT.flowerPink:MAT.flowerPurple,true,true);
-  wing.scale.set(1.15,.18,.8);wing.position.set(side*.22,.08,0);g.add(wing);
-  const wing2=mesh(new THREE.SphereGeometry(.19,10,7),MAT.flowerYellow,true,true);
-  wing2.scale.set(1,.16,.7);wing2.position.set(side*.18,-.12,.12);g.add(wing2);
+   const w1=animalPart(g,new THREE.SphereGeometry(.28,10,7),side<0?MAT.flowerPink:MAT.flowerPurple,[side*.22,.08,0],[1.2,.16,.82]);
+   const w2=animalPart(g,new THREE.SphereGeometry(.18,10,7),MAT.flowerYellow,[side*.19,-.12,.14],[1,.14,.7]);
+   wings.push(w1,w2);
  }
- animalCreatures.push({group:g,type:"butterfly",phase:Math.random()*Math.PI*2});
+ animalTrack(g,"butterfly",x,z,{speed:.7,roamX:5,roamZ:5,baseY:g.position.y,wing:wings,children:{body}});
  return animalAdd(g);
 }
 
 function createBird3D(x,z,scale=1){
  const g=new THREE.Group();g.position.set(x,rand(4,6),z);g.scale.setScalar(scale);
- const body=mesh(new THREE.SphereGeometry(.38,10,7),MAT.fishBlue,true,true);
- body.scale.set(1.35,.7,1);g.add(body);
- const head=mesh(new THREE.SphereGeometry(.25,10,7),MAT.animalWhite,true,true);
- head.position.set(.35,.16,.12);g.add(head);
- const beak=mesh(new THREE.ConeGeometry(.08,.28,6),MAT.flowerYellow,true,true);
- beak.rotation.z=-Math.PI/2;beak.position.set(.61,.16,.12);g.add(beak);
- for(const side of [-1,1]){
-  const wing=mesh(new THREE.SphereGeometry(.32,9,7),MAT.fishBlue,true,true);
-  wing.scale.set(1.15,.15,.65);wing.position.set(-.05,0,side*.35);g.add(wing);
- }
- animalCreatures.push({group:g,type:"bird",phase:Math.random()*Math.PI*2});
+ const body=animalPart(g,new THREE.SphereGeometry(.38,11,8),MAT.fishBlue,[0,0,0],[1.35,.7,1]);
+ animalPart(g,new THREE.SphereGeometry(.25,10,7),MAT.animalWhite,[.36,.16,.12]);
+ animalPart(g,new THREE.ConeGeometry(.08,.28,6),MAT.flowerYellow,[.63,.16,.12],[1,1,1],[0,0,-Math.PI/2]);
+ const wings=[];
+ for(const side of [-1,1])wings.push(animalPart(g,new THREE.SphereGeometry(.32,9,7),MAT.wingWhite,[-.05,0,side*.35],[1.15,.15,.65]));
+ animalTrack(g,"bird",x,z,{speed:.35,roamX:8,roamZ:8,baseY:g.position.y,wing:wings});
  return animalAdd(g);
 }
 
+function createChicken(x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,.08,z);g.scale.setScalar(scale);
+ const body=animalPart(g,new THREE.SphereGeometry(.36,11,8),MAT.chickenWhite,[0,.55,0],[1.3,.9,1.15]);
+ animalPart(g,new THREE.SphereGeometry(.25,10,7),MAT.chickenWhite,[0,.9,.34]);
+ animalPart(g,new THREE.ConeGeometry(.07,.2,7),MAT.flowerOrange,[0,.9,.58],[1,1,1],[Math.PI/2,0,0]);
+ for(const sx of [-.12,.12])animalEye(g,sx,.99,.54);
+ const legs=[animalPart(g,new THREE.CylinderGeometry(.035,.045,.4,6),MAT.flowerOrange,[-.12,.23,0]),animalPart(g,new THREE.CylinderGeometry(.035,.045,.4,6),MAT.flowerOrange,[.12,.23,0])];
+ animalTrack(g,"chicken",x,z,{speed:.18,roamX:3,roamZ:3,children:{body},walk:legs});return animalAdd(g);
+}
+
+function createDuck(x,z,scale=1){
+ const g=new THREE.Group();g.position.set(x,.42,z);g.scale.setScalar(scale);
+ const body=animalPart(g,new THREE.SphereGeometry(.34,11,8),MAT.duckYellow,[0,0,0],[1.5,.75,1.15]);
+ animalPart(g,new THREE.SphereGeometry(.24,10,7),MAT.duckYellow,[.32,.2,.2]);
+ animalPart(g,new THREE.ConeGeometry(.08,.25,7),MAT.orange,[.58,.19,.2],[1,1,1],[0,0,-Math.PI/2]);
+ animalTrack(g,"duck",x,z,{speed:.16,roamX:2.5,roamZ:2.5,baseY:.42,children:{body}});return animalAdd(g);
+}
+
 function buildAnimalPond(){
- const rim=mesh(new THREE.CylinderGeometry(10.5,11.2,.45,56),MAT.habitatStone,false,true);
- rim.scale.z=.72;rim.position.set(0,.12,17);animalAdd(rim);
- animalWaterMesh=mesh(new THREE.CylinderGeometry(10,10,.18,56),MAT.waterDeep,false,true);
- animalWaterMesh.scale.z=.72;animalWaterMesh.position.set(0,.34,17);animalAdd(animalWaterMesh);
- for(let i=0;i<18;i++)createFish(rand(-6.5,6.5),17+rand(-4.4,4.4),rand(.55,.9),i%2?MAT.fishBlue:MAT.fishOrange);
+ const cx=0,cz=17;
+ const outer=mesh(new THREE.CylinderGeometry(10.9,11.5,.48,64),MAT.habitatStone,false,true);outer.scale.z=.72;outer.position.set(cx,.12,cz);animalAdd(outer);
+ const sand=mesh(new THREE.CylinderGeometry(10.45,10.45,.12,64),MAT.habitatSand,false,true);sand.scale.z=.72;sand.position.set(cx,.36,cz);animalAdd(sand);
+ animalWaterMesh=mesh(new THREE.CylinderGeometry(9.95,9.95,.16,64),MAT.waterDeep,false,true);animalWaterMesh.scale.z=.72;animalWaterMesh.position.set(cx,.43,cz);animalAdd(animalWaterMesh);
+ for(let i=0;i<22;i++)createFish(rand(-6.2,6.2),cz+rand(-4.4,4.4),rand(.5,.9),i%3?MAT.fishBlue:MAT.fishOrange);
+ for(let i=0;i<6;i++)createDuck(rand(-5.5,5.5),cz+rand(-3.8,3.8),rand(.7,1));
+ for(let i=0;i<12;i++){
+   const lily=mesh(new THREE.CircleGeometry(rand(.3,.62),18),MAT.leafLight,false,false);lily.rotation.x=-Math.PI/2;lily.position.set(rand(-6.6,6.6),.55,cz+rand(-4.6,4.6));animalAdd(lily);
+ }
  for(let i=0;i<8;i++){
-  const lily=mesh(new THREE.CircleGeometry(rand(.3,.65),16),MAT.leafLight,false,false);
-  lily.rotation.x=-Math.PI/2;lily.position.set(rand(-6.5,6.5),.48,17+rand(-4.5,4.5));animalAdd(lily);
+   const r=mesh(new THREE.IcosahedronGeometry(rand(.25,.75),1),MAT.stone,true,true);r.scale.y=rand(.55,.85);r.position.set(rand(-8,8),.5,cz+rand(-6,6));animalAdd(r);
+ }
+ // Small stream flowing from the pond toward the central path.
+ const stream=mesh(new THREE.BoxGeometry(5.5,.08,22),MAT.waterDeep,false,true);stream.position.set(0,.48,6.8);stream.rotation.y=.04;animalAdd(stream);
+ for(let i=0;i<9;i++){
+   const ripple=mesh(new THREE.TorusGeometry(.38,.035,6,20),MAT.waterFoam,false,false);ripple.rotation.x=Math.PI/2;ripple.position.set(rand(-1.8,1.8),.53,rand(-2.5,13));animalAdd(ripple);animalWaterRipples.push(ripple);
  }
 }
 
+function buildBarn(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const base=animalPart(g,new THREE.BoxGeometry(12,4.6,7),MAT.barnRed,[0,2.3,0]);
+ const roof=animalPart(g,new THREE.ConeGeometry(5.2,7,4),MAT.roofBlue,[0,5.1,0],[1,1,.72],[0,Math.PI/4,0]);
+ const door=animalPart(g,new THREE.BoxGeometry(2.8,3.3,.18),MAT.barnCream,[0,1.75,3.56]);
+ for(const sx of [-4.5,4.5])animalPart(g,new THREE.BoxGeometry(.5,3.8,.5),MAT.habitatWood,[sx,1.9,3.55]);
+ for(const sx of [-2.8,2.8])animalPart(g,new THREE.BoxGeometry(1.5,1.4,.12),MAT.waterFoam,[sx,2.6,3.6]);
+ animalAdd(g);
+ return g;
+}
+function createHayBale(x,z,s=1){
+ const b=mesh(new THREE.CylinderGeometry(.65,.65,1.3,12),MAT.hay,true,true);b.position.set(x,.68,z);b.rotation.z=Math.PI/2;b.scale.setScalar(s);animalAdd(b);
+ for(let i=-1;i<=1;i++){const ring=mesh(new THREE.TorusGeometry(.54,.035,6,16),MAT.hayLight,true,true);ring.rotation.y=Math.PI/2;ring.position.set(x+i*.36*s,.68,z);ring.scale.setScalar(s);animalAdd(ring)}
+}
 function buildAnimalHabitat(){
- const soil=mesh(new THREE.BoxGeometry(18,.18,15),MAT.habitatSand,false,true);
- soil.position.set(18,.09,-10);animalAdd(soil);
- for(const x of [14,22]){
-  const post=mesh(new THREE.BoxGeometry(.35,2,.35),MAT.habitatWood,true,true);
-  post.position.set(x,.95,-14);animalAdd(post);
- }
- const roof=mesh(new THREE.BoxGeometry(10,.35,3.5),MAT.habitatWood,true,true);
- roof.position.set(18,2.25,-14);animalAdd(roof);
- for(let i=0;i<5;i++)createLowPolyAnimal(14+rand(0,8),-10+rand(-5,5),rand(.7,1.05),i%3===0?"deer":i%3===1?"fox":"rabbit");
-}
+ const soil=mesh(new THREE.BoxGeometry(21,.2,17),MAT.habitatSand,false,true);soil.position.set(20,.1,-10);animalAdd(soil);
+ buildBarn(20,-14);
+ for(let i=0;i<7;i++)createHayBale(14+rand(0,11),-7+rand(-5,5),rand(.65,1));
+ for(const x of [12,28])for(let z=-17;z<=-3;z+=3.5){const p=mesh(new THREE.BoxGeometry(.25,1.15,.25),MAT.habitatWood,true,true);p.position.set(x,.58,z);animalAdd(p)}
+ for(const z of [-17,-3]){const rail=mesh(new THREE.BoxGeometry(16,.18,.18),MAT.habitatWood,true,true);rail.position.set(20,.8,z);animalAdd(rail)}
 
+ for(let i=0;i<7;i++)createChicken(14+rand(0,11),-3+rand(-2,2),rand(.65,.95));
+}
 function buildButterflyGarden(){
- const bed=mesh(new THREE.BoxGeometry(18,.15,14),MAT.grass2,false,true);
- bed.position.set(-18,.08,-8);animalAdd(bed);
- const mats=[MAT.flowerPink,MAT.flowerYellow,MAT.flowerOrange,MAT.flowerBlue,MAT.flowerPurple];
- for(let i=0;i<45;i++)createFlower(-18+rand(-8,8),-8+rand(-6,6),mats[Math.floor(Math.random()*mats.length)],rand(.7,1.3));
- for(let i=0;i<10;i++)createButterfly3D(-18+rand(-8,8),-8+rand(-6,6),rand(.7,1.05));
+ const bed=mesh(new THREE.BoxGeometry(20,.16,15),MAT.grass2,false,true);bed.position.set(-20,.08,-8);animalAdd(bed);
+ const arch=new THREE.Group();arch.position.set(-20,0,-15);
+ for(const sx of [-3,3])animalPart(arch,new THREE.CylinderGeometry(.16,.2,3.4,10),MAT.fence,[sx,1.7,0]);
+ const top=animalPart(arch,new THREE.TorusGeometry(3,.16,8,28,Math.PI),MAT.fence,[0,3.35,0],[1,1,1],[0,0,Math.PI]);animalAdd(arch);
+ const mats=[MAT.flowerPink,MAT.flowerYellow,MAT.flowerOrange,MAT.flowerBlue,MAT.flowerWhite,MAT.flowerPurple];
+ for(let i=0;i<70;i++)createFlower(-20+rand(-9,9),-8+rand(-6.5,6.5),mats[Math.floor(Math.random()*mats.length)],rand(.7,1.35));
+ for(let i=0;i<16;i++)createButterfly3D(-20+rand(-9,9),-8+rand(-6.5,6.5),rand(.65,1.05));
 }
-
 function buildAnimalGrassland(){
- const bed=mesh(new THREE.BoxGeometry(18,.12,14),MAT.grass2,false,true);
- bed.position.set(-12,.06,15);animalAdd(bed);
- for(let i=0;i<36;i++){
-  const tuft=mesh(new THREE.ConeGeometry(rand(.07,.16),rand(.45,.85),6),MAT.leafLight,true,true);
-  tuft.position.set(-12+rand(-9,9),.35,15+rand(-7,7));animalAdd(tuft);
+ const bed=mesh(new THREE.BoxGeometry(19,.14,14),MAT.grass2,false,true);bed.position.set(-13,.07,15);animalAdd(bed);
+ for(let i=0;i<60;i++){
+   const x=-13+rand(-9,9),z=15+rand(-6.5,6.5);
+   const tuft=mesh(new THREE.ConeGeometry(rand(.07,.16),rand(.45,.85),6),MAT.leafLight,true,true);tuft.position.set(x,.38,z);animalAdd(tuft);
  }
- for(let i=0;i<7;i++)createFrog(rand(7,19),rand(11,20),rand(.7,1.05));
+ for(let i=0;i<8;i++)createFrog(rand(7,19),rand(11,21),rand(.7,1.05));
+ for(let i=0;i<5;i++)createLowPolyAnimal(-13+rand(-7,7),15+rand(-5,5),rand(.7,.95),"rabbit",{speed:.25,roamX:3,roamZ:3});
 }
-
+function buildAnimalFences(){
+ for(const x of [-34,34]){
+  for(let z=-30;z<=30;z+=3.5){const p=mesh(new THREE.BoxGeometry(.3,1.15,.3),MAT.habitatWood,true,true);p.position.set(x,.58,z);animalAdd(p)}
+  const rail=mesh(new THREE.BoxGeometry(.18,.18,60),MAT.habitatWood,true,true);rail.position.set(x,.8,0);animalAdd(rail)
+ }
+}
+function buildAnimalDecor(){
+ // Central market-style path, crates, feeding troughs and signboards make the world denser.
+ for(let z=-28;z<=28;z+=3.5){
+  const stone=mesh(new THREE.BoxGeometry(6.4,.12,2.15),MAT.stone,false,true);stone.position.set(rand(-.25,.25),.12,z+rand(-.16,.16));stone.rotation.y=rand(-.035,.035);animalAdd(stone)
+ }
+ for(let i=0;i<16;i++){
+  const crate=mesh(new THREE.BoxGeometry(.75,.6,.75),MAT.habitatWood,true,true);crate.position.set(rand(-30,30),.3,rand(-27,27));animalAdd(crate)
+ }
+ for(const pos of [[12,-1],[27,-1],[13,9],[27,9]]){
+  const trough=mesh(new THREE.BoxGeometry(2.3,.45,.75),MAT.habitatWood,true,true);trough.position.set(pos[0],.32,pos[1]);animalAdd(trough)
+  const water=mesh(new THREE.BoxGeometry(1.8,.08,.48),MAT.waterDeep,false,true);water.position.set(pos[0],.56,pos[1]);animalAdd(water)
+ }
+ // Small gazebo / observation point near the pond.
+ const gazebo=new THREE.Group();gazebo.position.set(-11,0,1);
+ for(const sx of [-2,2])for(const sz of [-2,2])animalPart(gazebo,new THREE.CylinderGeometry(.13,.17,3.2,10),MAT.habitatWood,[sx,1.6,sz]);
+ animalPart(gazebo,new THREE.ConeGeometry(3.3,1.5,4),MAT.roofBlue,[0,3.7,0],[1,1,.95],[0,Math.PI/4,0]);animalAdd(gazebo)
+ for(let i=0;i<18;i++)createHayBale(rand(-31,31),rand(-30,30),rand(.5,.8));
+}
 function buildAnimalWorld(){
- gardenGroup=new THREE.Group();gardenGroup.name="DuniaHaiwan3D";scene.add(gardenGroup);
- const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,48,48);
- const pos=terrainGeo.attributes.position;
+ gardenGroup=new THREE.Group();gardenGroup.name="DuniaHaiwan3D_Realistic";scene.add(gardenGroup);
+ const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,64,64);const pos=terrainGeo.attributes.position;
  for(let i=0;i<pos.count;i++){
   const x=pos.getX(i),z=pos.getY(i),edge=Math.max(Math.abs(x),Math.abs(z));
-  pos.setZ(i,(Math.sin(x*.18)*.045+Math.cos(z*.22)*.035)*Math.max(0,1-edge/36));
+  const h=(Math.sin(x*.15)*.07+Math.cos(z*.17)*.055+Math.sin((x+z)*.08)*.035)*Math.max(0,1-edge/36);pos.setZ(i,h)
  }
- terrainGeo.computeVertexNormals();
- const terrain=mesh(terrainGeo,MAT.grass2,false,true);
- terrain.rotation.x=-Math.PI/2;terrain.position.y=GROUND_Y;animalAdd(terrain);
-
- const path=mesh(new THREE.BoxGeometry(7,.10,64),MAT.path,false,true);
- path.position.set(0,.05,0);animalAdd(path);
- for(let z=-27;z<=27;z+=4){
-  const stone=mesh(new THREE.BoxGeometry(5.8,.12,2.15),MAT.stone,false,true);
-  stone.position.set(rand(-.3,.3),.12,z+rand(-.18,.18));animalAdd(stone);
+ terrainGeo.computeVertexNormals();const terrain=mesh(terrainGeo,MAT.grass2,false,true);terrain.rotation.x=-Math.PI/2;terrain.position.y=GROUND_Y;animalAdd(terrain)
+ // Soft meadow patches for visual depth.
+ for(let i=0;i<18;i++){
+  const patch=mesh(new THREE.CircleGeometry(rand(2.5,5.5),28),i%2?MAT.grass:MAT.leafLight,false,false);patch.rotation.x=-Math.PI/2;patch.position.set(rand(-29,29),.015,rand(-28,28));animalAdd(patch)
  }
- buildAnimalPond();
- buildAnimalHabitat();
- buildButterflyGarden();
- buildAnimalGrassland();
-
- const trees=[[-30,-24,1.2],[-20,-29,.9],[20,-29,1], [30,-22,1.25],[-31,4,.95],[31,5,1.0],[-28,25,1.05],[28,25,1.15],[8,-30,.75],[-8,-30,.8]];
+ const path=mesh(new THREE.BoxGeometry(7.2,.10,64),MAT.path,false,true);path.position.set(0,.05,0);animalAdd(path)
+ buildAnimalPond();buildAnimalHabitat();buildButterflyGarden();buildAnimalGrassland();buildAnimalDecor();buildAnimalFences()
+ const trees=[[-31,-25,1.35],[-23,-30,1],[-11,-31,.85],[10,-31,.9],[22,-30,1.1],[31,-23,1.35],[-32,4,1],[-30,27,1.25],[-20,29,.95],[20,29,1.1],[30,25,1.3],[30,8,.9]];
  trees.forEach(t=>createTree(...t));
- for(let i=0;i<8;i++)createBird3D(rand(-27,27),rand(-24,24),rand(.7,1.05));
- buildAnimalFences();
- buildMissionGarden();
- buildStartGarden();
- gardenWorldReady=true;
+ // Dense shrub line and fruit trees around the edges.
+ for(let i=0;i<42;i++)createBerryBush(rand(-31,31),rand(-29,29));
+ for(let i=0;i<24;i++)createFlower(rand(-30,30),rand(-29,29),[MAT.flowerPink,MAT.flowerYellow,MAT.flowerWhite,MAT.flowerBlue][i%4],rand(.65,1.1));
+ for(let i=0;i<10;i++)createBird3D(rand(-27,27),rand(-24,24),rand(.65,1.0));
+ buildMissionGarden();buildStartGarden();gardenWorldReady=true
 }
-
-function buildAnimalFences(){
- for(const x of [-33,33]){
-  for(let z=-29;z<=29;z+=4){
-   const p=mesh(new THREE.BoxGeometry(.3,1.1,.3),MAT.habitatWood,true,true);
-   p.position.set(x,.55,z);animalAdd(p);
-  }
-  const rail=mesh(new THREE.BoxGeometry(.18,.18,58),MAT.habitatWood,true,true);
-  rail.position.set(x,.78,0);animalAdd(rail);
- }
-}
-
 function updateAnimalVisual(t){
  if(!gardenWorldReady)return;
  const sec=t*.001;
  animalCreatures.forEach(a=>{
-  const g=a.group,ph=a.phase;
-  if(a.type==="butterfly"){
-   g.position.y+=Math.sin(sec*4+ph)*.003;
-   g.rotation.y=sec*.55+ph;
-  }else if(a.type==="bird"){
-   g.position.y+=Math.sin(sec*2+ph)*.008;
-   g.rotation.z=Math.sin(sec*2+ph)*.05;
-  }else if(a.type==="fish"){
-   g.position.y=.55+Math.sin(sec*2.4+ph)*.07;
-  }else if(a.type==="frog"){
-   g.position.y=.12+Math.max(0,Math.sin(sec*1.2+ph))*.035;
-  }
+   const g=a.group,ph=a.phase;
+   if(a.type==="fish"){
+     const dx=Math.sin(sec*a.speed+ph)*a.roamX,dz=Math.cos(sec*a.speed*.72+ph)*a.roamZ;
+     g.position.x=a.homeX+dx;g.position.z=a.homeZ+dz;g.position.y=a.baseY+Math.sin(sec*2.4+ph)*.08;g.rotation.y=Math.atan2(Math.cos(sec*a.speed+ph)*a.roamX,-Math.sin(sec*a.speed+ph)*a.roamZ);
+   }else if(a.type==="butterfly"){
+     g.position.x=a.homeX+Math.sin(sec*a.speed+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*a.speed*.8+ph)*a.roamZ;g.position.y=a.baseY+Math.sin(sec*2.5+ph)*.55;g.rotation.y=Math.atan2(Math.cos(sec*a.speed+ph)*a.roamX,-Math.sin(sec*a.speed*.8+ph)*a.roamZ);
+     a.wing.forEach((w,i)=>w.rotation.z=Math.sin(sec*9+ph+i)*.7)
+   }else if(a.type==="bird"){
+     g.position.x=a.homeX+Math.sin(sec*a.speed+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*a.speed*.8+ph)*a.roamZ;g.position.y=a.baseY+Math.sin(sec*1.6+ph)*.7;g.rotation.y=Math.atan2(Math.cos(sec*a.speed+ph)*a.roamX,-Math.sin(sec*a.speed*.8+ph)*a.roamZ);a.wing.forEach((w,i)=>w.rotation.x=Math.sin(sec*8+ph+i)*.55)
+   }else if(a.type==="frog"){
+     const jump=Math.max(0,Math.sin(sec*1.25+ph));g.position.x=a.homeX+Math.sin(sec*.35+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*.42+ph)*a.roamZ;g.position.y=a.baseY+jump*jump*.28;g.rotation.y=sec*.15+ph
+   }else{
+     const moving=Math.sin(sec*a.speed+ph),stride=Math.sin(sec*7+ph)*Math.abs(moving);
+     g.position.x=a.homeX+Math.sin(sec*a.speed*.42+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*a.speed*.48+ph)*a.roamZ;g.position.y=a.baseY+Math.abs(Math.sin(sec*1.7+ph))*.018;g.rotation.y=Math.atan2(Math.cos(sec*a.speed*.42+ph)*a.roamX,-Math.sin(sec*a.speed*.48+ph)*a.roamZ);
+     a.walk.forEach((leg,i)=>leg.rotation.z=stride*(i%2?-.28:.28));
+     if(a.children.tail)a.children.tail.rotation.y=Math.sin(sec*4+ph)*.18;
+     if(a.children.ears)a.children.ears.forEach((e,i)=>e.rotation.z=(i?-.18:.18)+Math.sin(sec*2.2+ph)*.04)
+   }
  });
- if(animalWaterMesh)animalWaterMesh.position.y=.34+Math.sin(sec*1.35)*.025;
+ if(animalWaterMesh)animalWaterMesh.position.y=.43+Math.sin(sec*1.35)*.025;
+ animalWaterRipples.forEach((r,i)=>{r.scale.setScalar(1+.12*Math.sin(sec*1.8+i));r.rotation.z=sec*.12+i*.3})
 }
 
 function clearQuestLights3D(){
@@ -1522,7 +1600,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V16: Level 2 Dunia Haiwan 3D + 5 cahaya ilmu aktif; V15 systems preserved.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V18: Level 2 Dunia Haiwan 3D dipadatkan + habitat detail + animasi haiwan; sistem V15/V16 dikekalkan.");
 })();
 </script>
 </body>
