@@ -36,7 +36,7 @@ button:disabled{cursor:not-allowed}
 #panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.96);
  width:min(900px,93vw);max-height:88vh;overflow:auto;padding:25px;display:none;z-index:10;opacity:0;transition:.25s}
 #panel.show{display:block;opacity:1;transform:translate(-50%,-50%) scale(1)}
-.close{float:right;background:#edf4f8;border-radius:50%;width:36px;height:36px;font-weight:900}
+.close{float:right;background:#edf4f8;border-radius:50%;width:36px;height:36px;font-weight:900;cursor:pointer;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:5}
 h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
 .card{background:#fff;border:2px solid #e4eef5;border-radius:20px;padding:15px;
@@ -50,7 +50,7 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 .secondary{background:#eaf2f7;border-radius:12px;padding:9px 13px;font-weight:800}
 #interaction{position:fixed;right:20px;bottom:20px;width:min(410px,calc(100vw - 40px));
  padding:18px;display:none;z-index:8;animation:panelIn .3s ease}
-#interaction.show{display:block}
+#interaction.show{display:block;pointer-events:auto;touch-action:auto}
 @keyframes panelIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 #choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .choice{padding:11px;border-radius:12px;background:#eef5fa;font-weight:800;border:2px solid transparent;transition:.15s}
@@ -312,7 +312,7 @@ function loadLevel(i){
  document.documentElement.style.setProperty("--accent",t.color);
  buildWorld(i);
  if(typeof window.setGarden3DLevel==="function")window.setGarden3DLevel(t.theme);
- updateHUD();hint("Cari cahaya soalan 1/5 • Dekati dan tekan E");
+ updateHUD();hint("Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
  setTimeout(()=>hint("",false),4500);
 }
 
@@ -542,7 +542,7 @@ function questionLight2D(n,t){
  ctx.strokeStyle="#fff";ctx.lineWidth=Math.max(1,2*p.s);
  ctx.beginPath();ctx.arc(p.x,p.y,r*.62,0,7);ctx.stroke();
  ctx.fillStyle="#17364d";ctx.font=`900 ${Math.max(10,12*p.s)}px Arial`;ctx.textAlign="center";
- ctx.fillText(solved?"✓":`SOAL ${n.questionIndex+1}`,p.x,p.y-r*.85);
+ ctx.fillText(solved?"✓":"CAHAYA",p.x,p.y-r*.85);
  ctx.textAlign="start";
 }
 function spawnParticle(x,z,type){
@@ -612,7 +612,7 @@ function tryInteract(){
 function openMission(questionIndex){
  const l=levels[state.level],q=l.questions[questionIndex];
  state.currentQuestion=questionIndex;
- document.getElementById("missionTitle").textContent=`${l.icon} Soalan ${questionIndex+1}/5 • ${l.mission}`;
+ document.getElementById("missionTitle").textContent=`${l.icon} Soalan ${state.questionSolved+1}/5 • ${l.mission}`;
  document.getElementById("missionText").textContent=`📍 ${q.target} — Terokai kawasan dan cari cahaya seterusnya selepas menjawab.`;
  document.querySelector("#missionProgress i").style.background=l.color;
  document.querySelector("#missionProgress i").style.width=((state.questionSolved/5)*100)+"%";
@@ -642,8 +642,8 @@ function answer(ok,button,container,questionIndex){
   }else{
    document.querySelector("#missionProgress i").style.width=((state.questionSolved/5)*100)+"%";
    closeMission();
-   toast(`Betul! Cahaya ${questionIndex+1} selesai. Cari cahaya ${state.questionSolved+1} ✨`);
-   hint(`✨ Cari cahaya soalan ${state.questionSolved+1}/5`);
+   toast(`Betul! Cahaya ini selesai. Cari mana-mana cahaya ilmu yang belum dijawab ✨`);
+   hint(`✨ ${state.questionSolved}/5 selesai • Cari mana-mana cahaya ilmu yang belum dijawab`);
   }
  }else{
   button.classList.add("wrong");
@@ -675,7 +675,7 @@ function startLevelTeleport(nextIndex,msg){
  hint("✨ 5/5 selesai! Bersedia untuk teleport...",true);
  setTimeout(()=>{
   loadLevel(nextIndex);teleporting=false;overlay.classList.remove("show");
-  hint(`🌎 Selamat datang di Level ${nextIndex+1}: ${levels[nextIndex].name}! Cari cahaya soalan 1/5`,true);
+  hint(`🌎 Selamat datang di Level ${nextIndex+1}: ${levels[nextIndex].name}! Cari mana-mana cahaya ilmu`,true);
   setTimeout(()=>hint("",false),4200);
  },1700);
 }
@@ -1240,6 +1240,18 @@ base.addEventListener("pointerdown",e=>{e.preventDefault();joyPointer=e.pointerI
 base.addEventListener("pointermove",e=>{if(e.pointerId===joyPointer)moveJoystick(e)});base.addEventListener("pointerup",resetJoystick);base.addEventListener("pointercancel",resetJoystick);
 const mobileInteractButton=document.getElementById("interactBtn");
 const mobileMapButton=document.getElementById("mapMobileBtn");
+
+/* V14: close button pada panel soalan mesti boleh disentuh di mobile. */
+const missionCloseButton=document.querySelector("#interaction .close");
+function closeMissionMobile(e){
+  if(e){e.preventDefault();e.stopPropagation()}
+  closeMission();
+}
+if(missionCloseButton){
+  missionCloseButton.addEventListener("pointerdown",closeMissionMobile,{passive:false});
+  missionCloseButton.addEventListener("touchstart",closeMissionMobile,{passive:false});
+  missionCloseButton.addEventListener("click",closeMissionMobile);
+}
 function mobileInteract(e){if(e){e.preventDefault();e.stopPropagation()}tryInteract()}
 function mobileMap(e){if(e){e.preventDefault();e.stopPropagation()}openMap()}
 mobileInteractButton.addEventListener("pointerdown",mobileInteract,{passive:false});
@@ -1250,7 +1262,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V14: cahaya boleh dipilih secara rawak + close panel mobile diperbaiki.");
 })();
 </script>
 </body>
