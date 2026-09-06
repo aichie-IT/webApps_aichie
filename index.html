@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- V18: Level 2 sahaja; haiwan babi/pig dibuang. Sistem lain dikekalkan. -->
+<!-- V18.1: Level 2 sahaja; syntax createLowPolyAnimal diperbaiki; haiwan babi/pig dibuang. Sistem lain dikekalkan. -->
 <title>Pengembaraan Sains 3D — Pro v2</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧑‍🔬</text></svg>">
 <style>
@@ -1178,9 +1178,6 @@ function createLowPolyAnimal(x,z,scale=1,type="rabbit",opts={}){
    }
  }
 
-   const snout=animalPart(g,new THREE.SphereGeometry(.17,10,7),MAT.animalLight,[0,1.35,1.38],[1.15,.75,.7]);
-   animalEye(g,-.14,1.51,1.18);animalEye(g,.14,1.51,1.18);
- }
  if(type==="sheep"){
    for(let i=0;i<9;i++)animalPart(g,new THREE.SphereGeometry(rand(.18,.28),9,7),MAT.sheepCream,[rand(-.65,.65),rand(.55,1.35),rand(-.55,.65)],[1.2,.8,1]);
  }
