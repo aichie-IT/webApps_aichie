@@ -266,7 +266,6 @@ const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 let W=innerWidth,H=innerHeight,dpr=1;
 let player={x:0,z:0,y:0,angle:0,speed:5,targetX:null,targetZ:null,walk:0};
 let mobileStick={x:0,z:0,active:false};
-window.mobileStick=mobileStick;
 let camera={x:0,z:0,shake:0};
 /* V22: LAB camera look — movement remains the original V4 world-direction movement. */
 let labCameraYaw=0,labCameraPitch=-0.08;
@@ -595,20 +594,14 @@ function update(dt,t){
     D / →  = KANAN kamera
     Ini mengelakkan W/S terasa terbalik apabila labCameraYaw berubah.
  */
- if(levels[state.level]?.theme==="matter" && window.labInteriorMode){
+ if(levels[state.level]?.theme==="matter" && labInteriorMode){
   let forward=0,strafe=0;
-  /* FRONT/BACK FIX — hanya songsangkan paksi depan/belakang.
-     W / ↑  = DEPAN
-     S / ↓  = BELAKANG
-     A / ←  = KIRI
-     D / →  = KANAN
-  */
   if(keys.w||keys.arrowup)forward+=1;
   if(keys.s||keys.arrowdown)forward-=1;
   if(keys.a||keys.arrowleft)strafe-=1;
   if(keys.d||keys.arrowright)strafe+=1;
 
-  // Mobile joystick: atas = DEPAN, bawah = BELAKANG.
+  // Mobile joystick: atas = depan, bawah = belakang, kiri/kanan kekal relatif kamera.
   if(mobileStick.active){
    forward=-mobileStick.z;
    strafe=mobileStick.x;
@@ -625,13 +618,10 @@ function update(dt,t){
   }
  }else{
   // Semua level lain dikekalkan seperti kod asal.
-  /* FRONT/BACK FIX — hanya songsangkan W/S dan paksi menegak joystick.
-     A/D dan kiri/kanan TIDAK diubah.
-  */
-  if(keys.w||keys.arrowup)dz-=1;if(keys.s||keys.arrowdown)dz+=1;
+  if(keys.w||keys.arrowup)dz+=1;if(keys.s||keys.arrowdown)dz-=1;
   if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
-  // Mobile joystick: atas = DEPAN, bawah = BELAKANG.
-  if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z*-1;}
+  // Mobile joystick controls the same player movement.
+  if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z;}
  }
  if(dx||dz){player.targetX=null;player.targetZ=null;const l=Math.hypot(dx,dz);dx/=l;dz/=l;
   player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;player.angle=Math.atan2(dx,dz);player.walk+=dt*9}
@@ -851,14 +841,6 @@ resize();updateHUD();requestAnimationFrame(loop);
      Three.js + GLTFLoader menggunakan ES Module URL penuh.
      Tiada import map / bare specifier "three", untuk serasi dengan GitHub Pages.
 -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/"
-  }
-</script>
-
 <script type="module">
 /*
  * THREE.JS GARDEN WORLD + GLB PLAYER
@@ -869,8 +851,8 @@ resize();updateHUD();requestAnimationFrame(loop);
  * - Logic game, mission, quiz, score, level unlock, movement dan UI asal
  *   tidak diubah. Dunia 3D hanya membaca player.x / player.z yang sedia ada.
  */
-import * as THREE from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import * as THREE from "https://esm.sh/three@0.152.2";
+import { GLTFLoader } from "https://esm.sh/three@0.152.2/examples/jsm/loaders/GLTFLoader.js?bundle";
 
 (function(){
 "use strict";
@@ -1567,10 +1549,6 @@ let matterFluids=[];
 let matterMachines=[];
 let cityMode=false;
 let labInteriorMode=false;
-Object.defineProperty(window,"labInteriorMode",{
- configurable:true,
- get:()=>labInteriorMode
-});
 // V20.2 bridge: declare Level-3 state before exposing it to the classic game script.
 // This prevents the temporal-dead-zone error: Cannot access 'labEntrance' before initialization.
 let cityGroup=null;
@@ -2227,7 +2205,7 @@ function updateCharacter(){
  if(!modelReady||!characterRoot)return;
  const now=performance.now(),delta=Math.min(.05,(now-lastGLBTime)/1000);lastGLBTime=now;
  if(mixer)mixer.update(delta);
- const moving=window.mobileStick.active||keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||player.targetX!==null;
+ const moving=mobileStick.active||keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||player.targetX!==null;
  if(idleAction&&walkAction){if(moving){if(!walkAction.isRunning())playAction(walkAction);idleAction.fadeOut(.18)}else{if(!idleAction.isRunning())playAction(idleAction);walkAction.fadeOut(.18)}}
  else if(idleAction&&!moving){if(!idleAction.isRunning())playAction(idleAction)}else if(walkAction&&moving){if(!walkAction.isRunning())playAction(walkAction)}
 
@@ -2359,25 +2337,21 @@ function moveJoystick(e){
  let x=e.clientX-cx,y=e.clientY-cy,max=r.width*.34,d=Math.hypot(x,y);
  if(d>max){x=x/d*max;y=y/d*max}
  knob.style.transform="translate("+x+"px,"+y+"px)";
- window.mobileStick.x=x/max;
- window.mobileStick.z=-y/max;
- window.mobileStick.active=true;
+ mobileStick.x=x/max;
+ mobileStick.z=y/max;
+ mobileStick.active=true;
  player.targetX=null;player.targetZ=null;
  if(e.pointerType==="touch")e.preventDefault();
 }
 function resetJoystick(){
  joyPointer=null;
  knob.style.transform="translate(0,0)";
- window.mobileStick.x=0;window.mobileStick.z=0;window.mobileStick.active=false;
+ mobileStick.x=0;mobileStick.z=0;mobileStick.active=false;
 }
 
 /* V25 — mobile joystick dibuat lebih robust untuk Android/iOS.
    Pointer capture memastikan jari yang bergerak keluar sedikit dari bulatan
    masih terus menghantar input movement. */
-/* V26 — Mobile GLB movement: pastikan joystick benar-benar menghantar input
-   pada Android/iPhone. Pointer Events + capture digunakan, dan hanya joystick
-   yang mengambil sentuhan movement. */
-base.style.touchAction="none";
 base.addEventListener("pointerdown",e=>{
  e.preventDefault();e.stopPropagation();
  joyPointer=e.pointerId;
@@ -2387,33 +2361,9 @@ base.addEventListener("pointerdown",e=>{
 base.addEventListener("pointermove",e=>{
  if(e.pointerId===joyPointer){e.preventDefault();moveJoystick(e)}
 },{passive:false});
-base.addEventListener("pointerup",e=>{
- if(e.pointerId===joyPointer){e.preventDefault();resetJoystick()}
-},{passive:false});
-base.addEventListener("pointercancel",e=>{
- if(e.pointerId===joyPointer){e.preventDefault();resetJoystick()}
-},{passive:false});
+base.addEventListener("pointerup",e=>{if(e.pointerId===joyPointer){e.preventDefault();resetJoystick()}},{passive:false});
+base.addEventListener("pointercancel",e=>{if(e.pointerId===joyPointer){e.preventDefault();resetJoystick()}},{passive:false});
 base.addEventListener("lostpointercapture",resetJoystick);
-
-/* V27 — touch fallback untuk telefon yang tidak menghantar Pointer Events
-   secara konsisten. Tidak mengubah rupa joystick; hanya memastikan GLB
-   menerima input movement pada Android/iOS. */
-let joyTouchActive=false;
-base.addEventListener("touchstart",e=>{
- e.preventDefault();
- joyTouchActive=true;
- const t=e.changedTouches[0];
- moveJoystick({clientX:t.clientX,clientY:t.clientY,pointerType:"touch",preventDefault(){}});
-},{passive:false});
-base.addEventListener("touchmove",e=>{
- if(!joyTouchActive)return;
- e.preventDefault();
- const t=e.changedTouches[0];
- moveJoystick({clientX:t.clientX,clientY:t.clientY,pointerType:"touch",preventDefault(){}});
-},{passive:false});
-base.addEventListener("touchend",e=>{e.preventDefault();joyTouchActive=false;resetJoystick()},{passive:false});
-base.addEventListener("touchcancel",e=>{e.preventDefault();joyTouchActive=false;resetJoystick()},{passive:false});
-
 const mobileInteractButton=document.getElementById("interactBtn");
 const mobileMapButton=document.getElementById("mapMobileBtn");
 
@@ -2439,7 +2389,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V26: GLB front/back direction corrected globally + robust mobile joystick.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V25: LAB GLB movement relative to camera + robust mobile joystick.");
 })();
 </script>
 </body>
