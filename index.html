@@ -603,14 +603,14 @@ function update(dt,t){
      A / ←  = KIRI
      D / →  = KANAN
   */
-  if(keys.w||keys.arrowup)forward-=1;
-  if(keys.s||keys.arrowdown)forward+=1;
+  if(keys.w||keys.arrowup)forward+=1;
+  if(keys.s||keys.arrowdown)forward-=1;
   if(keys.a||keys.arrowleft)strafe-=1;
   if(keys.d||keys.arrowright)strafe+=1;
 
   // Mobile joystick: atas = DEPAN, bawah = BELAKANG.
   if(mobileStick.active){
-   forward=mobileStick.z;
+   forward=-mobileStick.z;
    strafe=mobileStick.x;
   }
 
@@ -628,10 +628,10 @@ function update(dt,t){
   /* FRONT/BACK FIX — hanya songsangkan W/S dan paksi menegak joystick.
      A/D dan kiri/kanan TIDAK diubah.
   */
-  if(keys.w||keys.arrowup)dz+=1;if(keys.s||keys.arrowdown)dz-=1;
+  if(keys.w||keys.arrowup)dz-=1;if(keys.s||keys.arrowdown)dz+=1;
   if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
   // Mobile joystick: atas = DEPAN, bawah = BELAKANG.
-  if(mobileStick.active){dx=mobileStick.x;dz=-mobileStick.z;}
+  if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z*-1;}
  }
  if(dx||dz){player.targetX=null;player.targetZ=null;const l=Math.hypot(dx,dz);dx/=l;dz/=l;
   player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;player.angle=Math.atan2(dx,dz);player.walk+=dt*9}
@@ -2382,6 +2382,26 @@ base.addEventListener("pointercancel",e=>{
  if(e.pointerId===joyPointer){e.preventDefault();resetJoystick()}
 },{passive:false});
 base.addEventListener("lostpointercapture",resetJoystick);
+
+/* V27 — touch fallback untuk telefon yang tidak menghantar Pointer Events
+   secara konsisten. Tidak mengubah rupa joystick; hanya memastikan GLB
+   menerima input movement pada Android/iOS. */
+let joyTouchActive=false;
+base.addEventListener("touchstart",e=>{
+ e.preventDefault();
+ joyTouchActive=true;
+ const t=e.changedTouches[0];
+ moveJoystick({clientX:t.clientX,clientY:t.clientY,pointerType:"touch",preventDefault(){}});
+},{passive:false});
+base.addEventListener("touchmove",e=>{
+ if(!joyTouchActive)return;
+ e.preventDefault();
+ const t=e.changedTouches[0];
+ moveJoystick({clientX:t.clientX,clientY:t.clientY,pointerType:"touch",preventDefault(){}});
+},{passive:false});
+base.addEventListener("touchend",e=>{e.preventDefault();joyTouchActive=false;resetJoystick()},{passive:false});
+base.addEventListener("touchcancel",e=>{e.preventDefault();joyTouchActive=false;resetJoystick()},{passive:false});
+
 const mobileInteractButton=document.getElementById("interactBtn");
 const mobileMapButton=document.getElementById("mapMobileBtn");
 
