@@ -128,10 +128,6 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 @keyframes teleportText{0%,28%{opacity:0;transform:translate(-50%,-50%) translateY(10px)}45%,72%{opacity:1;transform:translate(-50%,-50%) translateY(0)}100%{opacity:0;transform:translate(-50%,-50%) translateY(-12px)}}
 
 /* V20 Level 3 city + immersive laboratory */
-#labCrosshair{position:fixed;left:50%;top:50%;width:30px;height:30px;transform:translate(-50%,-50%);z-index:4;display:none;pointer-events:none}
-#labCrosshair:before,#labCrosshair:after{content:"";position:absolute;background:#ff453d;border-radius:2px;box-shadow:0 0 8px #fff8}
-#labCrosshair:before{left:14px;top:2px;width:2px;height:26px}
-#labCrosshair:after{left:2px;top:14px;width:26px;height:2px}
 .dragBoard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .dragSource,.dropTarget,.puzzleCard{padding:12px;border-radius:14px;border:2px solid #d9e6ee;background:#fff;font-weight:900;touch-action:none;user-select:none}
 .dragSource{cursor:grab;box-shadow:0 5px 14px #18324a18}.dragSource.dragging{opacity:.55;transform:scale(.98)}
@@ -144,7 +140,7 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 </head>
 <body>
 <canvas id="game"></canvas>
-<canvas id="glbCanvas"></canvas><div id="labCrosshair"></div><div id="labBadge">🧪 LAB • MOD PEMERHATIAN</div>
+<canvas id="glbCanvas"></canvas><div id="labBadge">🧪 LAB • MOD PEMERHATIAN</div>
 <div id="mobileControls">
   <div id="joystickBase"><div id="joystickKnob"></div></div>
   <div id="actionButtons">
@@ -1847,7 +1843,6 @@ function enterLabInterior(){
  questLightPositions=interiorPositions;
  clearQuestLights3D();
  interiorPositions.forEach((p,i)=>createQuestLight3D(i,p));
- document.getElementById("labCrosshair").style.display="block";
  document.getElementById("labBadge").style.display="block";
  document.getElementById("labBadge").textContent="🧪 LAB • 5 CAHAYA ILMU";
  player.x=0;player.z=20.5;player.angle=Math.PI;
@@ -2133,8 +2128,7 @@ window.setGarden3DLevel=function(theme){
  questLights3D=[];questLightPositions=[];animatedPlants=[];animalCreatures=[];
  matterAnimated=[];matterFluids=[];matterMachines=[];animalWaterMesh=null;energyAnimated=[];gardenWorldReady=false;
  cityMode=false;labInteriorMode=false;cityGroup=null;labInteriorGroup=null;labDoorGlow=null;cityAnimated=[];window.cityMode=cityMode;
- const labCrosshairEl=document.getElementById("labCrosshair"),labBadgeEl=document.getElementById("labBadge");
- if(labCrosshairEl)labCrosshairEl.style.display="none";
+  const labBadgeEl=document.getElementById("labBadge");
  if(labBadgeEl)labBadgeEl.style.display="none";
 
  if(theme==="animals"){
@@ -2156,6 +2150,10 @@ window.setGarden3DLevel=function(theme){
  }
 
  if(shouldUse3D){
+  labCameraYaw=0;
+  labCameraPitch=-0.08;
+  labLookPointerId=null;
+  labLookActive=false;
   const positions=getQuestionPositions(theme);
   window.setGardenQuestionLights(levels[state.level].questions,positions);
   camera3d.position.set(player.x,8.5,player.z+10.5);
@@ -2221,10 +2219,18 @@ function updateCharacter(){
   characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
   if(moving)characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;else characterRoot.rotation.y=GLB_MODEL_ROTATION_Y;
   const bob=!moving?Math.sin(now/550)*.012:0;characterRoot.position.y=.025+bob;
-  camera3d.position.x+=(player.x-camera3d.position.x)*.08;
-  camera3d.position.z+=(player.z+10.5-camera3d.position.z)*.08;
-  camera3d.position.y+=(8.5-camera3d.position.y)*.08;
-  camera3d.lookAt(player.x,1.0,player.z-2.5);
+  /* V23: camera look aktif pada semua dunia 3D.
+     Movement player kekal menggunakan arah asal; hanya pandangan kamera berubah. */
+  const orbitDistance=10.5;
+  const orbitCosPitch=Math.cos(labCameraPitch);
+  const orbitSinPitch=Math.sin(labCameraPitch);
+  const orbitX=Math.sin(labCameraYaw)*orbitDistance*orbitCosPitch;
+  const orbitZ=Math.cos(labCameraYaw)*orbitDistance*orbitCosPitch;
+  const orbitY=8.5+orbitSinPitch*5.0;
+  camera3d.position.x+=(player.x+orbitX-camera3d.position.x)*.08;
+  camera3d.position.z+=(player.z+orbitZ-camera3d.position.z)*.08;
+  camera3d.position.y+=(orbitY-camera3d.position.y)*.08;
+  camera3d.lookAt(player.x,1.0+orbitSinPitch*2.8,player.z);
  }else{
   /* Level selain plants: kekalkan paparan GLB V4. */
   const projected=project(player.x,0,player.z);if(!projected)return;
@@ -2250,23 +2256,27 @@ function renderGLB(t){
  else if(modelReady){scene.background=null;renderer.render(scene,camera3d)}
 }
 
-/* V22 LAB camera look:
-   Desktop = drag mouse to look.
-   Mobile = swipe screen to look.
-   Joystick/E/Map are excluded so their existing controls remain unchanged. */
-function isLabLookBlockedTarget(target){
+/* V23 camera look:
+   Desktop = drag mouse kiri untuk melihat.
+   Mobile = swipe pada kawasan dunia untuk melihat.
+   Aktif pada SEMUA Level 3D.
+   Joystick, E, Map dan panel soalan tidak mengambil alih gesture kamera. */
+function isCameraLookBlockedTarget(target){
   return !!(target && target.closest && target.closest("#mobileControls,#interaction,#panel,#start,#teleport"));
 }
-function beginLabLook(e){
-  if(!labInteriorMode||isLabLookBlockedTarget(e.target))return;
+function beginCameraLook(e){
+  if(!gardenActive||isCameraLookBlockedTarget(e.target))return;
   if(e.pointerType==="mouse" && e.button!==0)return;
   labLookPointerId=e.pointerId;
-  labLookLastX=e.clientX;labLookLastY=e.clientY;labLookActive=true;
+  labLookLastX=e.clientX;
+  labLookLastY=e.clientY;
+  labLookActive=true;
 }
-function moveLabLook(e){
-  if(!labInteriorMode||!labLookActive||e.pointerId!==labLookPointerId)return;
+function moveCameraLook(e){
+  if(!gardenActive||!labLookActive||e.pointerId!==labLookPointerId)return;
   const dx=e.clientX-labLookLastX,dy=e.clientY-labLookLastY;
-  labLookLastX=e.clientX;labLookLastY=e.clientY;
+  labLookLastX=e.clientX;
+  labLookLastY=e.clientY;
   const sensitivity=e.pointerType==="mouse" ? 0.006 : 0.010;
   labCameraYaw-=dx*sensitivity;
   labCameraPitch-=dy*sensitivity;
@@ -2274,15 +2284,16 @@ function moveLabLook(e){
   labCameraPitch=Math.max(-limit,Math.min(limit,labCameraPitch));
   if(e.pointerType==="touch")e.preventDefault();
 }
-function endLabLook(e){
+function endCameraLook(e){
   if(e.pointerId===labLookPointerId){
-    labLookPointerId=null;labLookActive=false;
+    labLookPointerId=null;
+    labLookActive=false;
   }
 }
-window.addEventListener("pointerdown",beginLabLook,{passive:false});
-window.addEventListener("pointermove",moveLabLook,{passive:false});
-window.addEventListener("pointerup",endLabLook,{passive:false});
-window.addEventListener("pointercancel",endLabLook,{passive:false});
+window.addEventListener("pointerdown",beginCameraLook,{passive:false});
+window.addEventListener("pointermove",moveCameraLook,{passive:false});
+window.addEventListener("pointerup",endCameraLook,{passive:false});
+window.addEventListener("pointercancel",endCameraLook,{passive:false});
 
 /* V4 mobile joystick — dikekalkan. */
 const base=document.getElementById("joystickBase"),knob=document.getElementById("joystickKnob");
