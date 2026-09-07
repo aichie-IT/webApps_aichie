@@ -585,8 +585,29 @@ function drawParticles(t){
 function update(dt,t){
  if(teleporting)return;
  let dx=0,dz=0;
- if(keys.w||keys.arrowup)dz+=1;if(keys.s||keys.arrowdown)dz-=1;
- if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
+
+ /* LEVEL 3 LAB ONLY — pembetulan arah movement.
+    Dalam LAB, kamera immersive menghadap arah bertentangan dengan
+    sistem world-axis movement asal. Oleh itu input keyboard dibalikkan
+    HANYA ketika labInteriorMode aktif.
+
+    W / ↑  = DEPAN
+    S / ↓  = BELAKANG
+    A / ←  = KIRI
+    D / →  = KANAN
+ */
+ if(labInteriorMode){
+   if(keys.w||keys.arrowup)dz-=1;
+   if(keys.s||keys.arrowdown)dz+=1;
+   if(keys.a||keys.arrowleft)dx+=1;
+   if(keys.d||keys.arrowright)dx-=1;
+ }else{
+   if(keys.w||keys.arrowup)dz+=1;
+   if(keys.s||keys.arrowdown)dz-=1;
+   if(keys.a||keys.arrowleft)dx-=1;
+   if(keys.d||keys.arrowright)dx+=1;
+ }
+
  // Mobile joystick controls the same player movement.
  if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z;}
  if(dx||dz){player.targetX=null;player.targetZ=null;const l=Math.hypot(dx,dz);dx/=l;dz/=l;
