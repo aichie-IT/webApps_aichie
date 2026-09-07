@@ -603,8 +603,8 @@ function update(dt,t){
  if(interactCooldown>0)interactCooldown-=dt;
  const m=world.nodes.find(n=>n.type==="mission"),d=m?Math.hypot(player.x-m.x,player.z-m.z):99;
  const close=d<6;
- if(levels[state.level]?.theme==="matter"&&cityMode){
-  const labD=Math.hypot(player.x-labEntrance.x,player.z-labEntrance.z);
+ if(levels[state.level]?.theme==="matter"&&window.cityMode){
+  const labD=Math.hypot(player.x-window.labEntrance.x,player.z-window.labEntrance.z);
   if(labD<5.5){if(!nearMission){hint("🧪 Pintu LAB • Tekan E untuk masuk");nearMission=true}}
   else if(nearMission){hint("",false);nearMission=false}
  }else{
@@ -630,9 +630,9 @@ function getNearestQuestion(){
 }
 function tryInteract(){
  if(interactCooldown>0)return;
- if(levels[state.level]?.theme==="matter"&&cityMode){
-  const d=Math.hypot(player.x-labEntrance.x,player.z-labEntrance.z);
-  if(d<5.5){interactCooldown=1;enterLabInterior();return}
+ if(levels[state.level]?.theme==="matter"&&window.cityMode){
+  const d=Math.hypot(player.x-window.labEntrance.x,player.z-window.labEntrance.z);
+  if(d<5.5){interactCooldown=1;window.enterLabInterior();return}
   toast("Dekati pintu bangunan LAB untuk masuk 🧪");return;
  }
  const hit=getNearestQuestion();
@@ -1484,6 +1484,9 @@ let matterFluids=[];
 let matterMachines=[];
 let cityMode=false;
 let labInteriorMode=false;
+// V20.1 bridge: Level-3 state is exposed to the classic game script.
+window.cityMode=false;
+window.labEntrance=labEntrance;
 let cityGroup=null;
 let labInteriorGroup=null;
 let labEntrance={x:0,z:16.2};
@@ -1779,7 +1782,7 @@ function createCityWorld(){
 }
 function enterLabInterior(){
  if(!cityMode||labInteriorMode)return;
- labInteriorMode=true;cityMode=false;
+ labInteriorMode=true;cityMode=false;window.cityMode=cityMode;
  if(cityGroup)cityGroup.visible=false;
  if(labInteriorGroup)gardenGroup.remove(labInteriorGroup);
  labInteriorGroup=new THREE.Group();labInteriorGroup.name="LAB_Interior";gardenGroup.add(labInteriorGroup);
@@ -1815,6 +1818,7 @@ function enterLabInterior(){
  hint("🧪 Anda telah masuk LAB • Terokai setiap stesen dan cari 5 cahaya ilmu",true);
  setTimeout(()=>hint("",false),4200);
 }
+window.enterLabInterior=enterLabInterior;
 function updateCityVisual(t){
  const sec=t*.001;
  if(labDoorGlow)labDoorGlow.intensity=1.4+.6*Math.sin(sec*2.2);
@@ -1834,7 +1838,7 @@ function createMatterWorld(){
  terrainGeo.computeVertexNormals();
  const floor=mesh(terrainGeo,CITY.grass,false,true);floor.rotation.x=-Math.PI/2;floor.position.y=-.02;matterAdd(floor);
  createCityWorld();
- cityMode=true;labInteriorMode=false;gardenWorldReady=true;
+ cityMode=true;labInteriorMode=false;gardenWorldReady=true;window.cityMode=cityMode;
 }
 function updateMatterVisual(t){
  if(!gardenWorldReady)return;
@@ -1961,7 +1965,7 @@ window.setGarden3DLevel=function(theme){
  }
  questLights3D=[];questLightPositions=[];animatedPlants=[];animalCreatures=[];
  matterAnimated=[];matterFluids=[];matterMachines=[];animalWaterMesh=null;gardenWorldReady=false;
- cityMode=false;labInteriorMode=false;cityGroup=null;labInteriorGroup=null;labDoorGlow=null;cityAnimated=[];
+ cityMode=false;labInteriorMode=false;cityGroup=null;labInteriorGroup=null;labDoorGlow=null;cityAnimated=[];window.cityMode=cityMode;
  const labCrosshairEl=document.getElementById("labCrosshair"),labBadgeEl=document.getElementById("labBadge");
  if(labCrosshairEl)labCrosshairEl.style.display="none";
  if(labBadgeEl)labBadgeEl.style.display="none";
@@ -2100,7 +2104,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V20: Level 3 City 3D + LAB immersive interior + 5 interactive question formats; Button E lama dikekalkan.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V20.1: Level 3 City/LAB cross-script state bridge diperbaiki; Button E dan sistem lain dikekalkan.");
 })();
 </script>
 </body>
