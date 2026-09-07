@@ -266,6 +266,7 @@ const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 let W=innerWidth,H=innerHeight,dpr=1;
 let player={x:0,z:0,y:0,angle:0,speed:5,targetX:null,targetZ:null,walk:0};
 let mobileStick={x:0,z:0,active:false};
+window.mobileStick=mobileStick;
 let camera={x:0,z:0,shake:0};
 /* V22: LAB camera look — movement remains the original V4 world-direction movement. */
 let labCameraYaw=0,labCameraPitch=-0.08;
@@ -618,7 +619,7 @@ function update(dt,t){
   }
  }else{
   // Semua level lain dikekalkan seperti kod asal.
-  if(keys.w||keys.arrowup)dz+=1;if(keys.s||keys.arrowdown)dz-=1;
+  if(keys.w||keys.arrowup)dz-=1;if(keys.s||keys.arrowdown)dz+=1;
   if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
   // Mobile joystick controls the same player movement.
   if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z;}
@@ -2205,7 +2206,7 @@ function updateCharacter(){
  if(!modelReady||!characterRoot)return;
  const now=performance.now(),delta=Math.min(.05,(now-lastGLBTime)/1000);lastGLBTime=now;
  if(mixer)mixer.update(delta);
- const moving=mobileStick.active||keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||player.targetX!==null;
+ const moving=window.mobileStick.active||keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||player.targetX!==null;
  if(idleAction&&walkAction){if(moving){if(!walkAction.isRunning())playAction(walkAction);idleAction.fadeOut(.18)}else{if(!idleAction.isRunning())playAction(idleAction);walkAction.fadeOut(.18)}}
  else if(idleAction&&!moving){if(!idleAction.isRunning())playAction(idleAction)}else if(walkAction&&moving){if(!walkAction.isRunning())playAction(walkAction)}
 
@@ -2337,16 +2338,16 @@ function moveJoystick(e){
  let x=e.clientX-cx,y=e.clientY-cy,max=r.width*.34,d=Math.hypot(x,y);
  if(d>max){x=x/d*max;y=y/d*max}
  knob.style.transform="translate("+x+"px,"+y+"px)";
- mobileStick.x=x/max;
- mobileStick.z=y/max;
- mobileStick.active=true;
+ window.mobileStick.x=x/max;
+ window.mobileStick.z=y/max;
+ window.mobileStick.active=true;
  player.targetX=null;player.targetZ=null;
  if(e.pointerType==="touch")e.preventDefault();
 }
 function resetJoystick(){
  joyPointer=null;
  knob.style.transform="translate(0,0)";
- mobileStick.x=0;mobileStick.z=0;mobileStick.active=false;
+ window.mobileStick.x=0;window.mobileStick.z=0;window.mobileStick.active=false;
 }
 
 /* V25 — mobile joystick dibuat lebih robust untuk Android/iOS.
