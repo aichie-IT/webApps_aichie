@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- V20: Level 3 City 3D -> LAB immersive interior + 5 interactive science lights; Level 1/2 and other systems preserved. -->
 <title>Pengembaraan Sains 3D — Pro v2</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧑‍🔬</text></svg>">
 <style>
 :root{
   --ink:#18324a;--blue:#4f8cff;--cyan:#55d6ff;--green:#5ed48b;
@@ -37,7 +35,7 @@ button:disabled{cursor:not-allowed}
 #panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%) scale(.96);
  width:min(900px,93vw);max-height:88vh;overflow:auto;padding:25px;display:none;z-index:10;opacity:0;transition:.25s}
 #panel.show{display:block;opacity:1;transform:translate(-50%,-50%) scale(1)}
-.close{float:right;background:#edf4f8;border-radius:50%;width:36px;height:36px;font-weight:900;cursor:pointer;pointer-events:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;position:relative;z-index:5}
+.close{float:right;background:#edf4f8;border-radius:50%;width:36px;height:36px;font-weight:900}
 h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
 .card{background:#fff;border:2px solid #e4eef5;border-radius:20px;padding:15px;
@@ -51,13 +49,9 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 .secondary{background:#eaf2f7;border-radius:12px;padding:9px 13px;font-weight:800}
 #interaction{position:fixed;right:20px;bottom:20px;width:min(410px,calc(100vw - 40px));
  padding:18px;display:none;z-index:8;animation:panelIn .3s ease}
-#interaction.show{display:block;pointer-events:auto;touch-action:auto}
+#interaction.show{display:block}
 @keyframes panelIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 #choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.quizMode{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#6b57c8;background:#f1edff;border:1px solid #d8ccff;border-radius:999px;padding:7px 10px;display:inline-block;margin-bottom:8px}
-.matterChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.matterChoice{min-height:58px;text-align:left;font-weight:800}
-@media(max-width:620px){.matterChoices{grid-template-columns:1fr}.matterChoice{min-height:52px}}
 .choice{padding:11px;border-radius:12px;background:#eef5fa;font-weight:800;border:2px solid transparent;transition:.15s}
 .choice:hover{background:#dceeff;border-color:#74b8ff;transform:translateY(-2px)}
 .choice.correct{background:#dff8e8;border-color:#5ed48b}
@@ -92,8 +86,8 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 }
 
 /* ===== GLB PLAYER + MOBILE GAME CONTROLLER ===== */
-#glbCanvas{position:fixed;inset:0;width:100%;height:100%;display:none;z-index:2;pointer-events:none;touch-action:none}
-#game{z-index:1}
+#glbCanvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1;pointer-events:none}
+#game{z-index:0}
 #mobileControls{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
 #joystickBase{position:absolute;left:22px;bottom:24px;width:132px;height:132px;border-radius:50%;
  background:rgba(255,255,255,.25);border:3px solid rgba(255,255,255,.65);
@@ -113,43 +107,19 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
  #panel,#interaction,#complete,#start,#toast{z-index:30}
 }
 @media(min-width:901px){#mobileControls{display:none!important}}
-
-/* ===== LEVEL TELEPORT ANIMATION ===== */
-#teleportOverlay{position:fixed;inset:0;z-index:60;display:none;pointer-events:none;overflow:hidden;background:radial-gradient(circle at 50% 48%,rgba(255,255,255,.04),rgba(72,125,190,.28) 55%,rgba(10,35,60,.62));}
-#teleportOverlay.show{display:block}
-#teleportBeam{position:absolute;left:50%;top:50%;width:18px;height:18px;transform:translate(-50%,-50%);border-radius:50%;background:#fff;box-shadow:0 0 20px #fff,0 0 60px #7ee7ff,0 0 120px #8f7cff;opacity:0}
-#teleportOverlay.show #teleportBeam{animation:teleportBeam 1.65s ease-in-out forwards}
-#teleportRings{position:absolute;left:50%;top:50%;width:80px;height:80px;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.9);border-radius:50%;box-shadow:0 0 28px rgba(126,231,255,.85);opacity:0}
-#teleportOverlay.show #teleportRings{animation:teleportRings 1.65s ease-in-out forwards}
-#teleportText{position:absolute;left:50%;top:64%;transform:translate(-50%,-50%);color:#fff;font:900 18px Arial,sans-serif;text-shadow:0 3px 18px rgba(0,0,0,.55);opacity:0;white-space:nowrap}
-#teleportOverlay.show #teleportText{animation:teleportText 1.65s ease-in-out forwards}
-@keyframes teleportBeam{0%{width:14px;height:14px;opacity:0;transform:translate(-50%,-50%) scale(.3)}20%{opacity:1}58%{width:42px;height:42px;opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{width:320px;height:320px;opacity:0;transform:translate(-50%,-50%) scale(2.6)}}
-@keyframes teleportRings{0%{width:60px;height:60px;opacity:0;transform:translate(-50%,-50%) rotate(0) scale(.5)}25%{opacity:1}100%{width:520px;height:520px;opacity:0;transform:translate(-50%,-50%) rotate(300deg) scale(1.5)}}
-@keyframes teleportText{0%,28%{opacity:0;transform:translate(-50%,-50%) translateY(10px)}45%,72%{opacity:1;transform:translate(-50%,-50%) translateY(0)}100%{opacity:0;transform:translate(-50%,-50%) translateY(-12px)}}
-
-/* V20 Level 3 city + immersive laboratory */
-.dragBoard{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.dragSource,.dropTarget,.puzzleCard{padding:12px;border-radius:14px;border:2px solid #d9e6ee;background:#fff;font-weight:900;touch-action:none;user-select:none}
-.dragSource{cursor:grab;box-shadow:0 5px 14px #18324a18}.dragSource.dragging{opacity:.55;transform:scale(.98)}
-.dropTarget{min-height:72px;background:#f5f9fc;border-style:dashed;display:flex;align-items:center;justify-content:center;text-align:center}
-.dropTarget.over{border-color:#a984ff;background:#f1edff}.dropTarget.done{border-color:#5ed48b;background:#e5f9ed}
-.puzzleGrid{display:grid;gap:9px;margin-top:10px}.puzzleCard{cursor:pointer}.puzzleCard.selected{border-color:#a984ff;background:#f1edff}.puzzleCard.good{border-color:#5ed48b;background:#e5f9ed}
-.labBadge{position:fixed;left:50%;top:78px;transform:translateX(-50%);z-index:4;display:none;background:#ffffffdd;border:2px solid #fff;border-radius:999px;padding:7px 12px;font-weight:900;box-shadow:0 8px 22px #17364d22;pointer-events:none}
-@media(max-width:650px){.dragBoard{grid-template-columns:1fr}.labBadge{top:95px;font-size:11px}}
 </style>
 </head>
 <body>
 <canvas id="game"></canvas>
-<canvas id="glbCanvas"></canvas><div id="labBadge">🧪 LAB • MOD PEMERHATIAN</div>
+<canvas id="glbCanvas"></canvas>
 <div id="mobileControls">
   <div id="joystickBase"><div id="joystickKnob"></div></div>
   <div id="actionButtons">
     <button class="mobileAction" id="interactBtn">E<br><small>MISI</small></button>
     <button class="mobileAction" id="mapMobileBtn">🗺️<br><small>PETA</small></button>
   </div>
-  <div id="mobileHint">Gerakkan joystick untuk meneroka • Tekan E bila dekat cahaya</div>
+  <div id="mobileHint">Gerakkan joystick untuk meneroka • Tekan E bila dekat portal</div>
 </div>
-<div id="teleportOverlay" aria-hidden="true"><div id="teleportBeam"></div><div id="teleportRings"></div><div id="teleportText">✨ Teleport ke dunia seterusnya...</div></div>
 
 <div id="start">
  <div class="startbox">
@@ -203,73 +173,32 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 "use strict";
 
 const levels=[
- {name:"Taman Tumbuhan",icon:"🌱",color:"#5ed48b",desc:"Cari 5 cahaya ilmu di taman dan jawab soalan tentang tumbuhan.",
-  mission:"Cahaya Ilmu: Tumbuhan",theme:"plants",
-  questions:[
-   {question:"Bahagian manakah menyerap air dan mineral dari tanah?",choices:["Akar","Bunga","Buah","Daun"],answer:0,target:"Tumbuhan akar"},
-   {question:"Apakah fungsi utama daun pada kebanyakan tumbuhan?",choices:["Menyerap bunyi","Membuat makanan melalui fotosintesis","Menghasilkan batu","Menyimpan cahaya"],answer:1,target:"Daun hijau"},
-   {question:"Bahagian tumbuhan yang biasanya menghasilkan biji ialah…",choices:["Bunga","Akar","Batang","Duri"],answer:0,target:"Bunga"},
-   {question:"Apakah yang membantu tumbuhan berdiri tegak dan mengangkut air?",choices:["Batang","Kelopak","Buah","Biji"],answer:0,target:"Pokok"},
-   {question:"Antara berikut, yang manakah diperlukan tumbuhan untuk fotosintesis?",choices:["Cahaya matahari","Pasir sahaja","Batu","Garam"],answer:0,target:"Cahaya matahari"}
-  ]},
- {name:"Makmal Haiwan",icon:"🦋",color:"#ffb85c",desc:"Cari 5 cahaya ilmu di habitat dan jawab soalan tentang haiwan.",
-  mission:"Cahaya Ilmu: Haiwan",theme:"animals",
-  questions:[
-   {question:"Haiwan manakah merupakan mamalia?",choices:["Ikan emas","Kucing","Katak","Rama-rama"],answer:1,target:"Habitat mamalia"},
-   {question:"Haiwan manakah mempunyai sayap dan mengalami metamorfosis?",choices:["Rama-rama","Kucing","Ikan","Kura-kura"],answer:0,target:"Rama-rama"},
-   {question:"Apakah yang kebanyakan ikan gunakan untuk bernafas di dalam air?",choices:["Insang","Paru-paru sahaja","Bulu","Kulit keras"],answer:0,target:"Air & ikan"},
-   {question:"Haiwan manakah termasuk dalam kumpulan amfibia?",choices:["Katak","Ayam","Kucing","Lebah"],answer:0,target:"Habitat katak"},
-   {question:"Apakah contoh haiwan yang mempunyai rangka luar?",choices:["Belalang","Kambing","Ikan paus","Ular"],answer:0,target:"Serangga"}
-  ]},
- {name:"Makmal Bahan",icon:"🧪",color:"#a984ff",desc:"Masuki bandar, cari bangunan LAB dan terokai makmal bahan 3D.",
-  mission:"Cahaya Ilmu: Bahan",theme:"matter",
-  questions:[
-   {format:"choose",question:"🧊 Pilih keadaan jirim bagi ais yang mengekalkan bentuknya sendiri.",choices:["Gas","Cecair","Pepejal","Plasma"],answer:2,target:"Stesen Pepejal"},
-   {format:"drag",question:"💧 Seret bahan yang betul ke zon CECAIR.",choices:["Batu","Air","Kayu","Besi"],answer:1,target:"Stesen Cecair"},
-   {format:"puzzle",question:"🔥 Puzzle perubahan jirim: pilih urutan yang betul apabila ais menerima haba.",choices:["Ais → Air → Wap","Wap → Air → Ais","Air → Ais → Wap","Ais → Wap → Air"],answer:0,target:"Stesen Haba"},
-   {format:"match",question:"💨 Padankan contoh bahan GAS dengan sifatnya.",choices:["Udara → memenuhi ruang","Batu → mengalir","Air → mengekalkan bentuk","Kayu → memenuhi ruang"],answer:0,target:"Stesen Gas"},
-   {format:"inspect",question:"🔬 Pemeriksaan akhir: bahan pepejal mempunyai sifat…",choices:["Mempunyai bentuk sendiri","Sentiasa memenuhi seluruh ruang","Tiada isipadu","Mengalir seperti air"],answer:0,target:"Stesen Bahan Pepejal"}
-  ]},
- {name:"Lembah Tenaga",icon:"⚡",color:"#ffd45c",desc:"Terokai lembah tenaga, temui 5 cahaya ilmu dan selesaikan cabaran tenaga.",
-  mission:"Cahaya Ilmu: Tenaga",theme:"energy",
-  questions:[
-   {format:"choose",question:"☀️ Yang manakah sumber tenaga boleh diperbaharui?",choices:["Arang batu","Petroleum","Matahari","Gas asli"],answer:2,target:"Ladang Solar"},
-   {format:"drag",question:"🔋 Seret sumber yang sesuai ke zon TENAGA BOLEH DIPERBAHARUI.",choices:["☀️ Matahari","🪨 Arang batu","🛢️ Petroleum","🌬️ Angin"],answer:0,target:"Menara Angin & Solar"},
-   {format:"puzzle",question:"🧩 Susun perjalanan tenaga solar dengan memilih kad mengikut urutan yang betul.",choices:["☀️ Cahaya Matahari","🔵 Panel Solar","⚡ Tenaga Elektrik"],sequence:[0,1,2],target:"Pusat Tenaga"},
-   {format:"match",question:"🌬️ Padankan sumber tenaga dengan hasil yang betul.",choices:["Angin → Elektrik","Batu → Air","Matahari → Batu","Petroleum → Bunga"],answer:0,target:"Menara Turbin Angin"},
-   {format:"inspect",question:"🔎 Cabaran penjimat tenaga: mengapa kita perlu menjimatkan tenaga?",choices:["Mengurangkan pembaziran sumber","Supaya semua lampu menyala 24 jam","Menghasilkan lebih banyak sampah","Membazirkan sumber semula jadi"],answer:0,target:"Stesen Kecekapan Tenaga"}
-  ]},
- {name:"Kitaran Air",icon:"💧",color:"#55cfff",desc:"Cari 5 cahaya ilmu di sekitar kolam dan jawab soalan berkaitan air.",
-  mission:"Cahaya Ilmu: Air",theme:"water",
-  questions:[
-   {question:"Apakah proses apabila air cecair berubah menjadi wap air?",choices:["Penyejatan","Pembekuan","Pemendapan","Peleburan"],answer:0,target:"Kolam: penyejatan"},
-   {question:"Apakah proses apabila wap air menyejuk dan membentuk titisan air?",choices:["Pemeluwapan","Penyejatan","Pembakaran","Pengaratan"],answer:0,target:"Kolam: pemeluwapan"},
-   {question:"Antara berikut, yang manakah boleh menjadi tempat pembiakan nyamuk?",choices:["Air bertakung","Batu kering","Pasir kering","Daun tanpa air"],answer:0,target:"Kolam: nyamuk"},
-   {question:"Mikroorganisma akuatik hidup terutamanya di…",choices:["Persekitaran berair","Api","Batu angkasa","Udara tanpa kelembapan"],answer:0,target:"Kolam: mikroorganisma"},
-   {question:"Apakah proses apabila air hujan berkumpul di tasik, sungai atau kolam?",choices:["Pengumpulan","Penyejatan","Pemeluwapan","Pembakaran"],answer:0,target:"Kolam: pengumpulan"}
-  ]},
- {name:"Misi Angkasa",icon:"🚀",color:"#6877ff",desc:"Cari 5 cahaya ilmu di kawasan angkasa dan jawab soalan sistem suria.",
-  mission:"Cahaya Ilmu: Angkasa",theme:"space",
-  questions:[
-   {question:"Planet manakah paling hampir dengan Matahari?",choices:["Bumi","Marikh","Zuhrah","Utarid"],answer:3,target:"Utarid"},
-   {question:"Planet manakah dikenali sebagai Planet Merah?",choices:["Marikh","Musytari","Bumi","Zuhal"],answer:0,target:"Marikh"},
-   {question:"Apakah satelit semula jadi Bumi?",choices:["Bulan","Matahari","Marikh","Komet"],answer:0,target:"Bulan"},
-   {question:"Planet manakah mempunyai gelang yang sangat jelas?",choices:["Zuhal","Utarid","Bumi","Zuhrah"],answer:0,target:"Zuhal"},
-   {question:"Apakah Matahari?",choices:["Sebuah bintang","Sebuah planet","Sebuah bulan","Sebuah asteroid"],answer:0,target:"Matahari"}
-  ]}
+ {name:"Taman Tumbuhan",icon:"🌱",color:"#5ed48b",desc:"Kenali bahagian tumbuhan dan fungsi asasnya.",
+  mission:"Bahagian tumbuhan",question:"Bahagian manakah menyerap air dan mineral dari tanah?",
+  choices:["Akar","Bunga","Buah","Daun"],answer:0,theme:"plants"},
+ {name:"Makmal Haiwan",icon:"🦋",color:"#ffb85c",desc:"Kenali ciri dan pengelasan haiwan.",
+  mission:"Pengelasan haiwan",question:"Haiwan manakah merupakan mamalia?",
+  choices:["Ikan emas","Kucing","Katak","Rama-rama"],answer:1,theme:"animals"},
+ {name:"Makmal Bahan",icon:"🧪",color:"#a984ff",desc:"Terokai sifat pepejal, cecair dan gas.",
+  mission:"Sifat bahan",question:"Apakah keadaan jirim bagi air yang membeku?",
+  choices:["Gas","Cecair","Pepejal","Plasma"],answer:2,theme:"matter"},
+ {name:"Lembah Tenaga",icon:"⚡",color:"#ffd45c",desc:"Eksperimen dengan sumber dan bentuk tenaga.",
+  mission:"Sumber tenaga",question:"Yang manakah sumber tenaga boleh diperbaharui?",
+  choices:["Arang batu","Petroleum","Matahari","Gas asli"],answer:2,theme:"energy"},
+ {name:"Kitaran Air",icon:"💧",color:"#55cfff",desc:"Susun proses utama kitaran air mengikut urutan.",
+  mission:"Kitaran air",sequence:["Penyejatan","Pemeluwapan","Hujan","Pengumpulan"],theme:"water"},
+ {name:"Misi Angkasa",icon:"🚀",color:"#6877ff",desc:"Uji pengetahuan tentang sistem suria.",
+  mission:"Sistem suria",question:"Planet manakah paling hampir dengan Matahari?",
+  choices:["Bumi","Marikh","Zuhrah","Utarid"],answer:3,theme:"space"}
 ];
 
-let state={score:0,stars:0,unlocked:1,completed:[],level:0,questionSolved:0,currentQuestion:-1};
-let teleporting=false,teleportStart=0;
+let state={score:0,stars:0,unlocked:1,completed:[],level:0};
 let running=false,keys={},last=0,interactCooldown=0,nearMission=false;
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 let W=innerWidth,H=innerHeight,dpr=1;
 let player={x:0,z:0,y:0,angle:0,speed:5,targetX:null,targetZ:null,walk:0};
 let mobileStick={x:0,z:0,active:false};
 let camera={x:0,z:0,shake:0};
-/* V22: LAB camera look — movement remains the original V4 world-direction movement. */
-let labCameraYaw=0,labCameraPitch=-0.08;
-let labLookPointerId=null,labLookLastX=0,labLookLastY=0,labLookActive=false;
 let world={nodes:[],decor:[],particles:[],animals:[]};
 
 function resize(){
@@ -323,61 +252,27 @@ function closePanel(){document.getElementById("panel").classList.remove("show")}
 
 function loadLevel(i){
  if(i>=state.unlocked){toast("Level ini masih terkunci 🔒");return}
- state.level=i;state.questionSolved=0;state.currentQuestion=-1;player.x=0;player.z=0;player.targetX=null;player.targetZ=null;
+ state.level=i;player.x=0;player.z=0;player.targetX=null;player.targetZ=null;
  camera.x=0;camera.z=0;world.nodes=[];world.decor=[];world.particles=[];world.animals=[];
  const t=levels[i];
  document.getElementById("levelTitle").textContent=`${t.icon} Level ${i+1}: ${t.name}`;
  document.documentElement.style.setProperty("--accent",t.color);
- buildWorld(i);
- if(typeof window.setGarden3DLevel==="function")window.setGarden3DLevel(t.theme);
- updateHUD();hint(t.theme==="animals"?"Terokai habitat haiwan • Cari mana-mana cahaya ilmu dan tekan E":t.theme==="matter"?"Terokai makmal • Cari cahaya ilmu di setiap stesen bahan dan tekan E":"Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
+ buildWorld(i);updateHUD();hint("Dekati portal bercahaya • Tekan E untuk memulakan misi");
  setTimeout(()=>hint("",false),4500);
-}
-
-function getQuestionPositions(theme){
- if(theme==="plants")return[
-  {x:-20,z:-12}, // petak akar/tanaman
-  {x:20,z:-12},  // bunga/daun
-  {x:-21,z:12},  // bunga
-  {x:21,z:12},   // pokok
-  {x:-27,z:-10}  // kelompok pisang/tumbuhan
- ];
- if(theme==="animals")return[
-  {x:18,z:-10},
-  {x:-18,z:-8},
-  {x:0,z:17},
-  {x:16,z:12},
-  {x:-12,z:15}
- ];
- if(theme==="matter")return[
-  {x:15,z:-7},{x:-15,z:7},{x:12,z:-12},{x:-10,z:-8},{x:0,z:18}
- ];
- if(theme==="energy")return[
-  {x:15,z:-7},{x:-14,z:7},{x:18,z:12},{x:-18,z:-12},{x:0,z:20}
- ];
- if(theme==="water")return[
-  {x:10,z:-6},{x:13,z:-10},{x:17,z:-6},{x:13,z:-2},{x:9,z:-3}
- ];
- return[
-  {x:15,z:-7},{x:-15,z:7},{x:18,z:10},{x:-18,z:-10},{x:0,z:-22}
- ];
 }
 
 function buildWorld(i){
  const theme=levels[i].theme;
- world.nodes=[{x:0,z:0,type:"start",label:"Pangkalan"}];
- const q=levels[i].questions;
- const positions=getQuestionPositions(theme);
- q.forEach((item,index)=>{
-  const p=positions[index];
-  world.nodes.push({x:p.x,z:p.z,type:"questionLight",label:`Cahaya ${index+1}`,questionIndex:index,target:item.target,active:true,solved:false});
- });
+ world.nodes=[
+  {x:0,z:0,type:"start",label:"Pangkalan"},
+  {x:0,z:-15,type:"mission",label:"Misi Sains",active:true}
+ ];
  if(theme==="plants"){
   world.nodes.push({x:14,z:-8,type:"tree"},{x:-14,z:-7,type:"tree"},{x:17,z:8,type:"tree"});
   world.decor.push(...makeDecor("flower",26),...makeDecor("sprout",12));
  }else if(theme==="animals"){
-  world.nodes.push({x:18,z:-10,type:"habitat",label:"Habitat Mamalia"},{x:0,z:17,type:"water",label:"Kolam Air"},{x:-18,z:-8,type:"flowerHabitat",label:"Taman Rama-rama"});
-  world.animals=[{x:-18,z:-8,type:"butterfly",phase:0},{x:-12,z:15,type:"butterfly",phase:2}];
+  world.nodes.push({x:15,z:-7,type:"habitat",label:"Habitat"},{x:-15,z:6,type:"tree"},{x:17,z:10,type:"tree"});
+  world.animals=[{x:10,z:4,type:"butterfly",phase:0},{x:-9,z:-2,type:"butterfly",phase:2}];
   world.decor.push(...makeDecor("flower",22),...makeDecor("grass",15));
  }else if(theme==="matter"){
   world.nodes.push({x:15,z:-7,type:"lab",label:"Makmal"},{x:-15,z:7,type:"rock"});
@@ -397,7 +292,6 @@ function buildWorld(i){
   if(Math.random()<.45)world.decor.push({x:x+(Math.random()*3-1.5),z:z+(Math.random()*3-1.5),
    type:theme==="space"?"star":theme==="matter"?"crystal":"grass"});
  }
- if(typeof window.setGardenQuestionLights==="function")window.setGardenQuestionLights(q,positions);
 }
 function makeDecor(type,n){
  const a=[];for(let i=0;i<n;i++)a.push({x:Math.random()*50-25,z:Math.random()*50-20,type,phase:Math.random()*7});
@@ -523,23 +417,12 @@ function drawPlayer(t){
   ctx.restore();
 }
 function drawWorld(t){
- /*
-  * Level 1 menggunakan Garden World sebenar dalam Three.js.
-  * Semua level lain kekal menggunakan renderer Canvas V4 asal.
-  */
- if(levels[state.level]?.theme==="plants"){
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle="#ffffffd9";ctx.roundRect(17,H-68,210,43,13);ctx.fill();
-  ctx.fillStyle="#17364d";ctx.font="800 12px Arial";
-  ctx.fillText("WASD / ↑↓←→ bergerak  •  E interaksi",28,H-42);
-  return;
- }
  drawSky();drawGround();
  const arr=[...world.decor,...world.nodes];
  arr.sort((a,b)=>b.z-a.z);
  arr.forEach(n=>{
   if(n.type==="tree")tree(n,t);else if(n.type==="rock")rock(n);
-  else if(n.type==="questionLight")questionLight2D(n,t);else if(["mission","start"].includes(n.type))portal(n,t);
+  else if(["mission","start"].includes(n.type))portal(n,t);
   else if(["water","solar","lab","planet","rocket","habitat"].includes(n.type))special(n,t);
   else decor(n,t);
  });
@@ -548,24 +431,6 @@ function drawWorld(t){
  ctx.fillStyle="#ffffffd9";ctx.roundRect(17,H-68,210,43,13);ctx.fill();
  ctx.fillStyle="#17364d";ctx.font="800 12px Arial";
  ctx.fillText("WASD / ↑↓←→ bergerak  •  E interaksi",28,H-42);
-}
-function questionLight2D(n,t){
- const p=project(n.x,1.2,n.z);if(!p)return;
- const solved=n.solved;
- const pulse=1+Math.sin(t/220+n.questionIndex)*.12;
- const r=Math.max(7,22*p.s)*pulse;
- const grad=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*2.2);
- grad.addColorStop(0,solved?"#8ff5b2aa":"#fff8a8ee");
- grad.addColorStop(.35,solved?"#5ed48b55":"#ffd95c88");
- grad.addColorStop(1,"#ffffff00");
- ctx.fillStyle=grad;ctx.beginPath();ctx.arc(p.x,p.y,r*2.2,0,7);ctx.fill();
- ctx.fillStyle=solved?"#5ed48b":"#ffe45c";
- ctx.beginPath();ctx.arc(p.x,p.y,r*.35,0,7);ctx.fill();
- ctx.strokeStyle="#fff";ctx.lineWidth=Math.max(1,2*p.s);
- ctx.beginPath();ctx.arc(p.x,p.y,r*.62,0,7);ctx.stroke();
- ctx.fillStyle="#17364d";ctx.font=`900 ${Math.max(10,12*p.s)}px Arial`;ctx.textAlign="center";
- ctx.fillText(solved?"✓":"CAHAYA",p.x,p.y-r*.85);
- ctx.textAlign="start";
 }
 function spawnParticle(x,z,type){
  world.particles.push({x,z,y:Math.random()*2+1,v:Math.random()*.9+.3,life:1,type,phase:Math.random()*7});
@@ -583,33 +448,11 @@ function drawParticles(t){
 }
 
 function update(dt,t){
- if(teleporting)return;
  let dx=0,dz=0;
-
- /* LEVEL 3 LAB ONLY — pembetulan arah movement.
-    Dalam LAB, kamera immersive menghadap arah bertentangan dengan
-    sistem world-axis movement asal. Oleh itu input keyboard dibalikkan
-    HANYA ketika labInteriorMode aktif.
-
-    W / ↑  = DEPAN
-    S / ↓  = BELAKANG
-    A / ←  = KIRI
-    D / →  = KANAN
- */
- if(labInteriorMode){
-   if(keys.w||keys.arrowup)dz-=1;
-   if(keys.s||keys.arrowdown)dz+=1;
-   if(keys.a||keys.arrowleft)dx+=1;
-   if(keys.d||keys.arrowright)dx-=1;
- }else{
-   if(keys.w||keys.arrowup)dz+=1;
-   if(keys.s||keys.arrowdown)dz-=1;
-   if(keys.a||keys.arrowleft)dx-=1;
-   if(keys.d||keys.arrowright)dx+=1;
- }
-
+ if(keys.w||keys.arrowup)dz-=1;if(keys.s||keys.arrowdown)dz+=1;
+ if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
  // Mobile joystick controls the same player movement.
- if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z;}
+ if(mobileStick.active){dx=mobileStick.x;dz=-mobileStick.z;}
  if(dx||dz){player.targetX=null;player.targetZ=null;const l=Math.hypot(dx,dz);dx/=l;dz/=l;
   player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;player.angle=Math.atan2(dx,dz);player.walk+=dt*9}
  else if(player.targetX!==null){
@@ -623,14 +466,8 @@ function update(dt,t){
  if(interactCooldown>0)interactCooldown-=dt;
  const m=world.nodes.find(n=>n.type==="mission"),d=m?Math.hypot(player.x-m.x,player.z-m.z):99;
  const close=d<6;
- if(levels[state.level]?.theme==="matter"&&window.cityMode){
-  const labD=Math.hypot(player.x-window.labEntrance.x,player.z-window.labEntrance.z);
-  if(labD<5.5){if(!nearMission){hint("🧪 Pintu LAB • Tekan E untuk masuk");nearMission=true}}
-  else if(nearMission){hint("",false);nearMission=false}
- }else{
-  if(close&&!nearMission){hint("✨ Tekan E untuk memulakan misi");nearMission=true}
-  if(!close&&nearMission){hint("",false);nearMission=false}
- }
+ if(close&&!nearMission){hint("✨ Tekan E untuk memulakan misi");nearMission=true}
+ if(!close&&nearMission){hint("",false);nearMission=false}
 }
 
 function loop(t){
@@ -639,173 +476,70 @@ function loop(t){
  requestAnimationFrame(loop);
 }
 
-function getNearestQuestion(){
- const nodes=world.nodes.filter(n=>n.type==="questionLight"&&!n.solved);
- let best=null,bestD=Infinity;
- for(const n of nodes){
-  const d=Math.hypot(player.x-n.x,player.z-n.z);
-  if(d<bestD){best=n;bestD=d}
- }
- return {node:best,distance:bestD};
-}
 function tryInteract(){
  if(interactCooldown>0)return;
- if(levels[state.level]?.theme==="matter"&&window.cityMode){
-  const d=Math.hypot(player.x-window.labEntrance.x,player.z-window.labEntrance.z);
-  if(d<5.5){interactCooldown=1;window.enterLabInterior();return}
-  toast("Dekati pintu bangunan LAB untuk masuk 🧪");return;
- }
- const hit=getNearestQuestion();
- if(hit.node&&hit.distance<5.2){
-  interactCooldown=1;openMission(hit.node.questionIndex);
- }else{
-  const solved=world.nodes.filter(n=>n.type==="questionLight"&&n.solved).length;
-  toast(solved>=5?"Semua cahaya telah ditemui ✨":"Cari cahaya yang bercahaya di kawasan ini ✨");
- }
+ const n=world.nodes.find(n=>n.type==="mission"),d=n?Math.hypot(player.x-n.x,player.z-n.z):99;
+ if(n&&d<6){interactCooldown=1;openMission()}else toast("Dekati portal misi bercahaya ✨");
 }
-function closeMission(){
- const panel=document.getElementById("interaction");
- if(panel)panel.classList.remove("show");
-}
-// Fungsi ini turut diekspos ke window kerana butang X HTML asal menggunakan onclick="closeMission()".
-window.closeMission=closeMission;
-
-function openMission(questionIndex){
- const l=levels[state.level],q=l.questions[questionIndex];
- state.currentQuestion=questionIndex;
- document.getElementById("missionTitle").textContent=`${l.icon} Soalan ${state.questionSolved+1}/5 • ${l.mission}`;
- document.getElementById("missionText").textContent=`📍 ${q.target} — Terokai kawasan dan cari cahaya seterusnya selepas menjawab.`;
+function openMission(){
+ const l=levels[state.level];
+ document.getElementById("missionTitle").textContent=`${l.icon} ${l.mission}`;
+ document.getElementById("missionText").textContent=l.desc;
  document.querySelector("#missionProgress i").style.background=l.color;
- document.querySelector("#missionProgress i").style.width=((state.questionSolved/5)*100)+"%";
  const body=document.getElementById("missionBody");body.innerHTML="";
- makeQuiz(body,q,questionIndex);
+ if(l.sequence)makeSequence(body,l);else makeQuiz(body,l);
  document.getElementById("interaction").classList.add("show");
 }
-function makeQuiz(body,q,questionIndex){
- const isMatter=levels[state.level]?.theme==="matter";
- const isEnergy=levels[state.level]?.theme==="energy";
- if(isMatter||isEnergy){
-  const labels={choose:"🎯 PILIHAN",drag:"🖐️ DRAG & DROP",puzzle:"🧩 PUZZLE URUTAN",match:"🔗 PADANAN",inspect:"🔎 PEMERHATIAN"};
-  body.innerHTML=`<div class="quizMode">${labels[q.format]||"🧪 CABARAN MAKMAL"}</div><p><b>${q.question}</b></p>`;
-  if(q.format==="drag"){
-   body.innerHTML+=`<div class="dragBoard"><div id="dragSources"></div><div class="dropTarget" id="dropTarget">Seret jawapan ke sini<br><small>CECAIR</small></div></div>`;
-   const src=body.querySelector("#dragSources"),drop=body.querySelector("#dropTarget");
-   q.choices.forEach((x,i)=>{
-    const el=document.createElement("div");el.className="dragSource";el.textContent=x;el.dataset.index=i;
-    el.addEventListener("pointerdown",e=>{
-     e.preventDefault();el.classList.add("dragging");el.setPointerCapture(e.pointerId);
-     const move=ev=>{drop.classList.toggle("over",ev.clientX>=drop.getBoundingClientRect().left&&ev.clientX<=drop.getBoundingClientRect().right&&ev.clientY>=drop.getBoundingClientRect().top&&ev.clientY<=drop.getBoundingClientRect().bottom)};
-     const up=ev=>{
-      el.releasePointerCapture?.(e.pointerId);el.classList.remove("dragging");drop.classList.remove("over");
-      const r=drop.getBoundingClientRect(),inside=ev.clientX>=r.left&&ev.clientX<=r.right&&ev.clientY>=r.top&&ev.clientY<=r.bottom;
-      el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up);
-      if(inside){drop.textContent=x;drop.classList.add("done");answer(i===q.answer,el,src,questionIndex)}
-     };
-     el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);
-    });
-    src.appendChild(el);
-   });
-  }else if(q.format==="puzzle"&&q.sequence){
-   body.innerHTML+=`<div class="puzzleGrid" id="puzzleGrid"></div><p class="sub" id="puzzleOrder">Urutan: —</p>`;
-   const grid=body.querySelector("#puzzleGrid"),orderEl=body.querySelector("#puzzleOrder");
-   const picked=[];
-   q.choices.forEach((x,i)=>{
-    const el=document.createElement("div");el.className="puzzleCard";el.textContent=x;el.dataset.index=i;
-    el.onclick=()=>{
-     if(picked.includes(i))return;
-     picked.push(i);el.classList.add("selected");el.textContent=`${picked.length}. ${x}`;
-     orderEl.textContent=`Urutan: ${picked.map(k=>q.choices[k]).join(" → ")}`;
-     if(picked.length===q.choices.length){
-      const ok=picked.every((v,k)=>v===q.sequence[k]);
-      answer(ok,el,grid,questionIndex);
-     }
-    };grid.appendChild(el);
-   });
-  }else if(q.format==="puzzle"){
-   body.innerHTML+=`<div class="puzzleGrid" id="puzzleGrid"></div>`;
-   const grid=body.querySelector("#puzzleGrid");
-   q.choices.forEach((x,i)=>{
-    const el=document.createElement("div");el.className="puzzleCard";el.textContent=x;
-    el.onclick=()=>{
-     [...grid.children].forEach(c=>c.classList.remove("selected"));
-     el.classList.add("selected");
-     answer(i===q.answer,el,grid,questionIndex);
-    };grid.appendChild(el);
-   });
-  }else if(q.format==="match"){
-   body.innerHTML+=`<div id="matchGrid" class="matterChoices"></div>`;
-   const grid=body.querySelector("#matchGrid");
-   q.choices.forEach((x,i)=>{
-    const el=document.createElement("button");el.className="choice matterChoice";el.textContent=x;
-    el.onclick=()=>answer(i===q.answer,el,grid,questionIndex);grid.appendChild(el);
-   });
-  }else{
-   body.innerHTML+=`<div id="choices" class="matterChoices"></div>`;
-   const ch=body.querySelector("#choices");
-   q.choices.forEach((x,i)=>{
-    const b=document.createElement("button");b.className="choice matterChoice";b.textContent=x;
-    b.onclick=()=>answer(i===q.answer,b,ch,questionIndex);ch.appendChild(b)
-   });
-  }
- }else{
-  body.innerHTML=`<p><b>${q.question}</b></p><div id="choices"></div>`;
-  const ch=body.querySelector("#choices");
-  q.choices.forEach((x,i)=>{
-   const b=document.createElement("button");b.className="choice";b.textContent=x;
-   b.onclick=()=>answer(i===q.answer,b,ch,questionIndex);ch.appendChild(b)
-  });
- }
+function closeMission(){document.getElementById("interaction").classList.remove("show")}
+function makeQuiz(body,l){
+ body.innerHTML=`<p><b>${l.question}</b></p><div id="choices"></div>`;
+ const ch=body.querySelector("#choices");
+ l.choices.forEach((x,i)=>{
+  const b=document.createElement("button");b.className="choice";b.textContent=x;
+  b.onclick=()=>answer(i===l.answer,b,ch);ch.appendChild(b)
+ });
 }
-function answer(ok,button,container,questionIndex){
+function answer(ok,button,container){
  [...container.children].forEach(b=>b.disabled=true);
- const q=levels[state.level].questions[questionIndex];
  if(ok){
-  button.classList.add("correct");
-  state.score+=100;state.stars++;state.questionSolved++;
-  const node=world.nodes.find(n=>n.type==="questionLight"&&n.questionIndex===questionIndex);
-  if(node)node.solved=true;
-  if(state.questionSolved>=5){
-   document.querySelector("#missionProgress i").style.width="100%";
-   completeLevel("Semua 5 cahaya berjaya ditemui! +100 mata ⭐");
-  }else{
-   document.querySelector("#missionProgress i").style.width=((state.questionSolved/5)*100)+"%";
-   closeMission();
-   toast(`Betul! Cahaya ini selesai. Cari mana-mana cahaya ilmu yang belum dijawab ✨`);
-   hint(`✨ ${state.questionSolved}/5 selesai • Cari mana-mana cahaya ilmu yang belum dijawab`);
-  }
+  button.classList.add("correct");state.score+=100;state.stars++;
+  completeLevel("Betul! +100 mata ⭐");
  }else{
-  button.classList.add("wrong");
-  state.score=Math.max(0,state.score-20);
-  [...container.children].forEach((b,i)=>{if(i===q.answer)b.classList.add("correct")});
+  button.classList.add("wrong");state.score=Math.max(0,state.score-20);
+  [...container.children].forEach((b,i)=>{if(i===levels[state.level].answer)b.classList.add("correct")});
   toast("Belum tepat. Jawapan yang betul diserlahkan 💡");
  }
  updateHUD();
+}
+function makeSequence(body,l){
+ body.innerHTML=`<p><b>Seret langkah untuk menyusun proses daripada awal hingga akhir.</b></p>
+ <div class="dragzone"><div id="items"></div><div id="drop" class="drop">Letak urutan di sini 👇</div></div>
+ <button class="primary" id="checkSeq">Semak Urutan</button>`;
+ const items=body.querySelector("#items"),drop=body.querySelector("#drop");
+ [...l.sequence].sort(()=>Math.random()-.5).forEach(text=>{
+  const d=document.createElement("div");d.className="item";d.textContent=text;d.draggable=true;
+  d.ondragstart=e=>e.dataTransfer.setData("text/plain",text);items.appendChild(d)
+ });
+ drop.ondragover=e=>e.preventDefault();
+ drop.ondrop=e=>{e.preventDefault();const text=e.dataTransfer.getData("text/plain");
+  const el=[...items.children].find(x=>x.textContent===text);if(el){drop.appendChild(el);el.draggable=false}};
+ body.querySelector("#checkSeq").onclick=()=>{
+  const got=[...drop.children].map(x=>x.textContent);
+  if(JSON.stringify(got)===JSON.stringify(l.sequence)){state.score+=150;state.stars++;completeLevel("Urutan tepat! +150 mata 💧")}
+  else toast("Urutan belum betul. Cuba susun semula 🔄");updateHUD();
+ };
 }
 function completeLevel(msg){
  const idx=state.level;
  if(!state.completed.includes(idx))state.completed.push(idx);
  if(idx+1<levels.length&&state.unlocked<idx+2)state.unlocked=idx+2;
- closeMission();updateHUD();
- if(idx+1<levels.length){
-  startLevelTeleport(idx+1,msg);
- }else{
-  document.getElementById("completeTitle").textContent="Pengembaraan Selesai!";
-  document.getElementById("completeText").textContent=`${msg} Anda telah melengkapkan semua 6 misi! 🏆`;
-  document.getElementById("complete").style.display="flex";
- }
-}
-function startLevelTeleport(nextIndex,msg){
- if(teleporting)return;
- teleporting=true;teleportStart=performance.now();
- document.getElementById("complete").style.display="none";
- const overlay=document.getElementById("teleportOverlay");
- overlay.classList.remove("show");void overlay.offsetWidth;overlay.classList.add("show");
- hint("✨ 5/5 selesai! Bersedia untuk teleport...",true);
- setTimeout(()=>{
-  loadLevel(nextIndex);teleporting=false;overlay.classList.remove("show");
-  hint(`🌎 Selamat datang di Level ${nextIndex+1}: ${levels[nextIndex].name}! Cari mana-mana cahaya ilmu`,true);
-  setTimeout(()=>hint("",false),4200);
- },1700);
+ closeMission();
+ document.getElementById("completeTitle").textContent=idx+1<levels.length?`Level ${idx+1} Selesai!`:"Pengembaraan Selesai!";
+ document.getElementById("completeText").textContent=idx+1<levels.length?
+  `${msg} Level ${idx+2} kini dibuka. Teruskan meneroka!`:
+  `${msg} Anda telah melengkapkan semua 6 misi! 🏆`;
+ document.getElementById("complete").style.display="flex";
+ updateHUD();
 }
 function closeComplete(){
  document.getElementById("complete").style.display="none";
@@ -824,1531 +558,236 @@ canvas.addEventListener("click",e=>{
 resize();updateHUD();requestAnimationFrame(loop);
 </script>
 
-<!-- ===== MODERN THREE.JS + GLB PLAYER =====
-     Three.js + GLTFLoader menggunakan ES Module URL penuh.
-     Tiada import map / bare specifier "three", untuk serasi dengan GitHub Pages.
--->
-<script type="module">
-/*
- * THREE.JS GARDEN WORLD + GLB PLAYER
- *
- * IMPORTANT:
- * - V4 GLB loader/import yang telah terbukti berfungsi dikekalkan.
- * - Level 1 sahaja menggunakan dunia 3D sebenar.
- * - Logic game, mission, quiz, score, level unlock, movement dan UI asal
- *   tidak diubah. Dunia 3D hanya membaca player.x / player.z yang sedia ada.
- */
-import * as THREE from "https://esm.sh/three@0.152.2";
-import { GLTFLoader } from "https://esm.sh/three@0.152.2/examples/jsm/loaders/GLTFLoader.js?bundle";
-
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+<script>
 (function(){
 "use strict";
 
 const glbCanvas=document.getElementById("glbCanvas");
 const MODEL_URL="./player_character.glb";
-
-let renderer=null;
-let scene=null;
-let camera3d=null;
-let character=null;
-let characterRoot=null;
-let mixer=null;
-let idleAction=null;
-let walkAction=null;
-let modelReady=false;
-let modelHeight=1;
-let lastGLBTime=performance.now();
-let gardenGroup=null;
-let gardenActive=false;
-let gardenTime=0;
-let gardenWorldReady=false;
-let groundMesh=null;
-let waterMesh=null;
-let waterTime=0;
-let flowerGroups=[];
-let animatedPlants=[];
-let questLights3D=[];
-let questLightPositions=[];
-let energyAnimated=[];
-
-/* GLB V4 values: dikekalkan supaya model anda kekal seperti V4. */
-const GLB_HEIGHT_DESKTOP=105;
-const GLB_HEIGHT_MOBILE=88;
-const GLB_VERTICAL_OFFSET=18;
-const GLB_MODEL_ROTATION_Y=Math.PI;
-
-/* ===== REAL-WORLD GARDEN SCALE =====
-   1 Three.js unit ~= 1 meter.
-   Terrain: 72m x 72m. Character: ~1.8m tall.
-*/
-const GARDEN_SIZE=72;
-const CHARACTER_WORLD_HEIGHT=1.8;
-const GROUND_Y=0;
-
-const MAT={
-  grass:new THREE.MeshStandardMaterial({color:0x63b85d,roughness:.96,metalness:0}),
-  grass2:new THREE.MeshStandardMaterial({color:0x78c967,roughness:.95,metalness:0}),
-  soil:new THREE.MeshStandardMaterial({color:0x8b5737,roughness:1,metalness:0}),
-  soilDark:new THREE.MeshStandardMaterial({color:0x6f412b,roughness:1,metalness:0}),
-  path:new THREE.MeshStandardMaterial({color:0xd9bd7a,roughness:.9,metalness:0}),
-  stone:new THREE.MeshStandardMaterial({color:0xb5b9ae,roughness:.95,metalness:0}),
-  wood:new THREE.MeshStandardMaterial({color:0x8a5a38,roughness:.9,metalness:0}),
-  leaf:new THREE.MeshStandardMaterial({color:0x319b55,roughness:.9,metalness:0}),
-  leafLight:new THREE.MeshStandardMaterial({color:0x62c96b,roughness:.9,metalness:0}),
-  leafDark:new THREE.MeshStandardMaterial({color:0x207644,roughness:.92,metalness:0}),
-  flowerPink:new THREE.MeshStandardMaterial({color:0xff6f9f,roughness:.7,metalness:0}),
-  flowerYellow:new THREE.MeshStandardMaterial({color:0xffc928,roughness:.7,metalness:0}),
-  flowerOrange:new THREE.MeshStandardMaterial({color:0xff8b22,roughness:.7,metalness:0}),
-  flowerBlue:new THREE.MeshStandardMaterial({color:0x4e82ff,roughness:.7,metalness:0}),
-  flowerWhite:new THREE.MeshStandardMaterial({color:0xfff8e8,roughness:.7,metalness:0}),
-  flowerPurple:new THREE.MeshStandardMaterial({color:0xa56cff,roughness:.7,metalness:0}),
-  flowerCenter:new THREE.MeshStandardMaterial({color:0x6e4325,roughness:.85,metalness:0}),
-  water:new THREE.MeshPhysicalMaterial({color:0x39bfe5,roughness:.12,metalness:.05,transparent:true,opacity:.82}),
-  fence:new THREE.MeshStandardMaterial({color:0x9b683e,roughness:.9,metalness:0}),
-  white:new THREE.MeshStandardMaterial({color:0xf7f3df,roughness:.8,metalness:0}),
-  red:new THREE.MeshStandardMaterial({color:0xe94b45,roughness:.75,metalness:0}),
-  orange:new THREE.MeshStandardMaterial({color:0xf39a2e,roughness:.75,metalness:0}),
-  blue:new THREE.MeshStandardMaterial({color:0x3d78d8,roughness:.75,metalness:0}),
-  berry:new THREE.MeshStandardMaterial({color:0x365bd8,roughness:.65,metalness:0}),
-  banana:new THREE.MeshStandardMaterial({color:0xffdc42,roughness:.7,metalness:0}),
-  cactus:new THREE.MeshStandardMaterial({color:0x39a85a,roughness:.82,metalness:0}),
-  mushroom:new THREE.MeshStandardMaterial({color:0xef5146,roughness:.75,metalness:0}),
-  animalBrown:new THREE.MeshStandardMaterial({color:0x9a623c,roughness:.9,metalness:0}),
-  animalLight:new THREE.MeshStandardMaterial({color:0xd9a66f,roughness:.88,metalness:0}),
-  animalDark:new THREE.MeshStandardMaterial({color:0x4b352a,roughness:.9,metalness:0}),
-  animalWhite:new THREE.MeshStandardMaterial({color:0xf6f2df,roughness:.82,metalness:0}),
-  animalBlack:new THREE.MeshStandardMaterial({color:0x20252b,roughness:.8,metalness:0}),
-  fishBlue:new THREE.MeshStandardMaterial({color:0x3e8eea,roughness:.6,metalness:0}),
-  fishOrange:new THREE.MeshStandardMaterial({color:0xff8a32,roughness:.6,metalness:0}),
-  waterDeep:new THREE.MeshPhysicalMaterial({color:0x1b9ed0,roughness:.08,metalness:.04,transparent:true,opacity:.86}),
-  habitatWood:new THREE.MeshStandardMaterial({color:0x7a4e32,roughness:.92,metalness:0}),
-  habitatStone:new THREE.MeshStandardMaterial({color:0x8f9690,roughness:.96,metalness:0}),
-  habitatSand:new THREE.MeshStandardMaterial({color:0xd8bb82,roughness:1,metalness:0}),
-  barnRed:new THREE.MeshStandardMaterial({color:0xb8433c,roughness:.88,metalness:0}),
-  barnCream:new THREE.MeshStandardMaterial({color:0xf1d8a8,roughness:.9,metalness:0}),
-  roofBlue:new THREE.MeshStandardMaterial({color:0x3977a9,roughness:.78,metalness:0}),
-  hay:new THREE.MeshStandardMaterial({color:0xd8ae42,roughness:1,metalness:0}),
-  hayLight:new THREE.MeshStandardMaterial({color:0xf0cc65,roughness:1,metalness:0}),
-  waterFoam:new THREE.MeshStandardMaterial({color:0xe8fbff,roughness:.55,metalness:0}),
-
-  labWall:new THREE.MeshStandardMaterial({color:0xdbe7f3,roughness:.78,metalness:.02}),
-  labWallDark:new THREE.MeshStandardMaterial({color:0x9fb5ca,roughness:.82,metalness:.02}),
-  labFloor:new THREE.MeshStandardMaterial({color:0x5c7182,roughness:.72,metalness:.12}),
-  labFloorLight:new THREE.MeshStandardMaterial({color:0xbfcbd5,roughness:.76,metalness:.04}),
-  labSteel:new THREE.MeshStandardMaterial({color:0x9aa8b2,roughness:.28,metalness:.72}),
-  labSteelDark:new THREE.MeshStandardMaterial({color:0x43515b,roughness:.32,metalness:.65}),
-  labGlass:new THREE.MeshPhysicalMaterial({color:0xbdefff,roughness:.08,metalness:.02,transparent:true,opacity:.42,transmission:.25}),
-  labBlue:new THREE.MeshStandardMaterial({color:0x3b82d0,roughness:.42,metalness:.15}),
-  labCyan:new THREE.MeshStandardMaterial({color:0x35c6e8,emissive:0x0b5c78,emissiveIntensity:.35,roughness:.32,metalness:.1}),
-  labPurple:new THREE.MeshStandardMaterial({color:0x9a6cff,emissive:0x3a1d80,emissiveIntensity:.25,roughness:.36,metalness:.08}),
-  labOrange:new THREE.MeshStandardMaterial({color:0xff9d45,roughness:.4,metalness:.08}),
-  labRed:new THREE.MeshStandardMaterial({color:0xed5b5b,roughness:.4,metalness:.08}),
-  labGreen:new THREE.MeshStandardMaterial({color:0x52c77a,roughness:.42,metalness:.08}),
-  labYellow:new THREE.MeshStandardMaterial({color:0xffd34e,roughness:.4,metalness:.08}),
-  labGlassBlue:new THREE.MeshPhysicalMaterial({color:0x66d8ff,roughness:.04,metalness:0,transparent:true,opacity:.7,transmission:.2}),
-  labLiquid:new THREE.MeshPhysicalMaterial({color:0x5bc8ff,roughness:.12,metalness:0,transparent:true,opacity:.82}),
-  labLiquidPurple:new THREE.MeshPhysicalMaterial({color:0xa875ff,roughness:.12,metalness:0,transparent:true,opacity:.82}),
-  energyGrass:new THREE.MeshStandardMaterial({color:0x6ebc58,roughness:.96,metalness:0}),
-  energyRock:new THREE.MeshStandardMaterial({color:0x69747d,roughness:1,metalness:.05}),
-  energyRockLight:new THREE.MeshStandardMaterial({color:0x87939a,roughness:.96,metalness:.03}),
-  energyRoad:new THREE.MeshStandardMaterial({color:0x5c6973,roughness:.88,metalness:.08}),
-  energyRoadEdge:new THREE.MeshStandardMaterial({color:0xd7c88b,roughness:.9,metalness:0}),
-  energySolar:new THREE.MeshStandardMaterial({color:0x2266b5,roughness:.28,metalness:.3}),
-  energySteel:new THREE.MeshStandardMaterial({color:0x56636d,roughness:.32,metalness:.72}),
-  energyWhite:new THREE.MeshStandardMaterial({color:0xf1f4f2,roughness:.68,metalness:.08}),
-  energyYellow:new THREE.MeshStandardMaterial({color:0xffd447,emissive:0x6e4a00,emissiveIntensity:.18,roughness:.45,metalness:.05}),
-  energyCyan:new THREE.MeshStandardMaterial({color:0x48d8ff,emissive:0x0b6e9a,emissiveIntensity:.7,roughness:.25,metalness:.08}),
-  energyOrange:new THREE.MeshStandardMaterial({color:0xff8b32,roughness:.55,metalness:.08}),
-  energyWater:new THREE.MeshPhysicalMaterial({color:0x38bde8,roughness:.08,metalness:.04,transparent:true,opacity:.78}),
-  energySteam:new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.34}),
-  energyWood:new THREE.MeshStandardMaterial({color:0x7e5a3b,roughness:.92,metalness:0}),
-
-  cowWhite:new THREE.MeshStandardMaterial({color:0xf4f0df,roughness:.9,metalness:0}),
-  cowBlack:new THREE.MeshStandardMaterial({color:0x403c3b,roughness:.9,metalness:0}),
-  sheepCream:new THREE.MeshStandardMaterial({color:0xece7d6,roughness:1,metalness:0}),
-  chickenWhite:new THREE.MeshStandardMaterial({color:0xf7f4e9,roughness:.9,metalness:0}),
-  duckYellow:new THREE.MeshStandardMaterial({color:0xf1c542,roughness:.82,metalness:0}),
-  wingWhite:new THREE.MeshStandardMaterial({color:0xffffff,roughness:.85,metalness:0})
-};
+let renderer,scene,camera3d,character,characterRoot,mixer;
+let idleAction=null,walkAction=null,modelReady=false,lastGLBTime=performance.now();
 
 function findClip(clips,names){
-  if(!clips||!clips.length)return null;
-  return clips.find(c=>{
-    const name=(c.name||"").toLowerCase();
-    return names.some(n=>name.includes(n));
-  })||null;
+  return clips.find(c=>names.some(n=>c.name.toLowerCase().includes(n)));
 }
-function playAction(action){if(!action)return;action.reset().fadeIn(.18).play()}
 
 function initGLB(){
- try{
-  renderer=new THREE.WebGLRenderer({canvas:glbCanvas,alpha:true,antialias:true,powerPreference:"high-performance"});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
-  renderer.setSize(innerWidth,innerHeight,false);
-  renderer.setClearColor(0x000000,0);
-  renderer.outputColorSpace=THREE.SRGBColorSpace;
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure=1.12;
-  renderer.shadowMap.enabled=true;
-  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  try{
+    renderer=new THREE.WebGLRenderer({
+      canvas:glbCanvas,
+      alpha:true,
+      antialias:true,
+      powerPreference:"high-performance"
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.setSize(innerWidth,innerHeight,false);
+    renderer.outputEncoding=THREE.sRGBEncoding;
 
-  scene=new THREE.Scene();
-  scene.background=new THREE.Color(0x9bdff4);
-  scene.fog=new THREE.Fog(0x9bdff4,42,105);
+    scene=new THREE.Scene();
 
-  camera3d=new THREE.PerspectiveCamera(46,innerWidth/innerHeight,.1,180);
-  camera3d.position.set(0,9,11);
+    camera3d=new THREE.OrthographicCamera(
+      0,innerWidth,0,innerHeight,-1000,1000
+    );
+    camera3d.position.set(0,0,10);
 
-  const hemi=new THREE.HemisphereLight(0xbfefff,0x54734b,2.0);
-  scene.add(hemi);
-  const sun=new THREE.DirectionalLight(0xfff5d6,3.1);
-  sun.position.set(-18,30,16);
-  sun.castShadow=true;
-  sun.shadow.mapSize.set(2048,2048);
-  sun.shadow.camera.left=-40;sun.shadow.camera.right=40;
-  sun.shadow.camera.top=40;sun.shadow.camera.bottom=-40;
-  sun.shadow.camera.near=.5;sun.shadow.camera.far=100;
-  sun.shadow.bias=-.0004;
-  scene.add(sun);
-  const fill=new THREE.DirectionalLight(0x9bdcff,.7);
-  fill.position.set(22,10,-18);scene.add(fill);
+    scene.add(new THREE.HemisphereLight(0xffffff,0x7890a0,2.1));
+    const light=new THREE.DirectionalLight(0xffffff,2.5);
+    light.position.set(-3,5,8);
+    scene.add(light);
 
-  buildGardenWorld();
-  loadCharacter();
-  resizeGLB();
-  renderGLB();
- }catch(error){console.error("Three.js initialization error:",error)}
-}
+    const loader=new THREE.GLTFLoader();
 
-function mesh(geometry,material,cast=true,receive=true){
- const m=new THREE.Mesh(geometry,material);m.castShadow=cast;m.receiveShadow=receive;return m;
-}
-function add(obj){gardenGroup.add(obj);return obj}
-function rand(a,b){return a+Math.random()*(b-a)}
-function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+    loader.load(
+      MODEL_URL,
+      function(gltf){
+        character=gltf.scene;
 
-function buildGardenWorld(){
- gardenGroup=new THREE.Group();
- gardenGroup.name="TamanTumbuhan3D";
- scene.add(gardenGroup);
+        character.traverse(function(o){
+          if(o.isMesh){
+            o.frustumCulled=false;
+            o.castShadow=false;
+            o.receiveShadow=false;
+          }
+        });
 
- /* Terrain sebenar: sedikit beralun tetapi character kekal berpijak. */
- const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,48,48);
- const pos=terrainGeo.attributes.position;
- for(let i=0;i<pos.count;i++){
-   const x=pos.getX(i),z=pos.getY(i);
-   const edge=Math.max(Math.abs(x),Math.abs(z));
-   const h=(Math.sin(x*.23)*.035+Math.cos(z*.19)*.035)*Math.max(0,1-edge/36);
-   pos.setZ(i,h);
- }
- terrainGeo.computeVertexNormals();
- groundMesh=mesh(terrainGeo,MAT.grass,false,true);
- groundMesh.rotation.x=-Math.PI/2;
- groundMesh.position.y=GROUND_Y;
- add(groundMesh);
+        // Put the model inside a root so its mesh origin can be centred
+        // without being overwritten when the player moves around the v2 world.
+        const box=new THREE.Box3().setFromObject(character);
+        const size=box.getSize(new THREE.Vector3());
+        const center=box.getCenter(new THREE.Vector3());
 
- buildPaths();
- buildPlantBeds();
- buildPond();
- buildFences();
- buildTrees();
- buildFlowerFields();
- buildShrubsAndCrops();
- buildBananaGroves();
- buildCactusGarden();
- buildRocksAndLogs();
- buildGardenFurniture();
- buildBackgroundGarden();
- buildMissionGarden();
- buildStartGarden();
- gardenWorldReady=true;
-}
+        characterRoot=new THREE.Group();
+        characterRoot.add(character);
+        character.position.set(-center.x,-box.min.y,-center.z);
+        character.userData.baseHeight=Math.max(size.y,0.001);
+        scene.add(characterRoot);
 
-function buildPaths(){
- const path=mesh(new THREE.BoxGeometry(9,.10,70),MAT.path,false,true);
- path.position.set(0,.035,0);add(path);
- for(let z=-30;z<=30;z+=4){
-   const stone=mesh(new THREE.BoxGeometry(7.8,.12,2.3),MAT.stone,false,true);
-   stone.position.set(rand(-.35,.35),.105,z+rand(-.25,.25));
-   stone.rotation.y=rand(-.035,.035);add(stone);
- }
- /* side paths */
- [-1,1].forEach(side=>{
-  const p=mesh(new THREE.BoxGeometry(13,.08,3.2),MAT.path,false,true);
-  p.position.set(side*22,.04,-9);p.rotation.y=side*.12;add(p);
- });
-}
+        mixer=new THREE.AnimationMixer(character);
 
-function buildPlantBeds(){
- const beds=[[-22,-18,14,18],[22,-18,14,18],[-22,18,14,16],[22,18,14,16]];
- beds.forEach(([x,z,w,d])=>{
-  const soil=mesh(new THREE.BoxGeometry(w,.18,d),MAT.soil,false,true);
-  soil.position.set(x,.08,z);add(soil);
-  for(let row=-2;row<=2;row++){
-   for(let col=-3;col<=3;col++){
-    const px=x+col*1.7+rand(-.18,.18),pz=z+row*2.2+rand(-.18,.18);
-    const stem=mesh(new THREE.CylinderGeometry(.035,.05,.55,7),MAT.leafDark,true,true);
-    stem.position.set(px,.42,pz);add(stem);
-    const leaves=mesh(new THREE.SphereGeometry(.28,7,5),Math.random()>.5?MAT.leaf:MAT.leafLight,true,true);
-    leaves.scale.set(1.25,.55,1.25);leaves.position.set(px,.67,pz);add(leaves);
-   }
+        // The uploaded character contains "Idle" and "Walk".
+        const idleClip=findClip(gltf.animations,["idle","breath","stand"]);
+        const walkClip=findClip(gltf.animations,["walk","run","move"]);
+
+        if(idleClip){
+          idleAction=mixer.clipAction(idleClip);
+          idleAction.play();
+        }
+        if(walkClip){
+          walkAction=mixer.clipAction(walkClip);
+        }
+
+        modelReady=true;
+        window.modelReadyForFallback=true;
+        console.log("player_character.glb berjaya dimuatkan.",gltf.animations.map(a=>a.name));
+        if(typeof toast==="function") toast("Watak 3D sedia digunakan ✨");
+      },
+      undefined,
+      function(error){
+        console.error("Gagal memuatkan player_character.glb:",error);
+        if(typeof toast==="function"){
+          toast("Watak 3D gagal dimuatkan. Pastikan player_character.glb ada dalam folder yang sama.");
+        }
+      }
+    );
+  }catch(error){
+    console.error("Three.js initialization error:",error);
   }
- });
 }
-
-function buildPond(){
- const rim=mesh(new THREE.CylinderGeometry(7.6,8.2,.35,48),MAT.stone,false,true);
- rim.scale.z=.72;rim.position.set(-18,.12,1);add(rim);
- waterMesh=mesh(new THREE.CylinderGeometry(7.2,7.2,.12,48),MAT.water,false,true);
- waterMesh.scale.z=.72;waterMesh.position.set(-18,.30,1);add(waterMesh);
- for(let i=0;i<7;i++){
-  const lily=mesh(new THREE.CircleGeometry(rand(.28,.55),16),MAT.leafLight,false,false);
-  lily.rotation.x=-Math.PI/2;lily.position.set(-18+rand(-4.5,4.5),.39,1+rand(-3,3));add(lily);
- }
-}
-
-function buildFences(){
- const segments=[{x:-30,z:-26,len:60,rot:0},{x:-30,z:26,len:60,rot:0},{x:-32,z:0,len:52,rot:Math.PI/2},{x:32,z:0,len:52,rot:Math.PI/2}];
- segments.forEach(seg=>{
-  const count=Math.floor(seg.len/4);
-  for(let i=0;i<=count;i++){
-   const d=-seg.len/2+i*4;
-   const x=seg.rot===0?seg.x+d:seg.x;
-   const z=seg.rot===0?seg.z:seg.z+d;
-   const post=mesh(new THREE.BoxGeometry(.28,1.1,.28),MAT.fence,true,true);post.position.set(x,.55,z);add(post);
-  }
-  const rail=mesh(new THREE.BoxGeometry(seg.len,.18,.18),MAT.fence,true,true);
-  rail.position.set(seg.x,.78,seg.z);rail.rotation.y=seg.rot;add(rail);
- });
-}
-
-function createTree(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);
- const trunk=mesh(new THREE.CylinderGeometry(.42,.58,3.8,9),MAT.wood,true,true);trunk.position.y=1.9;g.add(trunk);
- const crownMat=Math.random()>.5?MAT.leaf:MAT.leafDark;
- for(let i=0;i<7;i++){
-  const crown=mesh(new THREE.IcosahedronGeometry(rand(1.4,2.0),1),crownMat,true,true);
-  crown.position.set(rand(-1.3,1.3),rand(3.5,5.2),rand(-1.2,1.2));g.add(crown);
- }
- add(g);return g;
-}
-function buildTrees(){
- const trees=[[-30,-22,1.35],[-18,-28,1.05],[18,-28,1.1],[30,-21,1.35],[-31,18,1.25],[31,18,1.3],[-28,4,.9],[28,6,.95],[-7,-30,.8],[8,-30,.85]];
- trees.forEach(t=>createTree(...t));
-}
-
-function createFlower(x,z,colorMat,height=1){
- const g=new THREE.Group();g.position.set(x,0,z);
- const stem=mesh(new THREE.CylinderGeometry(.025,.035,.55*height,7),MAT.leafDark,true,true);stem.position.y=.28*height;g.add(stem);
- const center=mesh(new THREE.SphereGeometry(.075*height,8,6),MAT.flowerCenter,true,true);center.position.y=.58*height;g.add(center);
- for(let i=0;i<7;i++){
-  const petal=mesh(new THREE.SphereGeometry(.10*height,8,6),colorMat,true,true);
-  const a=i*Math.PI*2/7;petal.scale.set(.65,1.15,.42);petal.position.set(Math.cos(a)*.16*height,.58*height+Math.sin(a)*.02,Math.sin(a)*.16*height);g.add(petal);
- }
- g.userData.baseY=0;g.userData.phase=Math.random()*Math.PI*2;animatedPlants.push(g);add(g);return g;
-}
-function createSunflower(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);
- const stem=mesh(new THREE.CylinderGeometry(.045,.065,1.45,8),MAT.leafDark,true,true);stem.position.y=.72;g.add(stem);
- for(let i=0;i<4;i++){
-  const leaf=mesh(new THREE.SphereGeometry(.16,7,5),MAT.leafLight,true,true);leaf.scale.set(1.8,.35,.65);
-  leaf.position.set((i%2?1:-1)*.2,.55+i*.13,(i<2?-.12:.12));g.add(leaf);
- }
- const c=mesh(new THREE.SphereGeometry(.32,12,8),MAT.flowerCenter,true,true);c.position.y=1.58;g.add(c);
- for(let i=0;i<12;i++){
-  const a=i*Math.PI*2/12,p=mesh(new THREE.SphereGeometry(.13,8,6),MAT.flowerYellow,true,true);
-  p.scale.set(.55,1.3,.45);p.position.set(Math.cos(a)*.32,1.58,Math.sin(a)*.32);g.add(p);
- }
- animatedPlants.push(g);add(g);
-}
-function buildFlowerFields(){
- const mats=[MAT.flowerPink,MAT.flowerYellow,MAT.flowerOrange,MAT.flowerBlue,MAT.flowerWhite,MAT.flowerPurple];
- for(let i=0;i<95;i++){
-  const side=i%2?1:-1;
-  const x=side*rand(10,30),z=rand(-25,24);
-  if(Math.abs(z)<5&&Math.abs(x)<12)continue;
-  createFlower(x,z,mats[Math.floor(Math.random()*mats.length)],rand(.7,1.25));
- }
- for(let i=0;i<24;i++)createSunflower(rand(-29,29),rand(-24,24),rand(.65,1.15));
-}
-
-function createBerryBush(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);
- for(let i=0;i<5;i++){
-  const leaf=mesh(new THREE.IcosahedronGeometry(rand(.35,.58),1),MAT.leaf,true,true);
-  leaf.position.set(rand(-.65,.65),rand(.3,.8),rand(-.55,.55));g.add(leaf);
- }
- for(let i=0;i<9;i++){
-  const b=mesh(new THREE.SphereGeometry(.10,8,6),MAT.berry,true,true);
-  b.position.set(rand(-.7,.7),rand(.45,1.0),rand(-.65,.65));g.add(b);
- }
- add(g);
-}
-function createPottedPlant(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);
- const pot=mesh(new THREE.CylinderGeometry(.28,.38,.42,12),MAT.orange,true,true);pot.position.y=.21;g.add(pot);
- for(let i=0;i<5;i++){
-  const leaf=mesh(new THREE.SphereGeometry(.22,7,5),MAT.leafLight,true,true);leaf.scale.set(.55,1.5,.32);leaf.position.set(rand(-.25,.25),.72+rand(0,.3),rand(-.25,.25));g.add(leaf);
- }
- add(g);
-}
-function buildShrubsAndCrops(){
- for(let i=0;i<32;i++)createBerryBush(rand(-30,30),rand(-26,26));
- for(let i=0;i<20;i++)createPottedPlant(rand(-30,30),rand(-25,25));
-}
-function createBananaPlant(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);
- const stem=mesh(new THREE.CylinderGeometry(.25,.32,2.4,9),MAT.wood,true,true);stem.position.y=1.2;g.add(stem);
- for(let i=0;i<9;i++){
-  const a=i*Math.PI*2/9;
-  const leaf=mesh(new THREE.CapsuleGeometry(.13,1.6,5,10),MAT.leafLight,true,true);
-  leaf.scale.set(1.2,.75,.55);leaf.position.set(Math.cos(a)*.65,2.25+Math.sin(i)*.15,Math.sin(a)*.65);leaf.rotation.z=.65*Math.cos(a);leaf.rotation.x=.25*Math.sin(a);g.add(leaf);
- }
- for(let i=0;i<4;i++){
-  const b=mesh(new THREE.CapsuleGeometry(.10,.65,5,8),MAT.banana,true,true);b.position.set(.15+i*.18,1.7,.1);b.rotation.z=-.8;g.add(b);
- }
- add(g);
-}
-function buildBananaGroves(){
- for(let i=0;i<10;i++)createBananaPlant(-30+rand(0,5),-10+rand(-7,7));
- for(let i=0;i<7;i++)createBananaPlant(26+rand(0,5),10+rand(-7,7));
-}
-function createCactus(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);
- const body=mesh(new THREE.CapsuleGeometry(.32,1.5,6,10),MAT.cactus,true,true);body.position.y=.9;g.add(body);
- for(const s of [-1,1]){
-  const arm=mesh(new THREE.CapsuleGeometry(.18,.65,6,8),MAT.cactus,true,true);arm.position.set(s*.42,1.05,0);arm.rotation.z=s*1.15;g.add(arm);
- }
- add(g);
-}
-function buildCactusGarden(){for(let i=0;i<18;i++)createCactus(rand(-8,8),rand(-27,27))}
-function buildRocksAndLogs(){
- for(let i=0;i<30;i++){
-  const r=mesh(new THREE.IcosahedronGeometry(rand(.25,.85),1),MAT.stone,true,true);
-  r.scale.y=rand(.45,.9);r.position.set(rand(-32,32),rand(.15,.4),rand(-31,31));add(r);
- }
- for(let i=0;i<10;i++){
-  const log=mesh(new THREE.CylinderGeometry(.22,.3,2.2,8),MAT.wood,true,true);
-  log.position.set(rand(-28,28),.28,rand(-28,28));log.rotation.z=Math.PI/2;log.rotation.y=rand(0,Math.PI);add(log);
- }
-}
-function buildGardenFurniture(){
- const bench= new THREE.Group();bench.position.set(15,.1,-3);
- for(const y of [.65,1.05]){const b=mesh(new THREE.BoxGeometry(3.2,.18,.48),MAT.wood,true,true);b.position.y=y;bench.add(b)}
- for(const x of [-1.2,1.2]){const leg=mesh(new THREE.BoxGeometry(.18,.7,.18),MAT.wood,true,true);leg.position.set(x,.35,0);bench.add(leg)}
- add(bench);
-}
-function buildBackgroundGarden(){
- for(let i=0;i<35;i++){
-  const x=rand(-35,35),z=rand(-35,35),s=rand(.45,.8);
-  if(Math.abs(x)<12&&Math.abs(z)<14)continue;
-  createTree(x,z,s);
- }
-}
-function createArch(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);
- for(const sx of [-2.2,2.2]){const p=mesh(new THREE.CylinderGeometry(.16,.2,3.2,10),MAT.fence,true,true);p.position.set(sx,1.6,0);g.add(p)}
- const top=mesh(new THREE.TorusGeometry(2.2,.16,8,24,Math.PI),MAT.fence,true,true);top.rotation.z=Math.PI;top.position.y=3.2;g.add(top);
- return g;
-}
-function buildMissionGarden(){
- const arch=createArch(0,-15);add(arch);
- const sign=mesh(new THREE.BoxGeometry(3.6,1.1,.12),MAT.white,true,true);sign.position.set(0,2.5,-15);add(sign);
- const portalRing=mesh(new THREE.TorusGeometry(1.2,.12,10,32),MAT.flowerYellow,true,true);portalRing.position.set(0,1.25,-14.82);portalRing.rotation.x=Math.PI/2;add(portalRing);
-}
-function buildStartGarden(){
- const arch=createArch(0,0);arch.scale.setScalar(.8);add(arch);
- const sign=mesh(new THREE.BoxGeometry(3.2,.9,.12),MAT.white,true,true);sign.position.set(0,2.1,0);add(sign);
-}
-
-
-/* ===== LEVEL 2: DUNIA HAIWAN 3D — REALISTIK / PADAT =====
-   Semua perubahan di bawah ini hanya untuk dunia Level 2 (theme: animals).
-   Sistem quiz, 5 cahaya, player GLB, movement, score dan Level 1 dikekalkan.
-*/
-let animalCreatures=[];
-let animalWaterMesh=null;
-let animalWaterRipples=[];
-let animalWorldDecor=[];
-
-function animalAdd(obj){gardenGroup.add(obj);return obj}
-function animalTrack(obj,type,homeX,homeZ,opts={}){
- const rec={group:obj,type,homeX,homeZ,phase:Math.random()*Math.PI*2,
-   speed:opts.speed||.45,roamX:opts.roamX||2.5,roamZ:opts.roamZ||2.5,
-   baseY:opts.baseY||0,walk:opts.walk||[],wing:opts.wing||[],children:opts.children||{}};
- animalCreatures.push(rec);return rec;
-}
-function animalPart(g,geometry,material,pos,scale,rot){
- const m=mesh(geometry,material,true,true);if(pos)m.position.set(...pos);if(scale)m.scale.set(...scale);if(rot)m.rotation.set(...rot);g.add(m);return m;
-}
-function animalEye(g,x,y,z){return animalPart(g,new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,[x,y,z],[1,1,1])}
-
-function createLowPolyAnimal(x,z,scale=1,type="rabbit",opts={}){
- const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);
- let body=MAT.animalBrown,belly=MAT.animalLight;
- if(type==="rabbit"){body=MAT.animalWhite;belly=MAT.animalLight}
- if(type==="fox"){body=MAT.orange;belly=MAT.animalWhite}
- if(type==="cow"){body=MAT.cowWhite;belly=MAT.animalWhite}
-
- if(type==="sheep"){body=MAT.sheepCream;belly=MAT.sheepCream}
- if(type==="deer"){body=MAT.animalBrown;belly=MAT.animalLight}
-
- const bodyM=animalPart(g,new THREE.SphereGeometry(.72,14,10),body,[0,.9,0],[1.38,.84,1.65]);
- const bellyM=animalPart(g,new THREE.SphereGeometry(.48,12,8),belly,[0,.77,.58],[1.05,.82,.8]);
- const head=animalPart(g,new THREE.SphereGeometry(.48,13,9),body,[0,1.45,.78],[1,1,1]);
- animalPart(g,new THREE.SphereGeometry(.25,10,7),belly,[0,1.32,1.15],[1,.75,1.15]);
- animalEye(g,-.17,1.59,1.16);animalEye(g,.17,1.59,1.16);
- const legs=[];
- for(const sx of [-.46,.46])for(const sz of [-.48,.48]){
-   const leg=animalPart(g,new THREE.CylinderGeometry(.105,.14,.65,8),body,[sx,.47,sz]);legs.push(leg);
-   animalPart(g,new THREE.SphereGeometry(.14,8,6),belly,[sx,.13,sz+.07],[1,.55,1.2]);
- }
- const tail=animalPart(g,new THREE.SphereGeometry(type==="cow"?.17:.25,10,7),body,[0,1.02,-1.36],[.72,1,1.65]);
- const ears=[];
- for(const sx of [-.4,.4]){
-   const ear=animalPart(g,new THREE.ConeGeometry(.15,.48,8),body,[sx,1.88,.72],[1,1,1],[0,0,sx<0?.22:-.22]);ears.push(ear);
- }
- if(type==="rabbit"){
-   ears.forEach(e=>e.scale.set(.85,1.65,.85));
- }
- if(type==="deer"){
-   ears.forEach(e=>e.scale.set(.9,1.15,.9));
-   const antlerMat=MAT.habitatWood;
-   for(const sx of [-.25,.25]){
-     const a=animalPart(g,new THREE.CylinderGeometry(.035,.055,.65,6),antlerMat,[sx,2.12,.7]);a.rotation.z=sx<0?.28:-.28;
-     animalPart(g,new THREE.CylinderGeometry(.025,.04,.32,6),antlerMat,[sx+(sx<0?.1:-.1),2.35,.7],[1,1,1],[0,0,sx<0?.55:-.55]);
-   }
- }
- if(type==="cow"){
-   const hornMat=MAT.habitatSand;
-   for(const sx of [-.22,.22])animalPart(g,new THREE.ConeGeometry(.08,.3,8),hornMat,[sx,1.91,.72],[1,1,1],[0,0,sx<0?.4:-.4]);
-   for(let i=0;i<3;i++){
-     const patch=animalPart(g,new THREE.SphereGeometry(.22,9,7),MAT.cowBlack,[rand(-.55,.55),.92,rand(-.45,.7)],[1.3,.65,.8]);patch.rotation.y=rand(0,Math.PI);
-   }
- }
-
- if(type==="sheep"){
-   for(let i=0;i<9;i++)animalPart(g,new THREE.SphereGeometry(rand(.18,.28),9,7),MAT.sheepCream,[rand(-.65,.65),rand(.55,1.35),rand(-.55,.65)],[1.2,.8,1]);
- }
- animalTrack(g,type,x,z,{speed:opts.speed||rand(.22,.5),roamX:opts.roamX||rand(2,5),roamZ:opts.roamZ||rand(2,5),walk:legs,children:{body:bodyM,belly:bellyM,head,tail,ears}});
- return animalAdd(g);
-}
-
-function createFish(x,z,scale=1,colorMat=MAT.fishBlue){
- const g=new THREE.Group();g.position.set(x,.58,z);g.scale.setScalar(scale);
- const body=animalPart(g,new THREE.SphereGeometry(.42,14,9),colorMat,[0,0,0],[1.65,.72,1]);
- const tail=animalPart(g,new THREE.ConeGeometry(.28,.58,7),colorMat,[-.67,0,0],[1,1,1],[0,Math.PI/2,0]);
- const eye=animalPart(g,new THREE.SphereGeometry(.055,8,6),MAT.animalBlack,[.48,.14,.25]);
- animalPart(g,new THREE.ConeGeometry(.14,.38,7),MAT.flowerYellow,[.04,.34,0],[1,1,1],[0,0,-Math.PI/2]);
- animalTrack(g,"fish",x,z,{speed:rand(.35,.75),roamX:rand(2,5),roamZ:rand(1,3),baseY:.58,children:{body,tail,eye}});
- return animalAdd(g);
-}
-
-function createFrog(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,.1,z);g.scale.setScalar(scale);
- const body=animalPart(g,new THREE.SphereGeometry(.52,13,9),MAT.leafDark,[0,.45,0],[1.3,.68,1.35]);
- const head=animalPart(g,new THREE.SphereGeometry(.43,13,9),MAT.leaf,[0,.78,.22],[1.2,.72,1.05]);
- for(const sx of [-.18,.18]){animalPart(g,new THREE.SphereGeometry(.13,10,7),MAT.flowerWhite,[sx,1.02,.46]);animalEye(g,sx,1.02,.56)}
- animalTrack(g,"frog",x,z,{speed:.28,roamX:3.5,roamZ:2.5,baseY:.1,children:{body,head}});
- return animalAdd(g);
-}
-
-function createButterfly3D(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,rand(1.5,3),z);g.scale.setScalar(scale);
- const body=animalPart(g,new THREE.CapsuleGeometry(.055,.42,5,8),MAT.animalDark,[0,0,0],[1,1,1],[Math.PI/2,0,0]);
- const wings=[];
- for(const side of [-1,1]){
-   const w1=animalPart(g,new THREE.SphereGeometry(.28,10,7),side<0?MAT.flowerPink:MAT.flowerPurple,[side*.22,.08,0],[1.2,.16,.82]);
-   const w2=animalPart(g,new THREE.SphereGeometry(.18,10,7),MAT.flowerYellow,[side*.19,-.12,.14],[1,.14,.7]);
-   wings.push(w1,w2);
- }
- animalTrack(g,"butterfly",x,z,{speed:.7,roamX:5,roamZ:5,baseY:g.position.y,wing:wings,children:{body}});
- return animalAdd(g);
-}
-
-function createBird3D(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,rand(4,6),z);g.scale.setScalar(scale);
- const body=animalPart(g,new THREE.SphereGeometry(.38,11,8),MAT.fishBlue,[0,0,0],[1.35,.7,1]);
- animalPart(g,new THREE.SphereGeometry(.25,10,7),MAT.animalWhite,[.36,.16,.12]);
- animalPart(g,new THREE.ConeGeometry(.08,.28,6),MAT.flowerYellow,[.63,.16,.12],[1,1,1],[0,0,-Math.PI/2]);
- const wings=[];
- for(const side of [-1,1])wings.push(animalPart(g,new THREE.SphereGeometry(.32,9,7),MAT.wingWhite,[-.05,0,side*.35],[1.15,.15,.65]));
- animalTrack(g,"bird",x,z,{speed:.35,roamX:8,roamZ:8,baseY:g.position.y,wing:wings});
- return animalAdd(g);
-}
-
-function createChicken(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,.08,z);g.scale.setScalar(scale);
- const body=animalPart(g,new THREE.SphereGeometry(.36,11,8),MAT.chickenWhite,[0,.55,0],[1.3,.9,1.15]);
- animalPart(g,new THREE.SphereGeometry(.25,10,7),MAT.chickenWhite,[0,.9,.34]);
- animalPart(g,new THREE.ConeGeometry(.07,.2,7),MAT.flowerOrange,[0,.9,.58],[1,1,1],[Math.PI/2,0,0]);
- for(const sx of [-.12,.12])animalEye(g,sx,.99,.54);
- const legs=[animalPart(g,new THREE.CylinderGeometry(.035,.045,.4,6),MAT.flowerOrange,[-.12,.23,0]),animalPart(g,new THREE.CylinderGeometry(.035,.045,.4,6),MAT.flowerOrange,[.12,.23,0])];
- animalTrack(g,"chicken",x,z,{speed:.18,roamX:3,roamZ:3,children:{body},walk:legs});return animalAdd(g);
-}
-
-function createDuck(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,.42,z);g.scale.setScalar(scale);
- const body=animalPart(g,new THREE.SphereGeometry(.34,11,8),MAT.duckYellow,[0,0,0],[1.5,.75,1.15]);
- animalPart(g,new THREE.SphereGeometry(.24,10,7),MAT.duckYellow,[.32,.2,.2]);
- animalPart(g,new THREE.ConeGeometry(.08,.25,7),MAT.orange,[.58,.19,.2],[1,1,1],[0,0,-Math.PI/2]);
- animalTrack(g,"duck",x,z,{speed:.16,roamX:2.5,roamZ:2.5,baseY:.42,children:{body}});return animalAdd(g);
-}
-
-function buildAnimalPond(){
- const cx=0,cz=17;
- const outer=mesh(new THREE.CylinderGeometry(10.9,11.5,.48,64),MAT.habitatStone,false,true);outer.scale.z=.72;outer.position.set(cx,.12,cz);animalAdd(outer);
- const sand=mesh(new THREE.CylinderGeometry(10.45,10.45,.12,64),MAT.habitatSand,false,true);sand.scale.z=.72;sand.position.set(cx,.36,cz);animalAdd(sand);
- animalWaterMesh=mesh(new THREE.CylinderGeometry(9.95,9.95,.16,64),MAT.waterDeep,false,true);animalWaterMesh.scale.z=.72;animalWaterMesh.position.set(cx,.43,cz);animalAdd(animalWaterMesh);
- for(let i=0;i<22;i++)createFish(rand(-6.2,6.2),cz+rand(-4.4,4.4),rand(.5,.9),i%3?MAT.fishBlue:MAT.fishOrange);
- for(let i=0;i<6;i++)createDuck(rand(-5.5,5.5),cz+rand(-3.8,3.8),rand(.7,1));
- for(let i=0;i<12;i++){
-   const lily=mesh(new THREE.CircleGeometry(rand(.3,.62),18),MAT.leafLight,false,false);lily.rotation.x=-Math.PI/2;lily.position.set(rand(-6.6,6.6),.55,cz+rand(-4.6,4.6));animalAdd(lily);
- }
- for(let i=0;i<8;i++){
-   const r=mesh(new THREE.IcosahedronGeometry(rand(.25,.75),1),MAT.stone,true,true);r.scale.y=rand(.55,.85);r.position.set(rand(-8,8),.5,cz+rand(-6,6));animalAdd(r);
- }
- // Small stream flowing from the pond toward the central path.
- const stream=mesh(new THREE.BoxGeometry(5.5,.08,22),MAT.waterDeep,false,true);stream.position.set(0,.48,6.8);stream.rotation.y=.04;animalAdd(stream);
- for(let i=0;i<9;i++){
-   const ripple=mesh(new THREE.TorusGeometry(.38,.035,6,20),MAT.waterFoam,false,false);ripple.rotation.x=Math.PI/2;ripple.position.set(rand(-1.8,1.8),.53,rand(-2.5,13));animalAdd(ripple);animalWaterRipples.push(ripple);
- }
-}
-
-function buildBarn(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);
- const base=animalPart(g,new THREE.BoxGeometry(12,4.6,7),MAT.barnRed,[0,2.3,0]);
- const roof=animalPart(g,new THREE.ConeGeometry(5.2,7,4),MAT.roofBlue,[0,5.1,0],[1,1,.72],[0,Math.PI/4,0]);
- const door=animalPart(g,new THREE.BoxGeometry(2.8,3.3,.18),MAT.barnCream,[0,1.75,3.56]);
- for(const sx of [-4.5,4.5])animalPart(g,new THREE.BoxGeometry(.5,3.8,.5),MAT.habitatWood,[sx,1.9,3.55]);
- for(const sx of [-2.8,2.8])animalPart(g,new THREE.BoxGeometry(1.5,1.4,.12),MAT.waterFoam,[sx,2.6,3.6]);
- animalAdd(g);
- return g;
-}
-function createHayBale(x,z,s=1){
- const b=mesh(new THREE.CylinderGeometry(.65,.65,1.3,12),MAT.hay,true,true);b.position.set(x,.68,z);b.rotation.z=Math.PI/2;b.scale.setScalar(s);animalAdd(b);
- for(let i=-1;i<=1;i++){const ring=mesh(new THREE.TorusGeometry(.54,.035,6,16),MAT.hayLight,true,true);ring.rotation.y=Math.PI/2;ring.position.set(x+i*.36*s,.68,z);ring.scale.setScalar(s);animalAdd(ring)}
-}
-function buildAnimalHabitat(){
- const soil=mesh(new THREE.BoxGeometry(21,.2,17),MAT.habitatSand,false,true);soil.position.set(20,.1,-10);animalAdd(soil);
- buildBarn(20,-14);
- for(let i=0;i<7;i++)createHayBale(14+rand(0,11),-7+rand(-5,5),rand(.65,1));
- for(const x of [12,28])for(let z=-17;z<=-3;z+=3.5){const p=mesh(new THREE.BoxGeometry(.25,1.15,.25),MAT.habitatWood,true,true);p.position.set(x,.58,z);animalAdd(p)}
- for(const z of [-17,-3]){const rail=mesh(new THREE.BoxGeometry(16,.18,.18),MAT.habitatWood,true,true);rail.position.set(20,.8,z);animalAdd(rail)}
-
- for(let i=0;i<7;i++)createChicken(14+rand(0,11),-3+rand(-2,2),rand(.65,.95));
-}
-function buildButterflyGarden(){
- const bed=mesh(new THREE.BoxGeometry(20,.16,15),MAT.grass2,false,true);bed.position.set(-20,.08,-8);animalAdd(bed);
- const arch=new THREE.Group();arch.position.set(-20,0,-15);
- for(const sx of [-3,3])animalPart(arch,new THREE.CylinderGeometry(.16,.2,3.4,10),MAT.fence,[sx,1.7,0]);
- const top=animalPart(arch,new THREE.TorusGeometry(3,.16,8,28,Math.PI),MAT.fence,[0,3.35,0],[1,1,1],[0,0,Math.PI]);animalAdd(arch);
- const mats=[MAT.flowerPink,MAT.flowerYellow,MAT.flowerOrange,MAT.flowerBlue,MAT.flowerWhite,MAT.flowerPurple];
- for(let i=0;i<70;i++)createFlower(-20+rand(-9,9),-8+rand(-6.5,6.5),mats[Math.floor(Math.random()*mats.length)],rand(.7,1.35));
- for(let i=0;i<16;i++)createButterfly3D(-20+rand(-9,9),-8+rand(-6.5,6.5),rand(.65,1.05));
-}
-function buildAnimalGrassland(){
- const bed=mesh(new THREE.BoxGeometry(19,.14,14),MAT.grass2,false,true);bed.position.set(-13,.07,15);animalAdd(bed);
- for(let i=0;i<60;i++){
-   const x=-13+rand(-9,9),z=15+rand(-6.5,6.5);
-   const tuft=mesh(new THREE.ConeGeometry(rand(.07,.16),rand(.45,.85),6),MAT.leafLight,true,true);tuft.position.set(x,.38,z);animalAdd(tuft);
- }
- for(let i=0;i<8;i++)createFrog(rand(7,19),rand(11,21),rand(.7,1.05));
- for(let i=0;i<5;i++)createLowPolyAnimal(-13+rand(-7,7),15+rand(-5,5),rand(.7,.95),"rabbit",{speed:.25,roamX:3,roamZ:3});
-}
-function buildAnimalFences(){
- for(const x of [-34,34]){
-  for(let z=-30;z<=30;z+=3.5){const p=mesh(new THREE.BoxGeometry(.3,1.15,.3),MAT.habitatWood,true,true);p.position.set(x,.58,z);animalAdd(p)}
-  const rail=mesh(new THREE.BoxGeometry(.18,.18,60),MAT.habitatWood,true,true);rail.position.set(x,.8,0);animalAdd(rail)
- }
-}
-function buildAnimalDecor(){
- // Central market-style path, crates, feeding troughs and signboards make the world denser.
- for(let z=-28;z<=28;z+=3.5){
-  const stone=mesh(new THREE.BoxGeometry(6.4,.12,2.15),MAT.stone,false,true);stone.position.set(rand(-.25,.25),.12,z+rand(-.16,.16));stone.rotation.y=rand(-.035,.035);animalAdd(stone)
- }
- for(let i=0;i<16;i++){
-  const crate=mesh(new THREE.BoxGeometry(.75,.6,.75),MAT.habitatWood,true,true);crate.position.set(rand(-30,30),.3,rand(-27,27));animalAdd(crate)
- }
- for(const pos of [[12,-1],[27,-1],[13,9],[27,9]]){
-  const trough=mesh(new THREE.BoxGeometry(2.3,.45,.75),MAT.habitatWood,true,true);trough.position.set(pos[0],.32,pos[1]);animalAdd(trough)
-  const water=mesh(new THREE.BoxGeometry(1.8,.08,.48),MAT.waterDeep,false,true);water.position.set(pos[0],.56,pos[1]);animalAdd(water)
- }
- // Small gazebo / observation point near the pond.
- const gazebo=new THREE.Group();gazebo.position.set(-11,0,1);
- for(const sx of [-2,2])for(const sz of [-2,2])animalPart(gazebo,new THREE.CylinderGeometry(.13,.17,3.2,10),MAT.habitatWood,[sx,1.6,sz]);
- animalPart(gazebo,new THREE.ConeGeometry(3.3,1.5,4),MAT.roofBlue,[0,3.7,0],[1,1,.95],[0,Math.PI/4,0]);animalAdd(gazebo)
- for(let i=0;i<18;i++)createHayBale(rand(-31,31),rand(-30,30),rand(.5,.8));
-}
-function buildAnimalWorld(){
- gardenGroup=new THREE.Group();gardenGroup.name="DuniaHaiwan3D_Realistic";scene.add(gardenGroup);
- const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,64,64);const pos=terrainGeo.attributes.position;
- for(let i=0;i<pos.count;i++){
-  const x=pos.getX(i),z=pos.getY(i),edge=Math.max(Math.abs(x),Math.abs(z));
-  const h=(Math.sin(x*.15)*.07+Math.cos(z*.17)*.055+Math.sin((x+z)*.08)*.035)*Math.max(0,1-edge/36);pos.setZ(i,h)
- }
- terrainGeo.computeVertexNormals();const terrain=mesh(terrainGeo,MAT.grass2,false,true);terrain.rotation.x=-Math.PI/2;terrain.position.y=GROUND_Y;animalAdd(terrain)
- // Soft meadow patches for visual depth.
- for(let i=0;i<18;i++){
-  const patch=mesh(new THREE.CircleGeometry(rand(2.5,5.5),28),i%2?MAT.grass:MAT.leafLight,false,false);patch.rotation.x=-Math.PI/2;patch.position.set(rand(-29,29),.015,rand(-28,28));animalAdd(patch)
- }
- const path=mesh(new THREE.BoxGeometry(7.2,.10,64),MAT.path,false,true);path.position.set(0,.05,0);animalAdd(path)
- buildAnimalPond();buildAnimalHabitat();buildButterflyGarden();buildAnimalGrassland();buildAnimalDecor();buildAnimalFences()
- const trees=[[-31,-25,1.35],[-23,-30,1],[-11,-31,.85],[10,-31,.9],[22,-30,1.1],[31,-23,1.35],[-32,4,1],[-30,27,1.25],[-20,29,.95],[20,29,1.1],[30,25,1.3],[30,8,.9]];
- trees.forEach(t=>createTree(...t));
- // Dense shrub line and fruit trees around the edges.
- for(let i=0;i<42;i++)createBerryBush(rand(-31,31),rand(-29,29));
- for(let i=0;i<24;i++)createFlower(rand(-30,30),rand(-29,29),[MAT.flowerPink,MAT.flowerYellow,MAT.flowerWhite,MAT.flowerBlue][i%4],rand(.65,1.1));
- for(let i=0;i<10;i++)createBird3D(rand(-27,27),rand(-24,24),rand(.65,1.0));
- buildMissionGarden();buildStartGarden();gardenWorldReady=true
-}
-function updateAnimalVisual(t){
- if(!gardenWorldReady)return;
- const sec=t*.001;
- animalCreatures.forEach(a=>{
-   const g=a.group,ph=a.phase;
-   if(a.type==="fish"){
-     const dx=Math.sin(sec*a.speed+ph)*a.roamX,dz=Math.cos(sec*a.speed*.72+ph)*a.roamZ;
-     g.position.x=a.homeX+dx;g.position.z=a.homeZ+dz;g.position.y=a.baseY+Math.sin(sec*2.4+ph)*.08;g.rotation.y=Math.atan2(Math.cos(sec*a.speed+ph)*a.roamX,-Math.sin(sec*a.speed+ph)*a.roamZ);
-   }else if(a.type==="butterfly"){
-     g.position.x=a.homeX+Math.sin(sec*a.speed+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*a.speed*.8+ph)*a.roamZ;g.position.y=a.baseY+Math.sin(sec*2.5+ph)*.55;g.rotation.y=Math.atan2(Math.cos(sec*a.speed+ph)*a.roamX,-Math.sin(sec*a.speed*.8+ph)*a.roamZ);
-     a.wing.forEach((w,i)=>w.rotation.z=Math.sin(sec*9+ph+i)*.7)
-   }else if(a.type==="bird"){
-     g.position.x=a.homeX+Math.sin(sec*a.speed+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*a.speed*.8+ph)*a.roamZ;g.position.y=a.baseY+Math.sin(sec*1.6+ph)*.7;g.rotation.y=Math.atan2(Math.cos(sec*a.speed+ph)*a.roamX,-Math.sin(sec*a.speed*.8+ph)*a.roamZ);a.wing.forEach((w,i)=>w.rotation.x=Math.sin(sec*8+ph+i)*.55)
-   }else if(a.type==="frog"){
-     const jump=Math.max(0,Math.sin(sec*1.25+ph));g.position.x=a.homeX+Math.sin(sec*.35+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*.42+ph)*a.roamZ;g.position.y=a.baseY+jump*jump*.28;g.rotation.y=sec*.15+ph
-   }else{
-     const moving=Math.sin(sec*a.speed+ph),stride=Math.sin(sec*7+ph)*Math.abs(moving);
-     g.position.x=a.homeX+Math.sin(sec*a.speed*.42+ph)*a.roamX;g.position.z=a.homeZ+Math.cos(sec*a.speed*.48+ph)*a.roamZ;g.position.y=a.baseY+Math.abs(Math.sin(sec*1.7+ph))*.018;g.rotation.y=Math.atan2(Math.cos(sec*a.speed*.42+ph)*a.roamX,-Math.sin(sec*a.speed*.48+ph)*a.roamZ);
-     a.walk.forEach((leg,i)=>leg.rotation.z=stride*(i%2?-.28:.28));
-     if(a.children.tail)a.children.tail.rotation.y=Math.sin(sec*4+ph)*.18;
-     if(a.children.ears)a.children.ears.forEach((e,i)=>e.rotation.z=(i?-.18:.18)+Math.sin(sec*2.2+ph)*.04)
-   }
- });
- if(animalWaterMesh)animalWaterMesh.position.y=.43+Math.sin(sec*1.35)*.025;
- animalWaterRipples.forEach((r,i)=>{r.scale.setScalar(1+.12*Math.sin(sec*1.8+i));r.rotation.z=sec*.12+i*.3})
-}
-
-
-/* ===== LEVEL 3: MAKMAL BAHAN 3D SEBENAR ===== */
-let matterAnimated=[];
-let matterFluids=[];
-let matterMachines=[];
-let cityMode=false;
-let labInteriorMode=false;
-// V20.2 bridge: declare Level-3 state before exposing it to the classic game script.
-// This prevents the temporal-dead-zone error: Cannot access 'labEntrance' before initialization.
-let cityGroup=null;
-let labInteriorGroup=null;
-let labEntrance={x:0,z:16.2};
-window.cityMode=false;
-window.labEntrance=labEntrance;
-let cityAnimated=[];
-let labDoorGlow=null;
-
-function matterAdd(obj){gardenGroup.add(obj);return obj}
-function labBox(x,y,z,w,h,d,mat,rotY=0){
- const o=mesh(new THREE.BoxGeometry(w,h,d),mat,true,true);
- o.position.set(x,y,z);o.rotation.y=rotY;return matterAdd(o);
-}
-function labCylinder(x,y,z,r,h,mat,radial=16){
- const o=mesh(new THREE.CylinderGeometry(r,r,h,radial),mat,true,true);o.position.set(x,y,z);return matterAdd(o);
-}
-function labGlow(x,y,z,color=0x6feaff,intensity=1.6,distance=6){
- const l=new THREE.PointLight(color,intensity,distance,2);l.position.set(x,y,z);matterAdd(l);return l
-}
-function createLabTube(x,z,scale=1,mat=MAT.labGlassBlue){
- const g=new THREE.Group();g.position.set(x,.72,z);g.scale.setScalar(scale);
- const tube=mesh(new THREE.CylinderGeometry(.25,.25,1.35,18,1,true),MAT.labGlass,true,false);g.add(tube);
- const liquid=mesh(new THREE.CylinderGeometry(.19,.19,.72,18),mat,true,false);liquid.position.y=-.18;g.add(liquid);
- const base=mesh(new THREE.CylinderGeometry(.34,.34,.12,18),MAT.labSteel,true,true);base.position.y=-.73;g.add(base);
- matterAdd(g);matterAnimated.push({group:g,type:"tube",phase:Math.random()*7});matterFluids.push(liquid);return g
-}
-function createBeaker(x,z,scale=1,mat=MAT.labLiquid){
- const g=new THREE.Group();g.position.set(x,.68,z);g.scale.setScalar(scale);
- const glass=mesh(new THREE.CylinderGeometry(.38,.28,.75,18,1,true),MAT.labGlassBlue,true,false);g.add(glass);
- const liquid=mesh(new THREE.CylinderGeometry(.30,.24,.30,18),mat,true,false);liquid.position.y=-.12;g.add(liquid);
- const rim=mesh(new THREE.TorusGeometry(.38,.035,8,24),MAT.labSteel,false,true);g.add(rim);
- matterAdd(g);matterAnimated.push({group:g,type:"beaker",phase:Math.random()*7});matterFluids.push(liquid);return g
-}
-function createFlask(x,z,scale=1,mat=MAT.labLiquidPurple){
- const g=new THREE.Group();g.position.set(x,.72,z);g.scale.setScalar(scale);
- const bulb=mesh(new THREE.SphereGeometry(.34,16,12),MAT.labGlassBlue,true,false);bulb.scale.set(1,1,.92);g.add(bulb);
- const neck=mesh(new THREE.CylinderGeometry(.13,.13,.55,14),MAT.labGlassBlue,true,false);neck.position.y=.42;g.add(neck);
- const liquid=mesh(new THREE.SphereGeometry(.26,14,10),mat,true,false);liquid.scale.set(1,.7,.9);liquid.position.y=-.06;g.add(liquid);
- const stopper=mesh(new THREE.CylinderGeometry(.14,.14,.08,14),MAT.labSteelDark,true,true);stopper.position.y=.72;g.add(stopper);
- matterAdd(g);matterAnimated.push({group:g,type:"flask",phase:Math.random()*7});return g
-}
-function createLabBench(x,z,w=7){
- const top=labBox(x,1.35,z,w,.28,1.65,MAT.labSteelDark);
- const wood=labBox(x,.72,z,w,.18,1.5,MAT.labFloorLight);
- for(const sx of [-1,1])for(const sz of [-.55,.55])labBox(x+sx*(w/2-.35),.62,z+sz,.22,1.35,.22,MAT.labSteel);
- labBox(x,.17,z,w+.35,.12,1.95,MAT.labFloorLight);
- return top
-}
-function createShelf(x,z){
- for(let y=1.1;y<=4.2;y+=1.05)labBox(x,y,z,7,.13,.65,MAT.labSteelDark);
- for(const sx of [-3.35,3.35])labBox(x+sx,2.5,z,.14,4.9,.72,MAT.labSteel);
-}
-function createCabinet(x,z){
- labBox(x,1.25,z,3.0,2.5,1.2,MAT.labWallDark);
- for(const sx of [-.75,.75]){
-  labBox(x+sx,1.25,z-.62,1.3,2.05,.06,MAT.labSteel);
-  labBox(x+sx,1.25,z-.67,.78,.06,.08,MAT.labBlue);
- }
-}
-function createBunsen(x,z){
- labCylinder(x,.28,z,.23,.16,MAT.labSteelDark,16);
- labCylinder(x,.62,z,.09,.65,MAT.labSteel,12);
- const flameMat=new THREE.MeshStandardMaterial({color:0xffc44d,emissive:0xff6b16,emissiveIntensity:1.8});
- const flame=mesh(new THREE.ConeGeometry(.16,.48,10),flameMat,true,false);flame.position.set(x,.98,z);matterAdd(flame);
- matterAnimated.push({group:flame,type:"flame",phase:Math.random()*7});
- labGlow(x,1.0,z,0xff8b28,1.0,3.5)
-}
-function createScaleStation(x,z){
- labBox(x,.72,z,1.65,1.3,1.15,MAT.labSteel);
- labBox(x,1.43,z-.03,1.15,.08,.72,MAT.labSteelDark);
- labBox(x,1.7,z-.03,.75,.12,.55,MAT.labGlassBlue);
- const pan=mesh(new THREE.CylinderGeometry(.42,.42,.08,20),MAT.labSteel,true,true);pan.position.set(x,1.78,z-.03);matterAdd(pan);
-}
-function createSolidStation(x,z){
- createLabBench(x,z,6.8);
- for(let i=0;i<5;i++){
-  const mat=[MAT.stone,MAT.wood,MAT.labSteel,MAT.soilDark,MAT.labWallDark][i];
-  const cube=mesh(new THREE.BoxGeometry(.62,.62,.62),mat,true,true);
-  cube.position.set(x-2.5+i*1.25,1.82,z);cube.rotation.set(rand(-.15,.15),rand(0,Math.PI),rand(-.15,.15));matterAdd(cube);
- }
-}
-function createLiquidStation(x,z){
- createLabBench(x,z,7.2);
- createBeaker(x-2.5,z,.8,MAT.labLiquid);
- createFlask(x,z,.9,MAT.labLiquidPurple);
- createBeaker(x+2.3,z,.85,MAT.labGreen);
- createBunsen(x+.8,z-.15);
-}
-function createGasStation(x,z){
- createLabBench(x,z,7.2);
- for(let i=0;i<4;i++){
-  const bulb=mesh(new THREE.SphereGeometry(.45,16,12),MAT.labGlassBlue,true,false);bulb.position.set(x-2.2+i*1.45,1.85,z);
-  const gas=mesh(new THREE.SphereGeometry(.33,14,10),[MAT.labCyan,MAT.labPurple,MAT.labOrange,MAT.labGreen][i],true,false);gas.position.copy(bulb.position);matterAdd(bulb);matterAdd(gas);
-  const neck=mesh(new THREE.CylinderGeometry(.12,.12,.35,12),MAT.labSteelDark,true,true);neck.position.set(bulb.position.x,2.2,z);matterAdd(neck);
- }
-}
-function createHeatStation(x,z){
- createLabBench(x,z,7.4);
- createBunsen(x-1.9,z);
- createBeaker(x+.15,z,.9,MAT.labLiquidPurple);
- createScaleStation(x+2.15,z);
-}
-function createMatterRoom(){
- // Compact professional laboratory interior, entered from the LAB building.
- labBox(0,.25,0,48,.25,48,MAT.labFloor,false);
- labBox(0,5.5,-24,48,11,.35,MAT.labWall);
- labBox(-24,5.5,0,.35,11,48,MAT.labWall);
- labBox(24,5.5,0,.35,11,48,MAT.labWall);
- labBox(0,5.5,24,48,11,.35,MAT.labWall);
-
- // Ceiling beams + skylight panels.
- for(let x=-18;x<=18;x+=9)labBox(x,10.6,0,.22,.42,46,MAT.labSteelDark);
- for(let x=-18;x<=18;x+=9){
-  const skylight=labBox(x,10.84,0,5.5,.08,7,MAT.labGlassBlue);skylight.castShadow=false;
- }
- // Clean floor grid.
- for(let z=-20;z<=20;z+=4)labBox(0,.08,z,44,.06,.09,MAT.labFloorLight);
- for(let x=-20;x<=20;x+=4)labBox(x,.085,0,.09,.065,44,MAT.labFloorLight);
-
- // Main entrance/exit frame.
- labBox(0,2.6,23.7,7.2,.35,.5,MAT.labSteelDark);
- labBox(-3.6,2.5,23.4,.4,5,.55,MAT.labBlue);
- labBox(3.6,2.5,23.4,.4,5,.55,MAT.labBlue);
- labBox(0,2.55,23.42,6.8,4.9,.12,MAT.labGlassBlue);
-
- // Interior partitions to make the lab feel like real rooms.
- labBox(-8,3.2,-1,.16,6.4,42,MAT.labWallDark);
- labBox(8,3.2,-1,.16,6.4,42,MAT.labWallDark);
-
- // Ceiling lighting.
- for(const x of [-18,-9,0,9,18])for(const z of [-19,-7,7,19]){
-  const panel=labBox(x,10.25,z,2.8,.12,.65,MAT.labCyan);panel.castShadow=false;
-  labGlow(x,10.0,z,0x66ddff,.55,6);
- }
-}
-function createMatterDecor(){
- // Left/right shelves make the lab visually dense but organized.
- createShelf(-25,-12);createShelf(-25,12);createShelf(25,-12);createShelf(25,12);
- createCabinet(-25,22);createCabinet(25,22);
- for(const p of [[-23,-24],[-18,-24],[18,-24],[23,-24],[15,23],[-15,23]])createBeaker(p[0],p[1],.7,[MAT.labLiquid,MAT.labLiquidPurple,MAT.labGreen][Math.floor(Math.random()*3)]);
- // Safety/observation consoles.
- for(const x of [-18,18]){
-  labBox(x,.8,0,4.5,1.55,1.0,MAT.labSteelDark);
-  labBox(x,1.65,0,3.7,.10,.72,MAT.labCyan);
-  labGlow(x,1.8,-.1,0x43d9ff,.7,4);
- }
- // Periodic-table style wall tiles.
- for(let r=0;r<3;r++)for(let c=0;c<8;c++){
-  const tile=labBox(-21+c*1.25,6.8,-29.72,.92,.92,.06,[MAT.labBlue,MAT.labPurple,MAT.labCyan,MAT.labGreen][(r+c)%4]);
-  tile.castShadow=false;
- }
- // Floating dust/spark particles around active workbenches.
- for(let i=0;i<24;i++){
-  const p=mesh(new THREE.SphereGeometry(.035,6,5),i%2?MAT.labCyan:MAT.labYellow,false,false);
-  p.position.set(rand(-26,26),rand(1.5,6.5),rand(-25,25));matterAdd(p);
-  matterAnimated.push({group:p,type:"spark",phase:Math.random()*7});
- }
-}
-
-function cityMat(hex,rough=.82,metal=0){
- return new THREE.MeshStandardMaterial({color:hex,roughness:rough,metalness:metal});
-}
-const CITY={
- road:cityMat(0x3b4650,.94),
- roadMark:cityMat(0xf5d76e,.72),
- sidewalk:cityMat(0xbfc8cf,.9),
- grass:cityMat(0x72c96d,.96),
- white:cityMat(0xf4f7fb,.82),
- blue:cityMat(0x5d8fe8,.7),
- blueDark:cityMat(0x315aa5,.74),
- red:cityMat(0xe55d5d,.72),
- orange:cityMat(0xf0a34b,.76),
- teal:cityMat(0x45c8bd,.72),
- purple:cityMat(0x9b78e8,.74),
- yellow:cityMat(0xf4cc55,.72),
- glass:cityMat(0x86d9ee,.28,.25),
- dark:cityMat(0x263744,.45,.35),
- tree:cityMat(0x43aa61,.92),
- tree2:cityMat(0x6dcc72,.9),
- trunk:cityMat(0x8a603f,.96)
-};
-function cityBox(x,y,z,w,h,d,mat,rot=0){
- const o=mesh(new THREE.BoxGeometry(w,h,d),mat,true,true);o.position.set(x,y,z);o.rotation.y=rot;cityGroup.add(o);return o;
-}
-function cityCylinder(x,y,z,r,h,mat){
- const o=mesh(new THREE.CylinderGeometry(r,r,h,12),mat,true,true);o.position.set(x,y,z);cityGroup.add(o);return o;
-}
-function cityLabel(text,x,y,z,w=5,h=1.3){
- const c=document.createElement("canvas");c.width=512;c.height=128;
- const g=c.getContext("2d");g.clearRect(0,0,512,128);
- g.fillStyle="#ffffff";g.roundRect(8,8,496,112,24);g.fill();
- g.fillStyle="#17364d";g.font="900 64px Arial";g.textAlign="center";g.textBaseline="middle";g.fillText(text,256,66);
- const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
- const mat=new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false});
- const sp=new THREE.Sprite(mat);sp.position.set(x,y,z);sp.scale.set(w,h,1);cityGroup.add(sp);return sp;
-}
-function cityTree(x,z,scale=1){
- const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(scale);cityGroup.add(g);
- const tr=mesh(new THREE.CylinderGeometry(.28,.42,2.5,9),CITY.trunk,true,true);tr.position.y=1.25;g.add(tr);
- for(let i=0;i<5;i++){const c=mesh(new THREE.IcosahedronGeometry(1.05,1),i%2?CITY.tree:CITY.tree2,true,true);
-  c.position.set(rand(-.65,.65),2.8+rand(-.2,.65),rand(-.55,.55));g.add(c)}
-}
-function cityBuilding(x,z,w,d,h,mat,label,opts={}){
- const body=cityBox(x,h/2,z,w,h,d,mat);
- const roof=cityBox(x,h+.18,z,w+.25,.35,d+.25,opts.roof||CITY.dark);
- // front windows
- const rows=Math.max(2,Math.floor(h/2.4)), cols=Math.max(2,Math.floor(w/2.2));
- for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-  const wx=x-w/2+.95+c*((w-1.9)/Math.max(1,cols-1));
-  const wy=1.35+r*2.15;
-  const win=cityBox(wx,wy,z-d/2-.018,.72,.9,.05,opts.window||CITY.glass);
-  win.castShadow=false;
- }
- if(label)cityLabel(label,x,h+.9,z-d/2-.1,Math.max(3.2,w*.52),.9);
- return body;
-}
-function cityPark(x,z,w=9,d=7){
- cityBox(x,.08,z,w,.16,d,CITY.grass);
- for(let i=0;i<5;i++)cityTree(x+rand(-w/2+1,w/2-1),z+rand(-d/2+1,d/2-1),rand(.65,.9));
- cityCylinder(x,.22,z,.9,.18,CITY.white);
- const water=cityCylinder(x,.34,z,.7,.08,CITY.glass);water.castShadow=false;
-}
-function cityCar(x,z,rot=0,mat=CITY.blue){
- const g=new THREE.Group();g.position.set(x,.25,z);g.rotation.y=rot;cityGroup.add(g);
- const body=mesh(new THREE.BoxGeometry(1.5,.45,2.7),mat,true,true);g.add(body);
- const top=mesh(new THREE.BoxGeometry(1.15,.35,1.25),CITY.glass,true,true);top.position.y=.38;g.add(top);
- for(const sx of [-.62,.62])for(const sz of [-.82,.82]){
-  const wh=mesh(new THREE.CylinderGeometry(.16,.16,.12,12),CITY.dark,true,true);wh.rotation.z=Math.PI/2;wh.position.set(sx,.02,sz);g.add(wh)
- }
- cityAnimated.push({group:g,type:"car",phase:Math.random()*7,baseX:x,baseZ:z});
-}
-function cityStreetLight(x,z){
- const pole=cityBox(x,2.2,z,.08,4.4,.08,CITY.dark);
- const lamp=cityBox(x,4.45,z,.5,.12,.18,CITY.yellow);
- const light=new THREE.PointLight(0xffe5a3,.45,6);light.position.set(x,4.3,z);cityGroup.add(light);
-}
-function cityLabBuilding(){
- const x=0,z=21,w=14,d=9,h=8;
- cityBuilding(x,z,w,d,h,CITY.white,"LAB",{roof:CITY.blueDark,window:CITY.glass});
- // LAB entrance canopy
- cityBox(0,5.8,16.35,5.6,.25,1.2,CITY.blueDark);
- cityBox(-2.9,3.1,16.35,.28,6.2,.35,CITY.blueDark);
- cityBox(2.9,3.1,16.35,.28,6.2,.35,CITY.blueDark);
- cityBox(0,2.65,16.22,5.35,5.15,.10,CITY.glass);
- labDoorGlow=new THREE.PointLight(0x9ee8ff,1.8,7);labDoorGlow.position.set(0,2.8,15.8);cityGroup.add(labDoorGlow);
- cityLabel("ENTER LAB",0,7.25,15.75,6.2,1.05);
- // small science icon blocks on facade
- for(const x2 of [-4.5,-2.25,2.25,4.5])cityBox(x2,6.1,16.34,1.1,.55,.08,CITY.purple);
-}
-function createCityWorld(){
- cityGroup=new THREE.Group();cityGroup.name="Level3_CityWorld";gardenGroup.add(cityGroup);
- // grass base and roads
- cityBox(0,-.08,3,58,.16,58,CITY.grass);
- cityBox(0,.01,3,7, .08,58,CITY.road);
- cityBox(0,.015,-8,54,.08,6,CITY.road);
- cityBox(0,.02,9,54,.08,5,CITY.road);
- // road markings
- for(let z=-24;z<=30;z+=4)cityBox(0,.065,z,.16,.025,2.1,CITY.roadMark);
- for(let x=-25;x<=25;x+=4){cityBox(x,.07,-8,2.1,.025,.16,CITY.roadMark);cityBox(x,.07,9,2.1,.025,.16,CITY.roadMark)}
- // sidewalks
- cityBox(-4.35,.10,3,1.4,.18,58,CITY.sidewalk);cityBox(4.35,.10,3,1.4,.18,58,CITY.sidewalk);
- cityBox(0,.11,-11.7,58,.18,1.5,CITY.sidewalk);cityBox(0,.11,12,58,.18,1.5,CITY.sidewalk);
- // compact city blocks
- const buildings=[
-  [-15,-19,9,7,6,CITY.blue,"SCIENCE"],
-  [14,-19,8,7,5.5,CITY.red,"MART"],
-  [-14,-2,9,7,7,CITY.orange,"CAFE"],
-  [14,-2,9,7,6,CITY.teal,"LIBRARY"],
-  [-15,14,9,6,6.5,CITY.purple,"SCHOOL"],
-  [14,14,8,6,5.5,CITY.blueDark,"HALL"]
- ];
- buildings.forEach(v=>cityBuilding(...v,{roof:CITY.dark,window:CITY.glass}));
- cityLabBuilding();
- cityPark(-15,8,8,6);cityPark(15,8,8,6);
- // fountain / plaza
- cityBox(0,.12,-15,11,.2,5,CITY.sidewalk);
- cityCylinder(0,.25,-15,1.15,.22,CITY.white);
- const fountain=cityCylinder(0,.48,-15,.72,.2,CITY.glass);fountain.castShadow=false;
- cityAnimated.push({group:fountain,type:"fountain",phase:0});
- // trees along streets
- for(let z=-25;z<=29;z+=6){cityTree(-6.2,z,rand(.65,.9));cityTree(6.2,z,rand(.65,.9))}
- for(let x=-25;x<=25;x+=7){cityTree(x,13.7,rand(.6,.85))}
- // cars
- cityCar(-2.1,-5,0,CITY.blue);cityCar(2.1,3,Math.PI,CITY.red);cityCar(-17,-8,Math.PI/2,CITY.orange);cityCar(17,9,-Math.PI/2,CITY.teal);
- // street lamps and benches
- for(const p of [[-5,-12],[5,-12],[-5,12],[5,12]])cityStreetLight(p[0],p[1]);
- for(const p of [[-15,8],[15,8],[0,-15]]){cityBox(p[0]-.9,.42,p[1],1.8,.18,.42,CITY.dark);cityBox(p[0],.7,p[1]-.15,.08,.7,.08,CITY.dark)}
- // distant skyline
- for(let i=0;i<14;i++){
-  const x=rand(-27,27),z=rand(-27,29),w=rand(2.2,4.2),d=rand(2.2,4),h=rand(3,9);
-  if(Math.abs(x)<7||Math.abs(z-21)<8)continue;
-  cityBuilding(x,z,w,d,h,[CITY.blue,CITY.red,CITY.orange,CITY.teal,CITY.purple][i%5],null,{roof:CITY.dark,window:CITY.glass});
- }
- cityLabel("PUSAT SAINS • CITY",0,10.1,4.8,9.5,1.25);
-}
-function enterLabInterior(){
- if(!cityMode||labInteriorMode)return;
- labInteriorMode=true;cityMode=false;window.cityMode=cityMode;
- if(cityGroup)cityGroup.visible=false;
- if(labInteriorGroup)gardenGroup.remove(labInteriorGroup);
- labInteriorGroup=new THREE.Group();labInteriorGroup.name="LAB_Interior";gardenGroup.add(labInteriorGroup);
- // temporarily route helper functions to the interior group through gardenGroup.
- createMatterRoom();
- createSolidStation(-15,-8);
- createLiquidStation(14,-7);
- createHeatStation(12,-12);
- createGasStation(-14,7);
- createScaleStation(0,18);
- createMatterDecor();
- // Move all newly-created direct children into labInteriorGroup.
- const interiorNames=[];
- for(const child of [...gardenGroup.children]){
-  if(child!==cityGroup&&child!==labInteriorGroup){gardenGroup.remove(child);labInteriorGroup.add(child);interiorNames.push(child)}
- }
- buildMissionGarden();buildStartGarden();
- for(const child of [...gardenGroup.children]){
-  if(child!==cityGroup&&child!==labInteriorGroup){gardenGroup.remove(child);labInteriorGroup.add(child)}
- }
- // The question lights are now physically inside the lab.
- const interiorPositions=[{x:-15,z:-8},{x:14,z:-7},{x:12,z:-12},{x:-14,z:7},{x:0,z:18}];
- world.nodes.filter(n=>n.type==="questionLight").forEach((n,i)=>{
-  n.x=interiorPositions[i].x;n.z=interiorPositions[i].z;n.active=true;
- });
- questLightPositions=interiorPositions;
- clearQuestLights3D();
- interiorPositions.forEach((p,i)=>createQuestLight3D(i,p));
- document.getElementById("labBadge").style.display="block";
- document.getElementById("labBadge").textContent="🧪 LAB • 5 CAHAYA ILMU";
- player.x=0;player.z=20.5;player.angle=Math.PI;
- hint("🧪 Anda telah masuk LAB • Terokai setiap stesen dan cari 5 cahaya ilmu",true);
- setTimeout(()=>hint("",false),4200);
-}
-window.enterLabInterior=enterLabInterior;
-function updateCityVisual(t){
- const sec=t*.001;
- if(labDoorGlow)labDoorGlow.intensity=1.4+.6*Math.sin(sec*2.2);
- cityAnimated.forEach(a=>{
-  if(a.type==="fountain")a.group.scale.y=.9+.15*Math.sin(sec*2.5);
-  if(a.type==="car")a.group.position.x=a.baseX+Math.sin(sec*.18+a.phase)*.7;
- });
-}
-
-/* ========================= LEVEL 4 — LEMBAH TENAGA 3D ========================= */
-function energyAdd(obj){gardenGroup.add(obj);return obj}
-function energyBox(x,y,z,w,h,d,mat,rot=0){const o=mesh(new THREE.BoxGeometry(w,h,d),mat,true,true);o.position.set(x,y,z);o.rotation.y=rot;return energyAdd(o)}
-function energyCylinder(x,y,z,r,h,mat,radial=16){const o=mesh(new THREE.CylinderGeometry(r,r,h,radial),mat,true,true);o.position.set(x,y,z);return energyAdd(o)}
-function energyCone(x,y,z,r,h,mat,radial=10){const o=mesh(new THREE.ConeGeometry(r,h,radial),mat,true,true);o.position.set(x,y,z);return energyAdd(o)}
-function energyLabel(text,x,y,z,w=4.5,h=1){
- const c=document.createElement("canvas");c.width=640;c.height=150;const g=c.getContext("2d");
- g.clearRect(0,0,640,150);g.fillStyle="#ffffff";g.roundRect(8,8,624,134,28);g.fill();
- g.fillStyle="#17364d";g.font="900 58px Arial";g.textAlign="center";g.textBaseline="middle";g.fillText(text,320,78);
- const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
- const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sp.position.set(x,y,z);sp.scale.set(w,h,1);return energyAdd(sp)
-}
-function energyCliff(x,z,r,h,rot=0,mat=MAT.energyRock){
- const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;
- const base=mesh(new THREE.ConeGeometry(r,r*1.25,7,2),mat,true,true);base.position.y=h*.48;base.scale.y=h/(r*1.25);g.add(base);
- const cap=mesh(new THREE.IcosahedronGeometry(r*.75,1),MAT.energyRockLight,true,true);cap.position.set(rand(-.3,.3),h*.92,rand(-.3,.3));g.add(cap);
- energyAdd(g);return g
-}
-function energyTree(x,z,s=1){
- const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);
- const tr=mesh(new THREE.CylinderGeometry(.25,.38,2.5,8),MAT.energyWood,true,true);tr.position.y=1.25;g.add(tr);
- for(let i=0;i<6;i++){const c=mesh(new THREE.IcosahedronGeometry(.85,1),i%2?MAT.leaf:MAT.leafLight,true,true);c.position.set(rand(-.6,.6),2.55+rand(-.25,.65),rand(-.55,.55));g.add(c)}
- energyAdd(g);return g
-}
-function energyRoad(x,z,w,d,rot=0){return energyBox(x,.05,z,w,.1,d,MAT.energyRoad,rot)}
-function energyRoadStripe(x,z,w,d,rot=0){const o=energyBox(x,.115,z,w,.025,d,MAT.energyRoadEdge,rot);o.castShadow=false;return o}
-function buildSolarFarm(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
- energyBox(x,.10,z,11,.2,7,MAT.energyRoadEdge);
- for(let r=0;r<2;r++)for(let c=0;c<3;c++){
-  const px=x-4+c*4, pz=z-1.8+r*3.6;
-  const frame=new THREE.Group();frame.position.set(px,.85,pz);frame.rotation.x=-.48;g.add(frame);
-  const panel=mesh(new THREE.BoxGeometry(3.2,.08,2.1),MAT.energySolar,true,true);frame.add(panel);
-  const support=mesh(new THREE.CylinderGeometry(.06,.08,1.7,8),MAT.energySteel,true,true);support.position.y=-.85;frame.add(support);
- }
- energyLabel("LADANG SOLAR",x,4.2,z-3.9,5.2,.9);
- const glow=new THREE.PointLight(0xffdf69,1.1,5);glow.position.set(x,1.6,z);energyAdd(glow);
-}
-function buildWindTurbine(x,z,s=1){
- const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);energyAdd(g);
- const base=mesh(new THREE.CylinderGeometry(.7,.95,.55,12),MAT.energySteel,true,true);base.position.y=.28;g.add(base);
- const tower=mesh(new THREE.CylinderGeometry(.18,.42,8,12),MAT.energyWhite,true,true);tower.position.y=4.25;g.add(tower);
- const nacelle=mesh(new THREE.BoxGeometry(.85,.55,1.25),MAT.energySteel,true,true);nacelle.position.set(0,8.1,.25);g.add(nacelle);
- const hub=new THREE.Group();hub.position.set(0,8.1,.9);g.add(hub);
- for(let i=0;i<3;i++){const blade=mesh(new THREE.BoxGeometry(.18,3.1,.1),MAT.energyWhite,true,true);blade.position.y=1.5;blade.rotation.z=i*Math.PI*2/3;hub.add(blade)}
- energyAnimated.push({group:hub,type:"wind",phase:Math.random()*6});
- energyLabel("TENAGA ANGIN",x,9.6,z-1.4,4.5,.85);
-}
-function buildDam(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
- energyBox(x,3.0,z,16,6,.9,MAT.energySteel);
- for(let i=-3;i<=3;i++)energyBox(x+i*2.0,2.0,z-.52,1.25,3.2,.15,MAT.energyCyan);
- // spillway/waterfall in front
- const water=mesh(new THREE.BoxGeometry(5,.08,4),MAT.energyWater,false,false);water.position.set(x,.45,z+2.1);g.add(water);
- const fall=mesh(new THREE.PlaneGeometry(5,4),MAT.energyWater,false,false);fall.rotation.x=Math.PI/2;fall.position.set(x,2.1,z+1.1);g.add(fall);
- energyAnimated.push({group:fall,type:"waterfall",phase:0});
- energyLabel("EMPANG HIDRO",x,7.2,z+.9,4.6,.85);
-}
-function buildGeothermal(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
- energyBox(x,.18,z,8,.35,6,MAT.energySteel);
- for(let i=0;i<3;i++){
-  const tank=mesh(new THREE.CylinderGeometry(1.05,1.15,2.7,16),MAT.energyWhite,true,true);tank.position.set(x-2.5+i*2.5,1.55,z);g.add(tank);
-  const pipe=mesh(new THREE.CylinderGeometry(.13,.13,2.8,10),MAT.energySteel,true,true);pipe.rotation.z=Math.PI/2;pipe.position.set(x-1.25+i*2.5,3,z);g.add(pipe);
- }
- const steam=new THREE.Group();steam.position.set(x,3.4,z);g.add(steam);
- for(let i=0;i<7;i++){const p=mesh(new THREE.SphereGeometry(.28+Math.random()*.18,10,8),MAT.energySteam,false,false);p.position.set(rand(-1.1,1.1),i*.42+rand(-.1,.1),rand(-.6,.6));steam.add(p)}
- energyAnimated.push({group:steam,type:"steam",phase:Math.random()*6});
- energyLabel("GEOTERMA",x,6.0,z-3.5,4.0,.82);
-}
-function buildEnergyHub(x,z){
- const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
- energyBox(x,.15,z,10,.3,6,MAT.energyRoadEdge);
- const base=mesh(new THREE.CylinderGeometry(2.2,2.5,.55,16),MAT.energySteel,true,true);base.position.y=.42;g.add(base);
- const core=mesh(new THREE.CylinderGeometry(1.35,1.55,2.7,16),MAT.energyCyan,true,true);core.position.y=1.95;g.add(core);
- const ring=mesh(new THREE.TorusGeometry(1.7,.1,10,36),MAT.energyYellow,true,true);ring.rotation.x=Math.PI/2;ring.position.y=2.0;g.add(ring);
- energyAnimated.push({group:ring,type:"hub",phase:0});
- energyLabel("PUSAT TENAGA",x,4.9,z-3.5,4.8,.86);
-}
-function createEnergyWorld(){
- gardenGroup=new THREE.Group();gardenGroup.name="Level4_EnergyValley";scene.add(gardenGroup);
- const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,48,48),pos=terrainGeo.attributes.position;
- for(let i=0;i<pos.count;i++){
-  const x=pos.getX(i),z=pos.getY(i),edge=Math.max(Math.abs(x),Math.abs(z));
-  const h=.02*Math.sin(x*.2)+.018*Math.cos(z*.18)+Math.max(0,edge-27)*.018;
-  pos.setZ(i,h);
- }
- terrainGeo.computeVertexNormals();
- const floor=mesh(terrainGeo,MAT.energyGrass,false,true);floor.rotation.x=-Math.PI/2;floor.position.y=-.02;energyAdd(floor);
- // Main valley road and branch roads
- energyRoad(0,0,7,68);energyRoad(-14,0,3.2,54);energyRoad(14,0,3.2,54);energyRoad(0,-10,46,3.2);
- for(let z=-30;z<=30;z+=4)energyRoadStripe(0,z,.18,2.0);
- for(let x=-20;x<=20;x+=4)energyRoadStripe(x,-10,2,.16);
- // River and stepping stones
- const riverMat=MAT.energyWater;
- const river=mesh(new THREE.PlaneGeometry(7,56),riverMat,false,false);river.rotation.x=-Math.PI/2;river.position.set(3,.02,0);energyAdd(river);
- for(let z=-25;z<=25;z+=3.5){const st=mesh(new THREE.CylinderGeometry(.55,.7,.22,10),MAT.energyRockLight,true,true);st.position.set(3+Math.sin(z*.35)*1.8,.13,z);energyAdd(st)}
- // cliffs/mountains around the valley
- [[-27,-23,7,10],[27,-20,7,11],[-27,20,8,12],[27,22,8,12],[-24,2,6,8],[24,4,6,9]].forEach(v=>energyCliff(v[0],v[1],v[2],v[3],rand(-.4,.4)));
- for(let i=0;i<18;i++){const side=i%2?-1:1;energyCliff(side*rand(24,31),rand(-30,30),rand(2.5,4.5),rand(3.5,7),rand(-.6,.6),i%3?MAT.energyRock:MAT.energyRockLight)}
- // vegetation and rocks to fill the world
- for(let i=0;i<34;i++){const x=rand(-24,24),z=rand(-29,29);if(Math.abs(x)<8&&Math.abs(z)<12)continue;energyTree(x,z,rand(.65,1.05))}
- for(let i=0;i<30;i++){const x=rand(-25,25),z=rand(-28,28);if(Math.abs(x)<8)continue;const r=rand(.25,.75);const o=energyCone(x,r*.55,z,r,r*1.2,MAT.energyRockLight,7);o.rotation.z=rand(-.3,.3)}
- // Energy stations correspond to the five science lights
- buildSolarFarm(15,-7);
- buildWindTurbine(-14,7,1);
- buildDam(18,12);
- buildGeothermal(-18,-12);
- buildEnergyHub(0,20);
- // Small substation, battery packs, signs
- for(const x of [-5,-2,1,4]){energyBox(x,.6,16,1.2,1.2,1.1,MAT.energyWhite);energyBox(x,.7,16,.8,.9,.18,MAT.energyCyan)}
- energyLabel("STESEN BATERI",0,3.2,15.1,4.3,.78);
- // street lamps
- for(const x of [-5,5])for(const z of [-26,-14,2,18]){energyBox(x,2.0,z,.08,4,.08,MAT.energySteel);energyBox(x,4.0,z,.7,.12,.2,MAT.energyYellow);const l=new THREE.PointLight(0xffe6a2,.55,7);l.position.set(x,3.8,z);energyAdd(l)}
- // background ridge
- for(let i=0;i<14;i++)energyCliff(rand(-30,30),rand(-33,-29),rand(3,6),rand(6,12),rand(-.3,.3));
- gardenWorldReady=true;
-}
-function createMatterWorld(){
- gardenGroup=new THREE.Group();gardenGroup.name="Level3_MatterWorld";scene.add(gardenGroup);
- const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,32,32);
- const pos=terrainGeo.attributes.position;
- for(let i=0;i<pos.count;i++){
-  const x=pos.getX(i),z=pos.getY(i);
-  pos.setZ(i,(Math.sin(x*.17)*.035+Math.cos(z*.15)*.03));
- }
- terrainGeo.computeVertexNormals();
- const floor=mesh(terrainGeo,CITY.grass,false,true);floor.rotation.x=-Math.PI/2;floor.position.y=-.02;matterAdd(floor);
- createCityWorld();
- cityMode=true;labInteriorMode=false;gardenWorldReady=true;window.cityMode=cityMode;
-}
-function updateEnergyVisual(t){
- if(!gardenWorldReady)return;
- const sec=t*.001;
- energyAnimated.forEach(a=>{
-  if(a.type==="wind")a.group.rotation.z=sec*1.9+a.phase;
-  else if(a.type==="hub")a.group.rotation.z=sec*.8;
-  else if(a.type==="waterfall")a.group.position.x=Math.sin(sec*2.2+a.phase)*.025;
-  else if(a.type==="steam")a.group.position.y=Math.sin(sec*.7+a.phase)*.12;
- });
-}
-function updateMatterVisual(t){
- if(!gardenWorldReady)return;
- const sec=t*.001;
- matterAnimated.forEach(a=>{
-  const g=a.group,ph=a.phase;
-  if(a.type==="tube"||a.type==="beaker"||a.type==="flask"){
-   g.rotation.y=Math.sin(sec*.55+ph)*.035;
-  }else if(a.type==="flame"){
-   g.scale.y=.88+.18*Math.sin(sec*10+ph);g.scale.x=.92+.08*Math.sin(sec*8+ph);
-  }else if(a.type==="spark"){
-   g.position.y+=Math.sin(sec*1.8+ph)*.003;
-  }
- });
- matterFluids.forEach((m,i)=>{m.position.y+=Math.sin(sec*1.5+i)*.0008});
-}
-function clearQuestLights3D(){
- questLights3D.forEach(item=>gardenGroup.remove(item.group));
- questLights3D=[];
-}
-function createQuestLight3D(index,pos){
- const g=new THREE.Group();
- g.position.set(pos.x,1.45,pos.z);
- const orbMat=new THREE.MeshStandardMaterial({
-  color:0xffe45c,emissive:0xffc928,emissiveIntensity:2.2,
-  roughness:.25,metalness:.05,transparent:true,opacity:.98
- });
- const orb=mesh(new THREE.SphereGeometry(.28,16,12),orbMat,true,false);g.add(orb);
- const ringMat=new THREE.MeshStandardMaterial({
-  color:0xffffff,emissive:0xffe45c,emissiveIntensity:1.8,
-  transparent:true,opacity:.82,roughness:.3
- });
- const ring=mesh(new THREE.TorusGeometry(.55,.045,8,32),ringMat,false,false);
- ring.rotation.x=Math.PI/2;g.add(ring);
- const stem=mesh(new THREE.CylinderGeometry(.035,.055,.8,8),MAT.fence,false,true);
- stem.position.y=-.65;g.add(stem);
- const light=new THREE.PointLight(0xffd84d,2.4,5.5,2);
- light.position.y=.1;g.add(light);
- g.userData={index,orb,ring,light,phase:index*.9};
- add(g);
- questLights3D.push({group:g,orb,ring,light,index});
-}
-window.setGardenQuestionLights=function(questions,positions){
- questLightPositions=positions||[];
- if(!gardenGroup)return;
- clearQuestLights3D();
- const theme=levels[state.level]?.theme;
- if(theme!=="plants"&&theme!=="animals"&&theme!=="matter"&&theme!=="energy")return;
- if(theme==="matter"&&!labInteriorMode)return;
- questLightPositions.forEach((pos,i)=>createQuestLight3D(i,pos));
-};
-function updateQuestLights3D(t){
- const qnodes=world.nodes.filter(n=>n.type==="questionLight");
- questLights3D.forEach(item=>{
-  const node=qnodes.find(n=>n.questionIndex===item.index);
-  const solved=node?.solved;
-  const pulse=1+Math.sin(t*.004+item.group.userData.phase)*.14;
-  item.orb.scale.setScalar(pulse);
-  item.ring.rotation.z=t*.0012+item.group.userData.phase;
-  item.ring.scale.setScalar(1+.08*Math.sin(t*.003+item.group.userData.phase));
-  item.light.intensity=solved?.25:2.2+Math.sin(t*.005+item.group.userData.phase)*.45;
-  const animalTheme=levels[state.level]?.theme==="animals";
-  const energyTheme=levels[state.level]?.theme==="energy";
-  item.orb.material.color.setHex(solved?0x62d98a:(animalTheme?0x73e8ff:(energyTheme?0xffe45c:0xffe45c)));
-  item.orb.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:(energyTheme?0xffa800:0xffc928)));
-  item.ring.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:(energyTheme?0xffa800:0xffc928)));
-  item.group.position.y=(solved?.9:1.45)+Math.sin(t*.003+item.group.userData.phase)*.08;
- });
-}
-function updateGardenVisual(t){
- if(!gardenWorldReady)return;
- gardenTime=t*.001;
- updateQuestLights3D(t);
- if(levels[state.level]?.theme==="animals")updateAnimalVisual(t);
- if(levels[state.level]?.theme==="matter"){
-  updateMatterVisual(t);
-  if(cityMode)updateCityVisual(t);
- }
- if(levels[state.level]?.theme==="energy")updateEnergyVisual(t);
- animatedPlants.forEach((g,i)=>{
-  const base=g.userData.phase||0;g.rotation.z=Math.sin(gardenTime*1.1+base)*.025;g.position.y=Math.sin(gardenTime*1.7+base)*.018;
- });
- if(waterMesh){waterMesh.position.y=.30+Math.sin(gardenTime*1.4)*.025;waterMesh.scale.x=.995+Math.sin(gardenTime*1.8)*.008}
-}
-
-function loadCharacter(){
- const loader=new GLTFLoader();
- loader.load(MODEL_URL,function(gltf){
-  character=gltf.scene;
-  character.traverse(object=>{
-   if(object.isMesh){object.visible=true;object.frustumCulled=false;object.castShadow=true;object.receiveShadow=true;
-    if(object.material){const ms=Array.isArray(object.material)?object.material:[object.material];ms.forEach(material=>{material.needsUpdate=true;if(material.map)material.map.colorSpace=THREE.SRGBColorSpace})}
-   }
-  });
-  character.updateMatrixWorld(true);
-  const box=new THREE.Box3().setFromObject(character);
-  const size=box.getSize(new THREE.Vector3()),center=box.getCenter(new THREE.Vector3());
-  modelHeight=Math.max(size.y,.001);
-  characterRoot=new THREE.Group();scene.add(characterRoot);characterRoot.add(character);
-  character.position.set(-center.x,-box.min.y,-center.z);
-  characterRoot.rotation.set(0,GLB_MODEL_ROTATION_Y,0);
-  /* Real-world scale: character ~1.8m. */
-  characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
-  if(gltf.animations?.length){
-   mixer=new THREE.AnimationMixer(character);
-   const idle=findClip(gltf.animations,["idle","breath","stand","rest"]);
-   const walk=findClip(gltf.animations,["walk","walking","run","running","move","locomotion"]);
-   const fallback=gltf.animations[0];
-   const selectedIdle=idle||(!walk?fallback:null),selectedWalk=walk||(!idle?fallback:null);
-   if(selectedIdle){idleAction=mixer.clipAction(selectedIdle);idleAction.setLoop(THREE.LoopRepeat);idleAction.play()}
-   if(selectedWalk&&selectedWalk!==selectedIdle){walkAction=mixer.clipAction(selectedWalk);walkAction.setLoop(THREE.LoopRepeat)}
-  }
-  modelReady=true;window.modelReadyForFallback=true;console.log("player_character.glb berjaya dimuatkan.","Animations:",gltf.animations.map(a=>a.name));
- },undefined,function(error){modelReady=false;window.modelReadyForFallback=false;console.error("Gagal memuatkan ./player_character.glb.",error);});
-}
-
-window.setGarden3DLevel=function(theme){
- const shouldUse3D=theme==="plants"||theme==="animals"||theme==="matter"||theme==="energy";
- gardenActive=shouldUse3D;
- glbCanvas.style.display=gardenActive?"block":"none";
- if(!scene||!camera3d)return;
-
- if(gardenGroup){
-  scene.remove(gardenGroup);
-  gardenGroup=null;
- }
- questLights3D=[];questLightPositions=[];animatedPlants=[];animalCreatures=[];
- matterAnimated=[];matterFluids=[];matterMachines=[];animalWaterMesh=null;energyAnimated=[];gardenWorldReady=false;
- cityMode=false;labInteriorMode=false;cityGroup=null;labInteriorGroup=null;labDoorGlow=null;cityAnimated=[];window.cityMode=cityMode;
-  const labBadgeEl=document.getElementById("labBadge");
- if(labBadgeEl)labBadgeEl.style.display="none";
-
- if(theme==="animals"){
-  scene.background=new THREE.Color(0x8edff4);
-  scene.fog.color.set(0x8edff4);
-  buildAnimalWorld();
- }else if(theme==="plants"){
-  scene.background=new THREE.Color(0x9bdff4);
-  scene.fog.color.set(0x9bdff4);
-  buildGardenWorld();
- }else if(theme==="matter"){
-  scene.background=new THREE.Color(0x8aa7bd);
-  scene.fog.color.set(0x8aa7bd);
-  createMatterWorld();
- }else if(theme==="energy"){
-  scene.background=new THREE.Color(0x86c8ee);
-  scene.fog.color.set(0x86c8ee);
-  createEnergyWorld();
- }
-
- if(shouldUse3D){
-  labCameraYaw=0;
-  labCameraPitch=-0.08;
-  labLookPointerId=null;
-  labLookActive=false;
-  const positions=getQuestionPositions(theme);
-  window.setGardenQuestionLights(levels[state.level].questions,positions);
-  camera3d.position.set(player.x,8.5,player.z+10.5);
-  camera3d.lookAt(player.x,1.0,player.z-2.5);
- }
-};
 
 function resizeGLB(){
- if(!renderer)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,2));renderer.setSize(innerWidth,innerHeight,false);
- if(camera3d){camera3d.aspect=innerWidth/innerHeight;camera3d.updateProjectionMatrix()}
-}
-addEventListener("resize",resizeGLB);
-
-function updateCharacter(){
- if(!modelReady||!characterRoot)return;
- const now=performance.now(),delta=Math.min(.05,(now-lastGLBTime)/1000);lastGLBTime=now;
- if(mixer)mixer.update(delta);
- const moving=mobileStick.active||keys.w||keys.a||keys.s||keys.d||keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||player.targetX!==null;
- if(idleAction&&walkAction){if(moving){if(!walkAction.isRunning())playAction(walkAction);idleAction.fadeOut(.18)}else{if(!idleAction.isRunning())playAction(idleAction);walkAction.fadeOut(.18)}}
- else if(idleAction&&!moving){if(!idleAction.isRunning())playAction(idleAction)}else if(walkAction&&moving){if(!walkAction.isRunning())playAction(walkAction)}
-
- if(gardenActive){
-  /* Level 3 LAB: tukar kepada pandangan immersive seperti FPS apabila sudah masuk bangunan. */
-  if(labInteriorMode){
-   if(characterRoot)characterRoot.visible=false;
-   characterRoot?.traverse(o=>{if(o.isMesh)o.visible=false});
-   if(teleporting)return;
-   const eyeY=1.62;
-   const lookDistance=5.5;
-   const cosPitch=Math.cos(labCameraPitch);
-   const dirX=Math.sin(labCameraYaw)*cosPitch;
-   const dirY=Math.sin(labCameraPitch);
-   const dirZ=Math.cos(labCameraYaw)*cosPitch;
-   camera3d.position.x+=(player.x-camera3d.position.x)*.18;
-   camera3d.position.y+=(eyeY-camera3d.position.y)*.18;
-   camera3d.position.z+=(player.z-camera3d.position.z)*.18;
-   camera3d.lookAt(
-     player.x+dirX*lookDistance,
-     eyeY+dirY*lookDistance,
-     player.z+dirZ*lookDistance
-   );
-   return;
-  }
-  if(characterRoot)characterRoot.visible=true;
-  characterRoot?.traverse(o=>{if(o.isMesh)o.visible=true});
-  /* Character kini berada secara fizikal di atas terrain. */
-  if(teleporting){
-   const lift=Math.min(1,(performance.now()-teleportStart)/1700);
-   const yLift=Math.sin(lift*Math.PI)*5.0;
-   const fade=lift<.38?1:Math.max(0,1-(lift-.38)/.62);
-   characterRoot.position.set(player.x,.025+yLift,player.z);
-   characterRoot.scale.setScalar((CHARACTER_WORLD_HEIGHT/modelHeight)*(1+.38*Math.sin(lift*Math.PI)));
-   characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;
-   characterRoot.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.transparent=true;m.opacity=fade})}});
-   camera3d.position.x+=(player.x-camera3d.position.x)*.08;
-   camera3d.position.z+=(player.z+10.5-camera3d.position.z)*.08;
-   camera3d.position.y+=((8.5+yLift*.35)-camera3d.position.y)*.08;
-   camera3d.lookAt(player.x,1.0+yLift*.25,player.z-2.5);
-   return;
-  }
-  characterRoot.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.transparent=true;m.opacity=1})}});
-  characterRoot.position.set(player.x,.025,player.z);
-  characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
-  if(moving)characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;else characterRoot.rotation.y=GLB_MODEL_ROTATION_Y;
-  const bob=!moving?Math.sin(now/550)*.012:0;characterRoot.position.y=.025+bob;
-  /* V23: camera look aktif pada semua dunia 3D.
-     Movement player kekal menggunakan arah asal; hanya pandangan kamera berubah. */
-  const orbitDistance=10.5;
-  const orbitCosPitch=Math.cos(labCameraPitch);
-  const orbitSinPitch=Math.sin(labCameraPitch);
-  const orbitX=Math.sin(labCameraYaw)*orbitDistance*orbitCosPitch;
-  const orbitZ=Math.cos(labCameraYaw)*orbitDistance*orbitCosPitch;
-  const orbitY=8.5+orbitSinPitch*5.0;
-  camera3d.position.x+=(player.x+orbitX-camera3d.position.x)*.08;
-  camera3d.position.z+=(player.z+orbitZ-camera3d.position.z)*.08;
-  camera3d.position.y+=(orbitY-camera3d.position.y)*.08;
-  camera3d.lookAt(player.x,1.0+orbitSinPitch*2.8,player.z);
- }else{
-  /* Level selain plants: kekalkan paparan GLB V4. */
-  const projected=project(player.x,0,player.z);if(!projected)return;
-  const screenX=projected.x-innerWidth/2,screenY=innerHeight/2-projected.y;
-  const mobile=innerWidth<=900,desiredHeight=mobile?GLB_HEIGHT_MOBILE:GLB_HEIGHT_DESKTOP;
-  characterRoot.scale.setScalar(desiredHeight/modelHeight);
-  characterRoot.position.x=screenX;characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET;characterRoot.position.z=0;
-  characterRoot.rotation.y=moving?GLB_MODEL_ROTATION_Y+player.angle:GLB_MODEL_ROTATION_Y;
-  if(!moving)characterRoot.position.y=screenY+GLB_VERTICAL_OFFSET+Math.sin(now/550)*1.2;
- }
-}
-
-function renderGLB(t){
- requestAnimationFrame(renderGLB);
- if(!renderer||!scene||!camera3d)return;
- updateGardenVisual(t||0);updateCharacter();
- if(gardenActive){
-  const theme=levels[state.level]?.theme;
-  const bg=theme==="animals"?0x8edff4:(theme==="matter"?(labInteriorMode?0x9aa9b6:0x86d5e8):(theme==="energy"?0x86c8ee:0x9bdff4));
-  scene.background=new THREE.Color(bg);scene.fog.color.set(bg);
-  renderer.render(scene,camera3d)
- }
- else if(modelReady){scene.background=null;renderer.render(scene,camera3d)}
-}
-
-/* V23 camera look:
-   Desktop = drag mouse kiri untuk melihat.
-   Mobile = swipe pada kawasan dunia untuk melihat.
-   Aktif pada SEMUA Level 3D.
-   Joystick, E, Map dan panel soalan tidak mengambil alih gesture kamera. */
-function isCameraLookBlockedTarget(target){
-  return !!(target && target.closest && target.closest("#mobileControls,#interaction,#panel,#start,#teleport"));
-}
-function beginCameraLook(e){
-  if(!gardenActive||isCameraLookBlockedTarget(e.target))return;
-  if(e.pointerType==="mouse" && e.button!==0)return;
-  labLookPointerId=e.pointerId;
-  labLookLastX=e.clientX;
-  labLookLastY=e.clientY;
-  labLookActive=true;
-}
-function moveCameraLook(e){
-  if(!gardenActive||!labLookActive||e.pointerId!==labLookPointerId)return;
-  const dx=e.clientX-labLookLastX,dy=e.clientY-labLookLastY;
-  labLookLastX=e.clientX;
-  labLookLastY=e.clientY;
-  const sensitivity=e.pointerType==="mouse" ? 0.006 : 0.010;
-  labCameraYaw+=dx*sensitivity;
-  labCameraPitch-=dy*sensitivity;
-  const limit=Math.PI*.46;
-  labCameraPitch=Math.max(-limit,Math.min(limit,labCameraPitch));
-  if(e.pointerType==="touch")e.preventDefault();
-}
-function endCameraLook(e){
-  if(e.pointerId===labLookPointerId){
-    labLookPointerId=null;
-    labLookActive=false;
+  if(!renderer)return;
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+  renderer.setSize(innerWidth,innerHeight,false);
+  if(camera3d){
+    camera3d.right=innerWidth;
+    camera3d.bottom=innerHeight;
+    camera3d.updateProjectionMatrix();
   }
 }
-window.addEventListener("pointerdown",beginCameraLook,{passive:false});
-window.addEventListener("pointermove",moveCameraLook,{passive:false});
-window.addEventListener("pointerup",endCameraLook,{passive:false});
-window.addEventListener("pointercancel",endCameraLook,{passive:false});
+window.addEventListener("resize",resizeGLB);
 
-/* V4 mobile joystick — dikekalkan. */
-const base=document.getElementById("joystickBase"),knob=document.getElementById("joystickKnob");
+function updateGLB(){
+  const now=performance.now();
+  const delta=Math.min(0.05,(now-lastGLBTime)/1000);
+  lastGLBTime=now;
+
+  if(!modelReady||!character)return;
+
+  if(mixer)mixer.update(delta);
+
+  const moving=(
+    mobileStick.active ||
+    keys.w||keys.a||keys.s||keys.d||
+    keys.arrowup||keys.arrowdown||keys.arrowleft||keys.arrowright||
+    player.targetX!==null
+  );
+
+  if(idleAction&&walkAction){
+    if(moving){
+      if(!walkAction.isRunning()){
+        walkAction.reset().fadeIn(.16).play();
+      }
+      idleAction.fadeOut(.16);
+    }else{
+      if(!idleAction.isRunning()){
+        idleAction.reset().fadeIn(.16).play();
+      }
+      walkAction.fadeOut(.16);
+    }
+  }
+
+  if(moving){
+    // Adjust this sign if the model's front is opposite to movement.
+    characterRoot.rotation.y=player.angle;
+  }
+
+  // Put the GLB at the same projected position as the original v2 player.
+  const p=project(player.x,0,player.z);
+  if(!p)return;
+
+  // Use a stable screen-space height so the model stays readable on phone and desktop.
+  // The original v2 player is visually around 70-110 px on typical screens.
+  const desiredHeight=Math.max(62,Math.min(125,70*p.s));
+  const scale=desiredHeight/character.userData.baseHeight;
+  characterRoot.scale.setScalar(scale);
+
+  characterRoot.position.x=p.x;
+  characterRoot.position.y=p.y;
+  characterRoot.position.z=0;
+}
+
+function renderGLB(){
+  requestAnimationFrame(renderGLB);
+  if(renderer&&scene&&camera3d){
+    updateGLB();
+    renderer.render(scene,camera3d);
+  }
+}
+
+// ===== Professional-style mobile joystick =====
+const base=document.getElementById("joystickBase");
+const knob=document.getElementById("joystickKnob");
 let joyPointer=null;
-function moveJoystick(e){const r=base.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;let x=e.clientX-cx,y=e.clientY-cy,max=r.width*.34,d=Math.hypot(x,y);if(d>max){x=x/d*max;y=y/d*max}knob.style.transform="translate("+x+"px,"+y+"px)";mobileStick.x=x/max;mobileStick.z=y/max;mobileStick.active=true;player.targetX=null;player.targetZ=null}
-function resetJoystick(){joyPointer=null;knob.style.transform="translate(0,0)";mobileStick.x=0;mobileStick.z=0;mobileStick.active=false}
-base.addEventListener("pointerdown",e=>{e.preventDefault();joyPointer=e.pointerId;base.setPointerCapture(e.pointerId);moveJoystick(e)});
-base.addEventListener("pointermove",e=>{if(e.pointerId===joyPointer)moveJoystick(e)});base.addEventListener("pointerup",resetJoystick);base.addEventListener("pointercancel",resetJoystick);
-const mobileInteractButton=document.getElementById("interactBtn");
-const mobileMapButton=document.getElementById("mapMobileBtn");
 
-/* V14: close button pada panel soalan mesti boleh disentuh di mobile. */
-const missionCloseButton=document.querySelector("#interaction .close");
-function closeMissionMobile(e){
-  if(e){e.preventDefault();e.stopPropagation()}
-  closeMission();
+function moveJoystick(e){
+  const r=base.getBoundingClientRect();
+  const cx=r.left+r.width/2;
+  const cy=r.top+r.height/2;
+  let x=e.clientX-cx;
+  let y=e.clientY-cy;
+  const max=r.width*.34;
+  const d=Math.hypot(x,y);
+
+  if(d>max){
+    x=x/d*max;
+    y=y/d*max;
+  }
+
+  knob.style.transform="translate("+x+"px,"+y+"px)";
+  mobileStick.x=x/max;
+  mobileStick.z=y/max;
+  mobileStick.active=true;
+
+  // Joystick movement overrides click-to-move.
+  player.targetX=null;
+  player.targetZ=null;
 }
-if(missionCloseButton){
-  missionCloseButton.addEventListener("pointerup",closeMissionMobile,{passive:false});
+
+function resetJoystick(){
+  joyPointer=null;
+  knob.style.transform="translate(0,0)";
+  mobileStick.x=0;
+  mobileStick.z=0;
+  mobileStick.active=false;
 }
-/* V19.1: Mobile E — gunakan satu laluan Pointer Events sahaja.
-   Elak pointerdown + touchstart + click menembak tryInteract() berulang pada satu sentuhan. */
-let lastMobileInteractAt=0;
-function mobileInteract(e){if(e){e.preventDefault();e.stopPropagation()}tryInteract()}
-function mobileMap(e){if(e){e.preventDefault();e.stopPropagation()}openMap()}
-mobileInteractButton.addEventListener("pointerdown",mobileInteract,{passive:false});
-mobileInteractButton.addEventListener("touchstart",mobileInteract,{passive:false});
-mobileInteractButton.addEventListener("click",mobileInteract);
-mobileMapButton.addEventListener("pointerdown",mobileMap,{passive:false});
-mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
-mobileMapButton.addEventListener("click",mobileMap);
+
+base.addEventListener("pointerdown",function(e){
+  e.preventDefault();
+  joyPointer=e.pointerId;
+  base.setPointerCapture(e.pointerId);
+  moveJoystick(e);
+});
+base.addEventListener("pointermove",function(e){
+  if(e.pointerId===joyPointer)moveJoystick(e);
+});
+base.addEventListener("pointerup",resetJoystick);
+base.addEventListener("pointercancel",resetJoystick);
+
+document.getElementById("interactBtn").addEventListener("pointerdown",function(e){
+  e.preventDefault();
+  tryInteract();
+});
+document.getElementById("mapMobileBtn").addEventListener("pointerdown",function(e){
+  e.preventDefault();
+  openMap();
+});
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V24: horizontal camera-look direction fixed; player movement unchanged.");
+resizeGLB();
+renderGLB();
+
 })();
 </script>
 </body>
