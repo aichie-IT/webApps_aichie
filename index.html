@@ -595,7 +595,7 @@ function update(dt,t){
     D / →  = KANAN kamera
     Ini mengelakkan W/S terasa terbalik apabila labCameraYaw berubah.
  */
- if(levels[state.level]?.theme==="matter" && labInteriorMode){
+ if(levels[state.level]?.theme==="matter" && window.labInteriorMode){
   let forward=0,strafe=0;
   /* FRONT/BACK FIX — hanya songsangkan paksi depan/belakang.
      W / ↑  = DEPAN
@@ -851,6 +851,14 @@ resize();updateHUD();requestAnimationFrame(loop);
      Three.js + GLTFLoader menggunakan ES Module URL penuh.
      Tiada import map / bare specifier "three", untuk serasi dengan GitHub Pages.
 -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.152.2/examples/jsm/"
+  }
+</script>
+
 <script type="module">
 /*
  * THREE.JS GARDEN WORLD + GLB PLAYER
@@ -861,8 +869,8 @@ resize();updateHUD();requestAnimationFrame(loop);
  * - Logic game, mission, quiz, score, level unlock, movement dan UI asal
  *   tidak diubah. Dunia 3D hanya membaca player.x / player.z yang sedia ada.
  */
-import * as THREE from "https://esm.sh/three@0.152.2";
-import { GLTFLoader } from "https://esm.sh/three@0.152.2/examples/jsm/loaders/GLTFLoader.js?bundle";
+import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 (function(){
 "use strict";
@@ -1559,6 +1567,10 @@ let matterFluids=[];
 let matterMachines=[];
 let cityMode=false;
 let labInteriorMode=false;
+Object.defineProperty(window,"labInteriorMode",{
+ configurable:true,
+ get:()=>labInteriorMode
+});
 // V20.2 bridge: declare Level-3 state before exposing it to the classic game script.
 // This prevents the temporal-dead-zone error: Cannot access 'labEntrance' before initialization.
 let cityGroup=null;
