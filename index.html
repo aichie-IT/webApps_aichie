@@ -234,14 +234,14 @@ const levels=[
    {format:"match",question:"💨 Padankan contoh bahan GAS dengan sifatnya.",choices:["Udara → memenuhi ruang","Batu → mengalir","Air → mengekalkan bentuk","Kayu → memenuhi ruang"],answer:0,target:"Stesen Gas"},
    {format:"inspect",question:"🔬 Pemeriksaan akhir: bahan pepejal mempunyai sifat…",choices:["Mempunyai bentuk sendiri","Sentiasa memenuhi seluruh ruang","Tiada isipadu","Mengalir seperti air"],answer:0,target:"Stesen Bahan Pepejal"}
   ]},
- {name:"Lembah Tenaga",icon:"⚡",color:"#ffd45c",desc:"Cari 5 cahaya ilmu di lembah tenaga dan jawab soalan tenaga.",
+ {name:"Lembah Tenaga",icon:"⚡",color:"#ffd45c",desc:"Terokai lembah tenaga, temui 5 cahaya ilmu dan selesaikan cabaran tenaga.",
   mission:"Cahaya Ilmu: Tenaga",theme:"energy",
   questions:[
-   {question:"Yang manakah sumber tenaga boleh diperbaharui?",choices:["Arang batu","Petroleum","Matahari","Gas asli"],answer:2,target:"Matahari"},
-   {question:"Tenaga apakah yang kita terima daripada Matahari?",choices:["Tenaga cahaya dan haba","Tenaga bunyi sahaja","Tenaga magnet sahaja","Tenaga daripada batu"],answer:0,target:"Cahaya"},
-   {question:"Apakah alat yang boleh menukarkan cahaya matahari kepada tenaga elektrik?",choices:["Panel solar","Termometer","Mikroskop","Kompas"],answer:0,target:"Panel solar"},
-   {question:"Tenaga daripada angin boleh digunakan untuk menghasilkan…",choices:["Elektrik","Tanah","Air laut","Batu"],answer:0,target:"Angin"},
-   {question:"Mengapa kita perlu menjimatkan tenaga?",choices:["Untuk mengurangkan pembaziran sumber","Supaya lampu sentiasa menyala","Untuk menghasilkan lebih banyak sampah","Supaya air menjadi batu"],answer:0,target:"Jimat tenaga"}
+   {format:"choose",question:"☀️ Yang manakah sumber tenaga boleh diperbaharui?",choices:["Arang batu","Petroleum","Matahari","Gas asli"],answer:2,target:"Ladang Solar"},
+   {format:"drag",question:"🔋 Seret sumber yang sesuai ke zon TENAGA BOLEH DIPERBAHARUI.",choices:["☀️ Matahari","🪨 Arang batu","🛢️ Petroleum","🌬️ Angin"],answer:0,target:"Menara Angin & Solar"},
+   {format:"puzzle",question:"🧩 Susun perjalanan tenaga solar dengan memilih kad mengikut urutan yang betul.",choices:["☀️ Cahaya Matahari","🔵 Panel Solar","⚡ Tenaga Elektrik"],sequence:[0,1,2],target:"Pusat Tenaga"},
+   {format:"match",question:"🌬️ Padankan sumber tenaga dengan hasil yang betul.",choices:["Angin → Elektrik","Batu → Air","Matahari → Batu","Petroleum → Bunga"],answer:0,target:"Menara Turbin Angin"},
+   {format:"inspect",question:"🔎 Cabaran penjimat tenaga: mengapa kita perlu menjimatkan tenaga?",choices:["Mengurangkan pembaziran sumber","Supaya semua lampu menyala 24 jam","Menghasilkan lebih banyak sampah","Membazirkan sumber semula jadi"],answer:0,target:"Stesen Kecekapan Tenaga"}
   ]},
  {name:"Kitaran Air",icon:"💧",color:"#55cfff",desc:"Cari 5 cahaya ilmu di sekitar kolam dan jawab soalan berkaitan air.",
   mission:"Cahaya Ilmu: Air",theme:"water",
@@ -663,7 +663,8 @@ function openMission(questionIndex){
 }
 function makeQuiz(body,q,questionIndex){
  const isMatter=levels[state.level]?.theme==="matter";
- if(isMatter){
+ const isEnergy=levels[state.level]?.theme==="energy";
+ if(isMatter||isEnergy){
   const labels={choose:"🎯 PILIHAN",drag:"🖐️ DRAG & DROP",puzzle:"🧩 PUZZLE URUTAN",match:"🔗 PADANAN",inspect:"🔎 PEMERHATIAN"};
   body.innerHTML=`<div class="quizMode">${labels[q.format]||"🧪 CABARAN MAKMAL"}</div><p><b>${q.question}</b></p>`;
   if(q.format==="drag"){
@@ -683,6 +684,22 @@ function makeQuiz(body,q,questionIndex){
      el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);
     });
     src.appendChild(el);
+   });
+  }else if(q.format==="puzzle"&&q.sequence){
+   body.innerHTML+=`<div class="puzzleGrid" id="puzzleGrid"></div><p class="sub" id="puzzleOrder">Urutan: —</p>`;
+   const grid=body.querySelector("#puzzleGrid"),orderEl=body.querySelector("#puzzleOrder");
+   const picked=[];
+   q.choices.forEach((x,i)=>{
+    const el=document.createElement("div");el.className="puzzleCard";el.textContent=x;el.dataset.index=i;
+    el.onclick=()=>{
+     if(picked.includes(i))return;
+     picked.push(i);el.classList.add("selected");el.textContent=`${picked.length}. ${x}`;
+     orderEl.textContent=`Urutan: ${picked.map(k=>q.choices[k]).join(" → ")}`;
+     if(picked.length===q.choices.length){
+      const ok=picked.every((v,k)=>v===q.sequence[k]);
+      answer(ok,el,grid,questionIndex);
+     }
+    };grid.appendChild(el);
    });
   }else if(q.format==="puzzle"){
    body.innerHTML+=`<div class="puzzleGrid" id="puzzleGrid"></div>`;
@@ -832,6 +849,7 @@ let flowerGroups=[];
 let animatedPlants=[];
 let questLights3D=[];
 let questLightPositions=[];
+let energyAnimated=[];
 
 /* GLB V4 values: dikekalkan supaya model anda kekal seperti V4. */
 const GLB_HEIGHT_DESKTOP=105;
@@ -910,6 +928,20 @@ const MAT={
   labGlassBlue:new THREE.MeshPhysicalMaterial({color:0x66d8ff,roughness:.04,metalness:0,transparent:true,opacity:.7,transmission:.2}),
   labLiquid:new THREE.MeshPhysicalMaterial({color:0x5bc8ff,roughness:.12,metalness:0,transparent:true,opacity:.82}),
   labLiquidPurple:new THREE.MeshPhysicalMaterial({color:0xa875ff,roughness:.12,metalness:0,transparent:true,opacity:.82}),
+  energyGrass:new THREE.MeshStandardMaterial({color:0x6ebc58,roughness:.96,metalness:0}),
+  energyRock:new THREE.MeshStandardMaterial({color:0x69747d,roughness:1,metalness:.05}),
+  energyRockLight:new THREE.MeshStandardMaterial({color:0x87939a,roughness:.96,metalness:.03}),
+  energyRoad:new THREE.MeshStandardMaterial({color:0x5c6973,roughness:.88,metalness:.08}),
+  energyRoadEdge:new THREE.MeshStandardMaterial({color:0xd7c88b,roughness:.9,metalness:0}),
+  energySolar:new THREE.MeshStandardMaterial({color:0x2266b5,roughness:.28,metalness:.3}),
+  energySteel:new THREE.MeshStandardMaterial({color:0x56636d,roughness:.32,metalness:.72}),
+  energyWhite:new THREE.MeshStandardMaterial({color:0xf1f4f2,roughness:.68,metalness:.08}),
+  energyYellow:new THREE.MeshStandardMaterial({color:0xffd447,emissive:0x6e4a00,emissiveIntensity:.18,roughness:.45,metalness:.05}),
+  energyCyan:new THREE.MeshStandardMaterial({color:0x48d8ff,emissive:0x0b6e9a,emissiveIntensity:.7,roughness:.25,metalness:.08}),
+  energyOrange:new THREE.MeshStandardMaterial({color:0xff8b32,roughness:.55,metalness:.08}),
+  energyWater:new THREE.MeshPhysicalMaterial({color:0x38bde8,roughness:.08,metalness:.04,transparent:true,opacity:.78}),
+  energySteam:new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.34}),
+  energyWood:new THREE.MeshStandardMaterial({color:0x7e5a3b,roughness:.92,metalness:0}),
 
   cowWhite:new THREE.MeshStandardMaterial({color:0xf4f0df,roughness:.9,metalness:0}),
   cowBlack:new THREE.MeshStandardMaterial({color:0x403c3b,roughness:.9,metalness:0}),
@@ -1828,6 +1860,125 @@ function updateCityVisual(t){
   if(a.type==="car")a.group.position.x=a.baseX+Math.sin(sec*.18+a.phase)*.7;
  });
 }
+
+/* ========================= LEVEL 4 — LEMBAH TENAGA 3D ========================= */
+function energyAdd(obj){gardenGroup.add(obj);return obj}
+function energyBox(x,y,z,w,h,d,mat,rot=0){const o=mesh(new THREE.BoxGeometry(w,h,d),mat,true,true);o.position.set(x,y,z);o.rotation.y=rot;return energyAdd(o)}
+function energyCylinder(x,y,z,r,h,mat,radial=16){const o=mesh(new THREE.CylinderGeometry(r,r,h,radial),mat,true,true);o.position.set(x,y,z);return energyAdd(o)}
+function energyCone(x,y,z,r,h,mat,radial=10){const o=mesh(new THREE.ConeGeometry(r,h,radial),mat,true,true);o.position.set(x,y,z);return energyAdd(o)}
+function energyLabel(text,x,y,z,w=4.5,h=1){
+ const c=document.createElement("canvas");c.width=640;c.height=150;const g=c.getContext("2d");
+ g.clearRect(0,0,640,150);g.fillStyle="#ffffff";g.roundRect(8,8,624,134,28);g.fill();
+ g.fillStyle="#17364d";g.font="900 58px Arial";g.textAlign="center";g.textBaseline="middle";g.fillText(text,320,78);
+ const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;
+ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sp.position.set(x,y,z);sp.scale.set(w,h,1);return energyAdd(sp)
+}
+function energyCliff(x,z,r,h,rot=0,mat=MAT.energyRock){
+ const g=new THREE.Group();g.position.set(x,0,z);g.rotation.y=rot;
+ const base=mesh(new THREE.ConeGeometry(r,r*1.25,7,2),mat,true,true);base.position.y=h*.48;base.scale.y=h/(r*1.25);g.add(base);
+ const cap=mesh(new THREE.IcosahedronGeometry(r*.75,1),MAT.energyRockLight,true,true);cap.position.set(rand(-.3,.3),h*.92,rand(-.3,.3));g.add(cap);
+ energyAdd(g);return g
+}
+function energyTree(x,z,s=1){
+ const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);
+ const tr=mesh(new THREE.CylinderGeometry(.25,.38,2.5,8),MAT.energyWood,true,true);tr.position.y=1.25;g.add(tr);
+ for(let i=0;i<6;i++){const c=mesh(new THREE.IcosahedronGeometry(.85,1),i%2?MAT.leaf:MAT.leafLight,true,true);c.position.set(rand(-.6,.6),2.55+rand(-.25,.65),rand(-.55,.55));g.add(c)}
+ energyAdd(g);return g
+}
+function energyRoad(x,z,w,d,rot=0){return energyBox(x,.05,z,w,.1,d,MAT.energyRoad,rot)}
+function energyRoadStripe(x,z,w,d,rot=0){const o=energyBox(x,.115,z,w,.025,d,MAT.energyRoadEdge,rot);o.castShadow=false;return o}
+function buildSolarFarm(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
+ energyBox(x,.10,z,11,.2,7,MAT.energyRoadEdge);
+ for(let r=0;r<2;r++)for(let c=0;c<3;c++){
+  const px=x-4+c*4, pz=z-1.8+r*3.6;
+  const frame=new THREE.Group();frame.position.set(px,.85,pz);frame.rotation.x=-.48;g.add(frame);
+  const panel=mesh(new THREE.BoxGeometry(3.2,.08,2.1),MAT.energySolar,true,true);frame.add(panel);
+  const support=mesh(new THREE.CylinderGeometry(.06,.08,1.7,8),MAT.energySteel,true,true);support.position.y=-.85;frame.add(support);
+ }
+ energyLabel("LADANG SOLAR",x,4.2,z-3.9,5.2,.9);
+ const glow=new THREE.PointLight(0xffdf69,1.1,5);glow.position.set(x,1.6,z);energyAdd(glow);
+}
+function buildWindTurbine(x,z,s=1){
+ const g=new THREE.Group();g.position.set(x,0,z);g.scale.setScalar(s);energyAdd(g);
+ const base=mesh(new THREE.CylinderGeometry(.7,.95,.55,12),MAT.energySteel,true,true);base.position.y=.28;g.add(base);
+ const tower=mesh(new THREE.CylinderGeometry(.18,.42,8,12),MAT.energyWhite,true,true);tower.position.y=4.25;g.add(tower);
+ const nacelle=mesh(new THREE.BoxGeometry(.85,.55,1.25),MAT.energySteel,true,true);nacelle.position.set(0,8.1,.25);g.add(nacelle);
+ const hub=new THREE.Group();hub.position.set(0,8.1,.9);g.add(hub);
+ for(let i=0;i<3;i++){const blade=mesh(new THREE.BoxGeometry(.18,3.1,.1),MAT.energyWhite,true,true);blade.position.y=1.5;blade.rotation.z=i*Math.PI*2/3;hub.add(blade)}
+ energyAnimated.push({group:hub,type:"wind",phase:Math.random()*6});
+ energyLabel("TENAGA ANGIN",x,9.6,z-1.4,4.5,.85);
+}
+function buildDam(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
+ energyBox(x,3.0,z,16,6,.9,MAT.energySteel);
+ for(let i=-3;i<=3;i++)energyBox(x+i*2.0,2.0,z-.52,1.25,3.2,.15,MAT.energyCyan);
+ // spillway/waterfall in front
+ const water=mesh(new THREE.BoxGeometry(5,.08,4),MAT.energyWater,false,false);water.position.set(x,.45,z+2.1);g.add(water);
+ const fall=mesh(new THREE.PlaneGeometry(5,4),MAT.energyWater,false,false);fall.rotation.x=Math.PI/2;fall.position.set(x,2.1,z+1.1);g.add(fall);
+ energyAnimated.push({group:fall,type:"waterfall",phase:0});
+ energyLabel("EMPANG HIDRO",x,7.2,z+.9,4.6,.85);
+}
+function buildGeothermal(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
+ energyBox(x,.18,z,8,.35,6,MAT.energySteel);
+ for(let i=0;i<3;i++){
+  const tank=mesh(new THREE.CylinderGeometry(1.05,1.15,2.7,16),MAT.energyWhite,true,true);tank.position.set(x-2.5+i*2.5,1.55,z);g.add(tank);
+  const pipe=mesh(new THREE.CylinderGeometry(.13,.13,2.8,10),MAT.energySteel,true,true);pipe.rotation.z=Math.PI/2;pipe.position.set(x-1.25+i*2.5,3,z);g.add(pipe);
+ }
+ const steam=new THREE.Group();steam.position.set(x,3.4,z);g.add(steam);
+ for(let i=0;i<7;i++){const p=mesh(new THREE.SphereGeometry(.28+Math.random()*.18,10,8),MAT.energySteam,false,false);p.position.set(rand(-1.1,1.1),i*.42+rand(-.1,.1),rand(-.6,.6));steam.add(p)}
+ energyAnimated.push({group:steam,type:"steam",phase:Math.random()*6});
+ energyLabel("GEOTERMA",x,6.0,z-3.5,4.0,.82);
+}
+function buildEnergyHub(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);energyAdd(g);
+ energyBox(x,.15,z,10,.3,6,MAT.energyRoadEdge);
+ const base=mesh(new THREE.CylinderGeometry(2.2,2.5,.55,16),MAT.energySteel,true,true);base.position.y=.42;g.add(base);
+ const core=mesh(new THREE.CylinderGeometry(1.35,1.55,2.7,16),MAT.energyCyan,true,true);core.position.y=1.95;g.add(core);
+ const ring=mesh(new THREE.TorusGeometry(1.7,.1,10,36),MAT.energyYellow,true,true);ring.rotation.x=Math.PI/2;ring.position.y=2.0;g.add(ring);
+ energyAnimated.push({group:ring,type:"hub",phase:0});
+ energyLabel("PUSAT TENAGA",x,4.9,z-3.5,4.8,.86);
+}
+function createEnergyWorld(){
+ gardenGroup=new THREE.Group();gardenGroup.name="Level4_EnergyValley";scene.add(gardenGroup);
+ const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,48,48),pos=terrainGeo.attributes.position;
+ for(let i=0;i<pos.count;i++){
+  const x=pos.getX(i),z=pos.getY(i),edge=Math.max(Math.abs(x),Math.abs(z));
+  const h=.02*Math.sin(x*.2)+.018*Math.cos(z*.18)+Math.max(0,edge-27)*.018;
+  pos.setZ(i,h);
+ }
+ terrainGeo.computeVertexNormals();
+ const floor=mesh(terrainGeo,MAT.energyGrass,false,true);floor.rotation.x=-Math.PI/2;floor.position.y=-.02;energyAdd(floor);
+ // Main valley road and branch roads
+ energyRoad(0,0,7,68);energyRoad(-14,0,3.2,54);energyRoad(14,0,3.2,54);energyRoad(0,-10,46,3.2);
+ for(let z=-30;z<=30;z+=4)energyRoadStripe(0,z,.18,2.0);
+ for(let x=-20;x<=20;x+=4)energyRoadStripe(x,-10,2,.16);
+ // River and stepping stones
+ const riverMat=MAT.energyWater;
+ const river=mesh(new THREE.PlaneGeometry(7,56),riverMat,false,false);river.rotation.x=-Math.PI/2;river.position.set(3,.02,0);energyAdd(river);
+ for(let z=-25;z<=25;z+=3.5){const st=mesh(new THREE.CylinderGeometry(.55,.7,.22,10),MAT.energyRockLight,true,true);st.position.set(3+Math.sin(z*.35)*1.8,.13,z);energyAdd(st)}
+ // cliffs/mountains around the valley
+ [[-27,-23,7,10],[27,-20,7,11],[-27,20,8,12],[27,22,8,12],[-24,2,6,8],[24,4,6,9]].forEach(v=>energyCliff(v[0],v[1],v[2],v[3],rand(-.4,.4)));
+ for(let i=0;i<18;i++){const side=i%2?-1:1;energyCliff(side*rand(24,31),rand(-30,30),rand(2.5,4.5),rand(3.5,7),rand(-.6,.6),i%3?MAT.energyRock:MAT.energyRockLight)}
+ // vegetation and rocks to fill the world
+ for(let i=0;i<34;i++){const x=rand(-24,24),z=rand(-29,29);if(Math.abs(x)<8&&Math.abs(z)<12)continue;energyTree(x,z,rand(.65,1.05))}
+ for(let i=0;i<30;i++){const x=rand(-25,25),z=rand(-28,28);if(Math.abs(x)<8)continue;const r=rand(.25,.75);const o=energyCone(x,r*.55,z,r,r*1.2,MAT.energyRockLight,7);o.rotation.z=rand(-.3,.3)}
+ // Energy stations correspond to the five science lights
+ buildSolarFarm(15,-7);
+ buildWindTurbine(-14,7,1);
+ buildDam(18,12);
+ buildGeothermal(-18,-12);
+ buildEnergyHub(0,20);
+ // Small substation, battery packs, signs
+ for(const x of [-5,-2,1,4]){energyBox(x,.6,16,1.2,1.2,1.1,MAT.energyWhite);energyBox(x,.7,16,.8,.9,.18,MAT.energyCyan)}
+ energyLabel("STESEN BATERI",0,3.2,15.1,4.3,.78);
+ // street lamps
+ for(const x of [-5,5])for(const z of [-26,-14,2,18]){energyBox(x,2.0,z,.08,4,.08,MAT.energySteel);energyBox(x,4.0,z,.7,.12,.2,MAT.energyYellow);const l=new THREE.PointLight(0xffe6a2,.55,7);l.position.set(x,3.8,z);energyAdd(l)}
+ // background ridge
+ for(let i=0;i<14;i++)energyCliff(rand(-30,30),rand(-33,-29),rand(3,6),rand(6,12),rand(-.3,.3));
+ gardenWorldReady=true;
+}
 function createMatterWorld(){
  gardenGroup=new THREE.Group();gardenGroup.name="Level3_MatterWorld";scene.add(gardenGroup);
  const terrainGeo=new THREE.PlaneGeometry(GARDEN_SIZE,GARDEN_SIZE,32,32);
@@ -1840,6 +1991,16 @@ function createMatterWorld(){
  const floor=mesh(terrainGeo,CITY.grass,false,true);floor.rotation.x=-Math.PI/2;floor.position.y=-.02;matterAdd(floor);
  createCityWorld();
  cityMode=true;labInteriorMode=false;gardenWorldReady=true;window.cityMode=cityMode;
+}
+function updateEnergyVisual(t){
+ if(!gardenWorldReady)return;
+ const sec=t*.001;
+ energyAnimated.forEach(a=>{
+  if(a.type==="wind")a.group.rotation.z=sec*1.9+a.phase;
+  else if(a.type==="hub")a.group.rotation.z=sec*.8;
+  else if(a.type==="waterfall")a.group.position.x=Math.sin(sec*2.2+a.phase)*.025;
+  else if(a.type==="steam")a.group.position.y=Math.sin(sec*.7+a.phase)*.12;
+ });
 }
 function updateMatterVisual(t){
  if(!gardenWorldReady)return;
@@ -1887,7 +2048,7 @@ window.setGardenQuestionLights=function(questions,positions){
  if(!gardenGroup)return;
  clearQuestLights3D();
  const theme=levels[state.level]?.theme;
- if(theme!=="plants"&&theme!=="animals"&&theme!=="matter")return;
+ if(theme!=="plants"&&theme!=="animals"&&theme!=="matter"&&theme!=="energy")return;
  if(theme==="matter"&&!labInteriorMode)return;
  questLightPositions.forEach((pos,i)=>createQuestLight3D(i,pos));
 };
@@ -1902,9 +2063,10 @@ function updateQuestLights3D(t){
   item.ring.scale.setScalar(1+.08*Math.sin(t*.003+item.group.userData.phase));
   item.light.intensity=solved?.25:2.2+Math.sin(t*.005+item.group.userData.phase)*.45;
   const animalTheme=levels[state.level]?.theme==="animals";
-  item.orb.material.color.setHex(solved?0x62d98a:(animalTheme?0x73e8ff:0xffe45c));
-  item.orb.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:0xffc928));
-  item.ring.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:0xffc928));
+  const energyTheme=levels[state.level]?.theme==="energy";
+  item.orb.material.color.setHex(solved?0x62d98a:(animalTheme?0x73e8ff:(energyTheme?0xffe45c:0xffe45c)));
+  item.orb.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:(energyTheme?0xffa800:0xffc928)));
+  item.ring.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:(energyTheme?0xffa800:0xffc928)));
   item.group.position.y=(solved?.9:1.45)+Math.sin(t*.003+item.group.userData.phase)*.08;
  });
 }
@@ -1917,6 +2079,7 @@ function updateGardenVisual(t){
   updateMatterVisual(t);
   if(cityMode)updateCityVisual(t);
  }
+ if(levels[state.level]?.theme==="energy")updateEnergyVisual(t);
  animatedPlants.forEach((g,i)=>{
   const base=g.userData.phase||0;g.rotation.z=Math.sin(gardenTime*1.1+base)*.025;g.position.y=Math.sin(gardenTime*1.7+base)*.018;
  });
@@ -1955,7 +2118,7 @@ function loadCharacter(){
 }
 
 window.setGarden3DLevel=function(theme){
- const shouldUse3D=theme==="plants"||theme==="animals"||theme==="matter";
+ const shouldUse3D=theme==="plants"||theme==="animals"||theme==="matter"||theme==="energy";
  gardenActive=shouldUse3D;
  glbCanvas.style.display=gardenActive?"block":"none";
  if(!scene||!camera3d)return;
@@ -1965,7 +2128,7 @@ window.setGarden3DLevel=function(theme){
   gardenGroup=null;
  }
  questLights3D=[];questLightPositions=[];animatedPlants=[];animalCreatures=[];
- matterAnimated=[];matterFluids=[];matterMachines=[];animalWaterMesh=null;gardenWorldReady=false;
+ matterAnimated=[];matterFluids=[];matterMachines=[];animalWaterMesh=null;energyAnimated=[];gardenWorldReady=false;
  cityMode=false;labInteriorMode=false;cityGroup=null;labInteriorGroup=null;labDoorGlow=null;cityAnimated=[];window.cityMode=cityMode;
  const labCrosshairEl=document.getElementById("labCrosshair"),labBadgeEl=document.getElementById("labBadge");
  if(labCrosshairEl)labCrosshairEl.style.display="none";
@@ -1983,11 +2146,15 @@ window.setGarden3DLevel=function(theme){
   scene.background=new THREE.Color(0x8aa7bd);
   scene.fog.color.set(0x8aa7bd);
   createMatterWorld();
+ }else if(theme==="energy"){
+  scene.background=new THREE.Color(0x86c8ee);
+  scene.fog.color.set(0x86c8ee);
+  createEnergyWorld();
  }
 
  if(shouldUse3D){
   const positions=getQuestionPositions(theme);
-  if(theme!=="matter")window.setGardenQuestionLights(levels[state.level].questions,positions);
+  window.setGardenQuestionLights(levels[state.level].questions,positions);
   camera3d.position.set(player.x,8.5,player.z+10.5);
   camera3d.lookAt(player.x,1.0,player.z-2.5);
  }
@@ -2066,7 +2233,7 @@ function renderGLB(t){
  updateGardenVisual(t||0);updateCharacter();
  if(gardenActive){
   const theme=levels[state.level]?.theme;
-  const bg=theme==="animals"?0x8edff4:(theme==="matter"?(labInteriorMode?0x9aa9b6:0x86d5e8):0x9bdff4);
+  const bg=theme==="animals"?0x8edff4:(theme==="matter"?(labInteriorMode?0x9aa9b6:0x86d5e8):(theme==="energy"?0x86c8ee:0x9bdff4));
   scene.background=new THREE.Color(bg);scene.fog.color.set(bg);
   renderer.render(scene,camera3d)
  }
@@ -2105,7 +2272,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V20.1: Level 3 City/LAB cross-script state bridge diperbaiki; Button E dan sistem lain dikekalkan.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V21: Level 4 Lembah Tenaga 3D ditambah; Level 1-3 dan Button E dikekalkan.");
 })();
 </script>
 </body>
