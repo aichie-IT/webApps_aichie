@@ -1484,12 +1484,13 @@ let matterFluids=[];
 let matterMachines=[];
 let cityMode=false;
 let labInteriorMode=false;
-// V20.1 bridge: Level-3 state is exposed to the classic game script.
-window.cityMode=false;
-window.labEntrance=labEntrance;
+// V20.2 bridge: declare Level-3 state before exposing it to the classic game script.
+// This prevents the temporal-dead-zone error: Cannot access 'labEntrance' before initialization.
 let cityGroup=null;
 let labInteriorGroup=null;
 let labEntrance={x:0,z:16.2};
+window.cityMode=false;
+window.labEntrance=labEntrance;
 let cityAnimated=[];
 let labDoorGlow=null;
 
