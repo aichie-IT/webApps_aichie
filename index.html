@@ -2278,7 +2278,7 @@ function moveCameraLook(e){
   labLookLastX=e.clientX;
   labLookLastY=e.clientY;
   const sensitivity=e.pointerType==="mouse" ? 0.006 : 0.010;
-  labCameraYaw-=dx*sensitivity;
+  labCameraYaw+=dx*sensitivity;
   labCameraPitch-=dy*sensitivity;
   const limit=Math.PI*.46;
   labCameraPitch=Math.max(-limit,Math.min(limit,labCameraPitch));
@@ -2327,7 +2327,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V22: Level 3 LAB movement direction restored + mouse/touch camera look; other systems unchanged.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V24: horizontal camera-look direction fixed; player movement unchanged.");
 })();
 </script>
 </body>
