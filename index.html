@@ -92,7 +92,7 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 }
 
 /* ===== GLB PLAYER + MOBILE GAME CONTROLLER ===== */
-#glbCanvas{position:fixed;inset:0;width:100%;height:100%;display:none;z-index:2;pointer-events:none}
+#glbCanvas{position:fixed;inset:0;width:100%;height:100%;display:none;z-index:2;pointer-events:none;touch-action:none}
 #game{z-index:1}
 #mobileControls{position:fixed;inset:0;z-index:12;pointer-events:none;display:none}
 #joystickBase{position:absolute;left:22px;bottom:24px;width:132px;height:132px;border-radius:50%;
@@ -271,6 +271,9 @@ let W=innerWidth,H=innerHeight,dpr=1;
 let player={x:0,z:0,y:0,angle:0,speed:5,targetX:null,targetZ:null,walk:0};
 let mobileStick={x:0,z:0,active:false};
 let camera={x:0,z:0,shake:0};
+/* V22: LAB camera look — movement remains the original V4 world-direction movement. */
+let labCameraYaw=0,labCameraPitch=-0.08;
+let labLookPointerId=null,labLookLastX=0,labLookLastY=0,labLookActive=false;
 let world={nodes:[],decor:[],particles:[],animals:[]};
 
 function resize(){
@@ -2182,11 +2185,18 @@ function updateCharacter(){
    if(teleporting)return;
    const eyeY=1.62;
    const lookDistance=5.5;
-   const dirX=Math.sin(player.angle),dirZ=Math.cos(player.angle);
+   const cosPitch=Math.cos(labCameraPitch);
+   const dirX=Math.sin(labCameraYaw)*cosPitch;
+   const dirY=Math.sin(labCameraPitch);
+   const dirZ=Math.cos(labCameraYaw)*cosPitch;
    camera3d.position.x+=(player.x-camera3d.position.x)*.18;
    camera3d.position.y+=(eyeY-camera3d.position.y)*.18;
    camera3d.position.z+=(player.z-camera3d.position.z)*.18;
-   camera3d.lookAt(player.x+dirX*lookDistance,eyeY-.05,player.z+dirZ*lookDistance);
+   camera3d.lookAt(
+     player.x+dirX*lookDistance,
+     eyeY+dirY*lookDistance,
+     player.z+dirZ*lookDistance
+   );
    return;
   }
   if(characterRoot)characterRoot.visible=true;
@@ -2240,6 +2250,40 @@ function renderGLB(t){
  else if(modelReady){scene.background=null;renderer.render(scene,camera3d)}
 }
 
+/* V22 LAB camera look:
+   Desktop = drag mouse to look.
+   Mobile = swipe screen to look.
+   Joystick/E/Map are excluded so their existing controls remain unchanged. */
+function isLabLookBlockedTarget(target){
+  return !!(target && target.closest && target.closest("#mobileControls,#interaction,#panel,#start,#teleport"));
+}
+function beginLabLook(e){
+  if(!labInteriorMode||isLabLookBlockedTarget(e.target))return;
+  if(e.pointerType==="mouse" && e.button!==0)return;
+  labLookPointerId=e.pointerId;
+  labLookLastX=e.clientX;labLookLastY=e.clientY;labLookActive=true;
+}
+function moveLabLook(e){
+  if(!labInteriorMode||!labLookActive||e.pointerId!==labLookPointerId)return;
+  const dx=e.clientX-labLookLastX,dy=e.clientY-labLookLastY;
+  labLookLastX=e.clientX;labLookLastY=e.clientY;
+  const sensitivity=e.pointerType==="mouse" ? 0.006 : 0.010;
+  labCameraYaw-=dx*sensitivity;
+  labCameraPitch-=dy*sensitivity;
+  const limit=Math.PI*.46;
+  labCameraPitch=Math.max(-limit,Math.min(limit,labCameraPitch));
+  if(e.pointerType==="touch")e.preventDefault();
+}
+function endLabLook(e){
+  if(e.pointerId===labLookPointerId){
+    labLookPointerId=null;labLookActive=false;
+  }
+}
+window.addEventListener("pointerdown",beginLabLook,{passive:false});
+window.addEventListener("pointermove",moveLabLook,{passive:false});
+window.addEventListener("pointerup",endLabLook,{passive:false});
+window.addEventListener("pointercancel",endLabLook,{passive:false});
+
 /* V4 mobile joystick — dikekalkan. */
 const base=document.getElementById("joystickBase"),knob=document.getElementById("joystickKnob");
 let joyPointer=null;
@@ -2272,7 +2316,7 @@ mobileMapButton.addEventListener("touchstart",mobileMap,{passive:false});
 mobileMapButton.addEventListener("click",mobileMap);
 
 initGLB();
-console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V21: Level 4 Lembah Tenaga 3D ditambah; Level 1-3 dan Button E dikekalkan.");
+console.log("Pengembaraan Sains: Garden World 3D + GLB aktif. V22: Level 3 LAB movement direction restored + mouse/touch camera look; other systems unchanged.");
 })();
 </script>
 </body>
