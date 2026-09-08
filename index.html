@@ -2348,7 +2348,7 @@ function moveJoystick(e){
  if(d>max){x=x/d*max;y=y/d*max}
  knob.style.transform="translate("+x+"px,"+y+"px)";
  window.mobileStick.x=x/max;
- window.mobileStick.z=y/max;
+ window.mobileStick.z=-y/max;
  window.mobileStick.active=true;
  player.targetX=null;player.targetZ=null;
  if(e.pointerType==="touch")e.preventDefault();
