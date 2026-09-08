@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- V20: Level 3 City 3D -> LAB immersive interior + 5 interactive science lights; Level 1/2 and other systems preserved. -->
+<!-- V26: Desktop forward/back direction fixed; LAB camera orientation aligned with outdoor joystick; other systems preserved. -->
 <title>Pengembaraan Sains 3D — Pro v2</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧑‍🔬</text></svg>">
 <style>
@@ -585,7 +585,7 @@ function drawParticles(t){
 function update(dt,t){
  if(teleporting)return;
  let dx=0,dz=0;
- if(keys.w||keys.arrowup)dz+=1;if(keys.s||keys.arrowdown)dz-=1;
+ if(keys.w||keys.arrowup)dz-=1;if(keys.s||keys.arrowdown)dz+=1;
  if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;
  // Mobile joystick controls the same player movement.
  if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z;}
@@ -2150,7 +2150,7 @@ window.setGarden3DLevel=function(theme){
  }
 
  if(shouldUse3D){
-  labCameraYaw=0;
+  labCameraYaw=Math.PI;
   labCameraPitch=-0.08;
   labLookPointerId=null;
   labLookActive=false;
