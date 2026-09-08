@@ -606,13 +606,13 @@ function update(dt,t){
   */
   if(keys.w||keys.arrowup)forward+=1;
   if(keys.s||keys.arrowdown)forward-=1;
-  if(keys.a||keys.arrowleft)strafe-=1;
-  if(keys.d||keys.arrowright)strafe+=1;
+  if(keys.a||keys.arrowleft)strafe+=1;
+  if(keys.d||keys.arrowright)strafe-=1;
 
   // Mobile joystick: atas = DEPAN, bawah = BELAKANG.
   if(mobileStick.active){
-   forward=-mobileStick.z;
-   strafe=mobileStick.x;
+   forward=mobileStick.z;
+   strafe=-mobileStick.x;
   }
 
   const fl=Math.hypot(forward,strafe);
