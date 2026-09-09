@@ -57,6 +57,20 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
 #interaction.waterMissionPanel.show{transform:translate(-50%,-50%) scale(1)}
 #interaction.waterMissionPanel:before{content:"";position:absolute;inset:-7px;border-radius:30px;border:1px solid rgba(85,207,255,.42);box-shadow:0 0 45px rgba(85,207,255,.22);pointer-events:none}
 @keyframes waterPanelIn{from{opacity:0;transform:translate(-50%,-47%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+/* LEVEL 6 sahaja — popup soalan dan kawalan penerbangan angkasa. */
+#interaction.spaceMissionPanel{left:50%;right:auto;top:50%;bottom:auto;width:min(780px,92vw);max-height:82vh;transform:translate(-50%,-50%) scale(.96);background:rgba(8,14,38,.94);color:#eef6ff;border-color:rgba(140,190,255,.55);animation:spacePanelIn .3s ease forwards}
+#interaction.spaceMissionPanel.show{transform:translate(-50%,-50%) scale(1)}
+#interaction.spaceMissionPanel .sub{color:#cbd9ff}
+#interaction.spaceMissionPanel .choice,#interaction.spaceMissionPanel .dragSource,#interaction.spaceMissionPanel .puzzleCard{background:#111c43;color:#f4f7ff;border-color:#344a7c}
+#interaction.spaceMissionPanel .choice:hover,#interaction.spaceMissionPanel .puzzleCard.selected{background:#1b2d62;border-color:#79c7ff}
+#interaction.spaceMissionPanel .quizMode{color:#9fd9ff;background:#13254f;border-color:#31598c}
+#interaction.spaceMissionPanel:before{content:"";position:absolute;inset:-7px;border-radius:30px;border:1px solid rgba(122,189,255,.42);box-shadow:0 0 55px rgba(73,128,255,.28);pointer-events:none}
+@keyframes spacePanelIn{from{opacity:0;transform:translate(-50%,-47%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+#spaceFlightControls{position:absolute;right:20px;bottom:102px;display:none;gap:8px;pointer-events:auto}
+#spaceFlightControls button{width:54px;height:54px;border-radius:16px;background:rgba(12,24,62,.86);color:#fff;border:2px solid rgba(145,201,255,.7);box-shadow:0 8px 22px rgba(0,0,0,.28);font-weight:900}
+#spaceFlightControls button:active{transform:scale(.94)}
+body.spaceLevel #spaceFlightControls{display:flex}
+@media(min-width:901px){#spaceFlightControls{display:none!important}}
 @keyframes panelIn{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
 #choices{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 .quizMode{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#6b57c8;background:#f1edff;border:1px solid #d8ccff;border-radius:999px;padding:7px 10px;display:inline-block;margin-bottom:8px}
@@ -151,6 +165,10 @@ h1,h2,h3{margin:5px 0 9px}.sub{opacity:.72;margin:0 0 16px}
   <div id="actionButtons">
     <button class="mobileAction" id="interactBtn">E<br><small>MISI</small></button>
     <button class="mobileAction" id="mapMobileBtn">🗺️<br><small>PETA</small></button>
+  </div>
+  <div id="spaceFlightControls" aria-label="Kawalan terbang angkasa">
+    <button id="spaceUpBtn" aria-label="Naik">⬆️<br><small>NAIK</small></button>
+    <button id="spaceDownBtn" aria-label="Turun">⬇️<br><small>TURUN</small></button>
   </div>
   <div id="mobileHint">Gerakkan joystick untuk meneroka • Tekan E bila dekat cahaya</div>
 </div>
@@ -252,14 +270,14 @@ const levels=[
    {format:"puzzle",question:"🌧️ Puzzle perjalanan setitis air: pilih kad mengikut urutan kitaran air yang betul.",choices:["☀️ Penyejatan","☁️ Pemeluwapan","🌧️ Kerpasan","🌊 Pengumpulan"],sequence:[0,1,2,3],target:"Air • URUTAN KITARAN"},
    {format:"match",question:"🏔️ Padankan pergerakan air dengan tempat yang sesuai dalam alam sekitar.",choices:["Air hujan mengalir → Sungai","Wap air → Dasar sungai","Air bawah tanah → Awan sahaja","Salji cair → Matahari"],answer:0,target:"Sungai • ZON LARIAN AIR"},
    {format:"inspect",question:"🌱 Air hujan yang meresap melalui tanah boleh bergerak ke bawah dan disimpan sebagai…",choices:["Air bawah tanah","Awan panas","Asap","Cahaya matahari"],answer:0,target:"Tanah • ZON RESAPAN"}
-  ]}, {name:"Misi Angkasa",icon:"🚀",color:"#6877ff",desc:"Cari 5 cahaya ilmu di kawasan angkasa dan jawab soalan sistem suria.",
+  ]}, {name:"Misi Angkasa",icon:"🚀",color:"#6877ff",desc:"Terapung bebas di angkasa, terokai sistem suria mini dan cari 5 cahaya ilmu.",
   mission:"Cahaya Ilmu: Angkasa",theme:"space",
   questions:[
-   {question:"Planet manakah paling hampir dengan Matahari?",choices:["Bumi","Marikh","Zuhrah","Utarid"],answer:3,target:"Utarid"},
-   {question:"Planet manakah dikenali sebagai Planet Merah?",choices:["Marikh","Musytari","Bumi","Zuhal"],answer:0,target:"Marikh"},
-   {question:"Apakah satelit semula jadi Bumi?",choices:["Bulan","Matahari","Marikh","Komet"],answer:0,target:"Bulan"},
-   {question:"Planet manakah mempunyai gelang yang sangat jelas?",choices:["Zuhal","Utarid","Bumi","Zuhrah"],answer:0,target:"Zuhal"},
-   {question:"Apakah Matahari?",choices:["Sebuah bintang","Sebuah planet","Sebuah bulan","Sebuah asteroid"],answer:0,target:"Matahari"}
+   {format:"choose",question:"☀️ Kapal anda berada dekat Matahari. Planet manakah paling hampir dengan Matahari?",choices:["Bumi","Marikh","Zuhrah","Utarid"],answer:3,target:"Orbit Utarid • ZON MATAHARI"},
+   {format:"drag",question:"🔴 Seret planet yang betul ke portal PLANET MERAH.",choices:["🌍 Bumi","🔴 Marikh","🟠 Zuhrah","🪐 Zuhal"],answer:1,target:"Marikh • PORTAL PLANET MERAH"},
+   {format:"puzzle",question:"🧩 Susun misi orbit mengikut urutan yang betul dari pusat sistem suria ke planet ketiga.",choices:["☀️ Matahari","🪐 Utarid","🟠 Zuhrah","🌍 Bumi"],sequence:[0,1,2,3],target:"Orbit • PUZZLE SISTEM SURIA"},
+   {format:"match",question:"🛰️ Padankan objek angkasa dengan ciri yang paling tepat.",choices:["Bulan → Satelit semula jadi Bumi","Matahari → Satelit Bumi","Komet → Planet gas","Asteroid → Bintang"],answer:0,target:"Bulan • STESEN SATELIT"},
+   {format:"inspect",question:"🔭 Pemeriksaan akhir: apakah Matahari dalam sistem suria kita?",choices:["Sebuah bintang","Sebuah planet","Sebuah bulan","Sebuah asteroid"],answer:0,target:"Matahari • TERAS BINTANG"}
   ]}
 ];
 
@@ -328,14 +346,14 @@ function closePanel(){document.getElementById("panel").classList.remove("show")}
 
 function loadLevel(i){
  if(i>=state.unlocked){toast("Level ini masih terkunci 🔒");return}
- state.level=i;state.questionSolved=0;state.currentQuestion=-1;player.x=0;player.z=0;player.targetX=null;player.targetZ=null;
+ state.level=i;state.questionSolved=0;state.currentQuestion=-1;player.x=0;player.z=levels[i].theme==="space"?5:0;player.y=levels[i].theme==="space"?5:0;player.targetX=null;player.targetZ=null;
  camera.x=0;camera.z=0;world.nodes=[];world.decor=[];world.particles=[];world.animals=[];
  const t=levels[i];
  document.getElementById("levelTitle").textContent=`${t.icon} Level ${i+1}: ${t.name}`;
  document.documentElement.style.setProperty("--accent",t.color);
  buildWorld(i);
  if(typeof window.setGarden3DLevel==="function")window.setGarden3DLevel(t.theme);
- updateHUD();hint(t.theme==="animals"?"Terokai habitat haiwan • Cari mana-mana cahaya ilmu dan tekan E":t.theme==="matter"?"Terokai makmal • Cari cahaya ilmu di setiap stesen bahan dan tekan E":t.theme==="water"?"🌧️ Terokai lembah kitaran air • Cari 5 cahaya ilmu dan tekan E":"Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
+ updateHUD();hint(t.theme==="animals"?"Terokai habitat haiwan • Cari mana-mana cahaya ilmu dan tekan E":t.theme==="matter"?"Terokai makmal • Cari cahaya ilmu di setiap stesen bahan dan tekan E":t.theme==="water"?"🌧️ Terokai lembah kitaran air • Cari 5 cahaya ilmu dan tekan E":t.theme==="space"?"🚀 Terapung bebas • WASD/joystick terbang • SPACE naik • SHIFT turun • Cari 5 cahaya ilmu":"Cari mana-mana cahaya ilmu yang belum dijawab • Dekati dan tekan E");
  setTimeout(()=>hint("",false),4500);
 }
 
@@ -363,6 +381,9 @@ function getQuestionPositions(theme){
  if(theme==="water")return[
   {x:12,z:-8},{x:-10,z:-15},{x:20,z:9},{x:-7,z:4},{x:0,z:20}
  ];
+ if(theme==="space")return[
+  {x:-16,y:8,z:-10},{x:16,y:11,z:-8},{x:0,y:15,z:0},{x:-17,y:12,z:10},{x:18,y:7,z:12}
+ ];
  return[
   {x:15,z:-7},{x:-15,z:7},{x:18,z:10},{x:-18,z:-10},{x:0,z:-22}
  ];
@@ -375,7 +396,7 @@ function buildWorld(i){
  const positions=getQuestionPositions(theme);
  q.forEach((item,index)=>{
   const p=positions[index];
-  world.nodes.push({x:p.x,z:p.z,type:"questionLight",label:`Cahaya ${index+1}`,questionIndex:index,target:item.target,active:true,solved:false});
+  world.nodes.push({x:p.x,z:p.z,y:p.y||0,type:"questionLight",label:`Cahaya ${index+1}`,questionIndex:index,target:item.target,active:true,solved:false});
  });
  if(theme==="plants"){
   world.nodes.push({x:14,z:-8,type:"tree"},{x:-14,z:-7,type:"tree"},{x:17,z:8,type:"tree"});
@@ -393,6 +414,9 @@ function buildWorld(i){
  }else if(theme==="water"){
   world.nodes.push({x:13,z:-6,type:"water",label:"Tasik"},{x:-14,z:7,type:"tree"});
   world.decor.push(...makeDecor("drop",22),...makeDecor("flower",10));
+ }else if(theme==="space"){
+  world.nodes.push({x:0,z:-18,type:"planet",label:"Sistem Suria"},{x:0,z:18,type:"rocket",label:"Kapal Angkasa"});
+  world.decor.push(...makeDecor("star",45),...makeDecor("asteroid",16));
  }else{
   world.nodes.push({x:15,z:-7,type:"planet",label:"Planet"},{x:-15,z:7,type:"rocket",label:"Roket"});
   world.decor.push(...makeDecor("star",35),...makeDecor("asteroid",12));
@@ -600,7 +624,24 @@ function update(dt,t){
     D / →  = KANAN kamera
     Ini mengelakkan W/S terasa terbalik apabila labCameraYaw berubah.
  */
- if(levels[state.level]?.theme==="matter" && window.labInteriorMode){
+ if(levels[state.level]?.theme==="space"){
+  let forward=0,strafe=0;
+  if(keys.w||keys.arrowup)forward+=1;if(keys.s||keys.arrowdown)forward-=1;
+  if(keys.a||keys.arrowleft)strafe+=1;if(keys.d||keys.arrowright)strafe-=1;
+  if(mobileStick.active){forward=mobileStick.z;strafe=-mobileStick.x}
+  const fl=Math.hypot(forward,strafe);
+  if(fl>0){
+   forward/=fl;strafe/=fl;const sy=Math.sin(labCameraYaw),cy=Math.cos(labCameraYaw);
+   dx=sy*forward+cy*strafe;dz=cy*forward-sy*strafe;
+  }
+  let vertical=0;
+  if(keys[" "]||keys.space)vertical+=1;
+  if(keys.shift)vertical-=1;
+  vertical+=window.spaceFlightY||0;
+  player.x+=dx*player.speed*1.15*dt;player.z+=dz*player.speed*1.15*dt;player.y+=vertical*player.speed*.9*dt;
+  if(dx||dz)player.angle=Math.atan2(dx,dz);
+  player.x=Math.max(-31,Math.min(31,player.x));player.z=Math.max(-31,Math.min(31,player.z));player.y=Math.max(2.5,Math.min(22,player.y));
+ }else if(levels[state.level]?.theme==="matter" && window.labInteriorMode){
   let forward=0,strafe=0;
   /* FRONT/BACK FIX — hanya songsangkan paksi depan/belakang.
      W / ↑  = DEPAN
@@ -638,7 +679,7 @@ function update(dt,t){
   // Mobile joystick: atas = DEPAN, bawah = BELAKANG.
   if(mobileStick.active){dx=mobileStick.x;dz=mobileStick.z*-1;}
  }
- if(dx||dz){player.targetX=null;player.targetZ=null;const l=Math.hypot(dx,dz);dx/=l;dz/=l;
+ if(levels[state.level]?.theme!=="space" && (dx||dz)){player.targetX=null;player.targetZ=null;const l=Math.hypot(dx,dz);dx/=l;dz/=l;
   player.x+=dx*player.speed*dt;player.z+=dz*player.speed*dt;player.angle=Math.atan2(dx,dz);player.walk+=dt*9}
  else if(player.targetX!==null){
   const ax=player.targetX-player.x,az=player.targetZ-player.z,d=Math.hypot(ax,az);
@@ -646,10 +687,13 @@ function update(dt,t){
    player.x+=ax/d*player.speed*dt;player.z+=az/d*player.speed*dt;player.angle=Math.atan2(ax,az);player.walk+=dt*9;
   }
  }
- player.x=Math.max(-27,Math.min(27,player.x));player.z=Math.max(-23,Math.min(30,player.z));
- camera.x+=(player.x-camera.x)*Math.min(1,dt*4);camera.z+=(player.z-camera.z)*Math.min(1,dt*4);
+ if(levels[state.level]?.theme!=="space"){
+  player.x=Math.max(-27,Math.min(27,player.x));player.z=Math.max(-23,Math.min(30,player.z));
+  camera.x+=(player.x-camera.x)*Math.min(1,dt*4);camera.z+=(player.z-camera.z)*Math.min(1,dt*4);
+ }
  if(interactCooldown>0)interactCooldown-=dt;
- const m=world.nodes.find(n=>n.type==="mission"),d=m?Math.hypot(player.x-m.x,player.z-m.z):99;
+ const m=world.nodes.find(n=>n.type==="mission"),isSpaceLevel=levels[state.level]?.theme==="space";
+ const d=m?(isSpaceLevel?Math.hypot(player.x-m.x,player.y-(m.y||0),player.z-m.z):Math.hypot(player.x-m.x,player.z-m.z)):99;
  const close=d<6;
  if(levels[state.level]?.theme==="matter"&&window.cityMode){
   const labD=Math.hypot(player.x-window.labEntrance.x,player.z-window.labEntrance.z);
@@ -670,8 +714,9 @@ function loop(t){
 function getNearestQuestion(){
  const nodes=world.nodes.filter(n=>n.type==="questionLight"&&!n.solved);
  let best=null,bestD=Infinity;
+ const isSpace=levels[state.level]?.theme==="space";
  for(const n of nodes){
-  const d=Math.hypot(player.x-n.x,player.z-n.z);
+  const d=isSpace?Math.hypot(player.x-n.x,player.y-(n.y||0),player.z-n.z):Math.hypot(player.x-n.x,player.z-n.z);
   if(d<bestD){best=n;bestD=d}
  }
  return {node:best,distance:bestD};
@@ -693,7 +738,7 @@ function tryInteract(){
 }
 function closeMission(){
  const panel=document.getElementById("interaction");
- if(panel){panel.classList.remove("show");panel.classList.remove("waterMissionPanel");}
+ if(panel){panel.classList.remove("show");panel.classList.remove("waterMissionPanel");panel.classList.remove("spaceMissionPanel");}
 }
 // Fungsi ini turut diekspos ke window kerana butang X HTML asal menggunakan onclick="closeMission()".
 window.closeMission=closeMission;
@@ -709,13 +754,15 @@ function openMission(questionIndex){
  makeQuiz(body,q,questionIndex);
  const missionPanel=document.getElementById("interaction");
  missionPanel.classList.toggle("waterMissionPanel",l.theme==="water");
+ missionPanel.classList.toggle("spaceMissionPanel",l.theme==="space");
  missionPanel.classList.add("show");
 }
 function makeQuiz(body,q,questionIndex){
  const isMatter=levels[state.level]?.theme==="matter";
  const isEnergy=levels[state.level]?.theme==="energy";
  const isWater=levels[state.level]?.theme==="water";
- if(isMatter||isEnergy||isWater){
+ const isSpace=levels[state.level]?.theme==="space";
+ if(isMatter||isEnergy||isWater||isSpace){
   const labels={choose:"🎯 PILIHAN",drag:"🖐️ DRAG & DROP",puzzle:"🧩 PUZZLE URUTAN",match:"🔗 PADANAN",inspect:"🔎 PEMERHATIAN"};
   body.innerHTML=`<div class="quizMode">${labels[q.format]||"🧪 CABARAN MAKMAL"}</div><p><b>${q.question}</b></p>`;
   if(q.format==="drag"){
@@ -1006,6 +1053,19 @@ const MAT={
   energyWater:new THREE.MeshPhysicalMaterial({color:0x38bde8,roughness:.08,metalness:.04,transparent:true,opacity:.78}),
   energySteam:new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.34}),
   energyWood:new THREE.MeshStandardMaterial({color:0x7e5a3b,roughness:.92,metalness:0}),
+  spaceMetal:new THREE.MeshStandardMaterial({color:0x596273,roughness:.34,metalness:.72}),
+  spaceMetalDark:new THREE.MeshStandardMaterial({color:0x171c2a,roughness:.42,metalness:.65}),
+  spaceGlass:new THREE.MeshPhysicalMaterial({color:0x6fc9ff,roughness:.08,metalness:.05,transparent:true,opacity:.72,transmission:.12}),
+  spaceEarth:new THREE.MeshStandardMaterial({color:0x4f78a8,roughness:.9,metalness:0}),
+  spaceEarthLight:new THREE.MeshStandardMaterial({color:0x91a7cf,roughness:.9,metalness:0}),
+  spaceRed:new THREE.MeshStandardMaterial({color:0xb95b4f,roughness:.9,metalness:.02}),
+  spaceOrange:new THREE.MeshStandardMaterial({color:0xd49a5a,roughness:.82,metalness:.03}),
+  spaceMoon:new THREE.MeshStandardMaterial({color:0x9ba2ae,roughness:.98,metalness:0}),
+  spaceSun:new THREE.MeshBasicMaterial({color:0xffc84d}),
+  spaceSunGlow:new THREE.MeshBasicMaterial({color:0xffe6a3,transparent:true,opacity:.24}),
+  spaceNebula:new THREE.MeshBasicMaterial({color:0x433c9b,transparent:true,opacity:.16,side:THREE.DoubleSide}),
+  spaceStar:new THREE.PointsMaterial({color:0xffffff,size:.12,sizeAttenuation:true,transparent:true,opacity:.9}),
+  spaceBeacon:new THREE.MeshStandardMaterial({color:0x9cecff,emissive:0x18a9ff,emissiveIntensity:2.2,roughness:.2,metalness:.1}),
 
   cowWhite:new THREE.MeshStandardMaterial({color:0xf4f0df,roughness:.9,metalness:0}),
   cowBlack:new THREE.MeshStandardMaterial({color:0x403c3b,roughness:.9,metalness:0}),
@@ -2225,7 +2285,7 @@ window.setGardenQuestionLights=function(questions,positions){
  if(!gardenGroup)return;
  clearQuestLights3D();
  const theme=levels[state.level]?.theme;
- if(theme!=="plants"&&theme!=="animals"&&theme!=="matter"&&theme!=="energy"&&theme!=="water")return;
+ if(theme!=="plants"&&theme!=="animals"&&theme!=="matter"&&theme!=="energy"&&theme!=="water"&&theme!=="space")return;
  if(theme==="matter"&&!window.labInteriorMode)return;
  questLightPositions.forEach((pos,i)=>createQuestLight3D(i,pos));
 };
@@ -2245,7 +2305,8 @@ function updateQuestLights3D(t){
   item.orb.material.color.setHex(solved?0x62d98a:(animalTheme?0x73e8ff:(energyTheme?0xffe45c:(waterTheme?0x8eeaff:0xffe45c))));
   item.orb.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:(energyTheme?0xffa800:(waterTheme?0x08bfe8:0xffc928))));
   item.ring.material.emissive.setHex(solved?0x2b9d58:(animalTheme?0x16bde8:(energyTheme?0xffa800:(waterTheme?0x08bfe8:0xffc928))));
-  item.group.position.y=(solved?.9:1.45)+Math.sin(t*.003+item.group.userData.phase)*.08;
+  const spaceTheme=levels[state.level]?.theme==="space";
+  item.group.position.y=spaceTheme?((node?.y||0)+Math.sin(t*.003+item.group.userData.phase)*.12):(solved?.9:1.45)+Math.sin(t*.003+item.group.userData.phase)*.08;
  });
 }
 function updateGardenVisual(t){
@@ -2259,11 +2320,54 @@ function updateGardenVisual(t){
  }
  if(levels[state.level]?.theme==="energy")updateEnergyVisual(t);
  if(levels[state.level]?.theme==="water")updateWaterVisual(t);
+ if(levels[state.level]?.theme==="space")updateSpaceVisual(t);
  animatedPlants.forEach((g,i)=>{
   const base=g.userData.phase||0;g.rotation.z=Math.sin(gardenTime*1.1+base)*.025;g.position.y=Math.sin(gardenTime*1.7+base)*.018;
  });
  if(waterMesh){waterMesh.position.y=.30+Math.sin(gardenTime*1.4)*.025;waterMesh.scale.x=.995+Math.sin(gardenTime*1.8)*.008}
 }
+
+
+/* ========================= LEVEL 6 — MISI ANGKASA 3D =========================
+   Dunia angkasa sebenar: orbit planet, stesen, asteroid, komet, nebula,
+   bintang, satelit dan 5 cahaya ilmu pada ketinggian berbeza.
+*/
+let spaceAnimated=[];
+let spaceStars=null;
+let spaceOrbiters=[];
+let spaceBeacons=[];
+let spaceDust=[];
+
+function spaceAdd(obj){gardenGroup.add(obj);return obj}
+function spaceBox(x,y,z,w,h,d,mat,rot=0){const o=mesh(new THREE.BoxGeometry(w,h,d),mat,true,true);o.position.set(x,y,z);o.rotation.y=rot;return spaceAdd(o)}
+function spaceSphere(x,y,z,r,mat,segments=24){const o=mesh(new THREE.SphereGeometry(r,segments,segments/2),mat,true,true);o.position.set(x,y,z);return spaceAdd(o)}
+function spaceLabel(text,x,y,z,w=6,h=1){const c=document.createElement("canvas");c.width=640;c.height=150;const g=c.getContext("2d");g.clearRect(0,0,640,150);g.fillStyle="#071026ee";g.roundRect(8,8,624,134,28);g.fill();g.strokeStyle="#7fd7ff88";g.lineWidth=3;g.stroke();g.fillStyle="#e9f7ff";g.font="900 54px Arial";g.textAlign="center";g.textBaseline="middle";g.fillText(text,320,76);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sp.position.set(x,y,z);sp.scale.set(w,h,1);return spaceAdd(sp)}
+function spaceAsteroid(x,y,z,s=1){const g=new THREE.Group();g.position.set(x,y,z);g.scale.setScalar(s);spaceAdd(g);const mat=[MAT.spaceMoon,MAT.spaceEarthLight,MAT.spaceMetalDark][Math.floor(Math.random()*3)];for(let i=0;i<5;i++){const r=mesh(new THREE.IcosahedronGeometry(rand(.35,.9),1),mat,true,true);r.position.set(rand(-.8,.8),rand(-.7,.7),rand(-.8,.8));r.rotation.set(rand(0,6),rand(0,6),rand(0,6));g.add(r)}spaceAnimated.push({group:g,type:"asteroid",phase:Math.random()*7,spin:rand(.2,.7)});return g}
+function spacePlanet(x,y,z,r,mat,ring=false){const g=new THREE.Group();g.position.set(x,y,z);spaceAdd(g);const p=mesh(new THREE.SphereGeometry(r,32,20),mat,true,true);g.add(p);if(ring){const rm=new THREE.MeshStandardMaterial({color:0xb7a87a,roughness:.82,metalness:.05,transparent:true,opacity:.76,side:THREE.DoubleSide});const rg=mesh(new THREE.RingGeometry(r*1.35,r*2.05,64),rm,false,false);rg.rotation.x=Math.PI*.48;g.add(rg)}return g}
+function spaceSun(){const g=new THREE.Group();g.position.set(0,10,-17);spaceAdd(g);const orb=mesh(new THREE.SphereGeometry(4.4,32,24),MAT.spaceSun,false,false);g.add(orb);const glow=mesh(new THREE.SphereGeometry(5.7,24,18),MAT.spaceSunGlow,false,false);g.add(glow);for(let i=0;i<16;i++){const ray=mesh(new THREE.BoxGeometry(.09,2.4,.09),MAT.spaceSun,false,false);const a=i*Math.PI*2/16;ray.position.set(Math.cos(a)*5.5,Math.sin(a)*5.5,0);ray.rotation.z=a;g.add(ray)}const l=new THREE.PointLight(0xffc65b,2.8,55);l.position.set(0,10,-17);spaceAdd(l);spaceLabel("MATAHARI",0,16,-17,4.7,.82);return g}
+function spaceStation(){const g=new THREE.Group();g.position.set(0,7,17);spaceAdd(g);const core=mesh(new THREE.CylinderGeometry(1.0,1.0,3.2,20),MAT.spaceMetal,true,true);core.rotation.z=Math.PI/2;g.add(core);for(const sx of [-1,1]){const arm=mesh(new THREE.BoxGeometry(5.2,.18,1.7),MAT.spaceMetalDark,true,true);arm.position.x=sx*3.1;g.add(arm);const panel=mesh(new THREE.BoxGeometry(3.7,.08,1.4),MAT.spaceGlass,false,false);panel.position.set(sx*3.1,.08,0);g.add(panel)}const ring=mesh(new THREE.TorusGeometry(1.7,.09,10,40),MAT.spaceBeacon,false,false);ring.rotation.y=Math.PI/2;g.add(ring);spaceAnimated.push({group:ring,type:"station",phase:0});spaceLabel("STESEN ORBIT",0,10.1,17,5.3,.86);return g}
+function spaceRocket(){const g=new THREE.Group();g.position.set(25,5,10);g.rotation.z=-.12;spaceAdd(g);const body=mesh(new THREE.CylinderGeometry(.9,.9,5.2,20),MAT.spaceMetal,true,true);body.rotation.z=Math.PI/2;g.add(body);const nose=mesh(new THREE.ConeGeometry(.9,1.9,20),MAT.white,true,true);nose.rotation.z=-Math.PI/2;nose.position.x=3.55;g.add(nose);for(const sx of [-1,1]){const fin=mesh(new THREE.BoxGeometry(1.2,.18,1.7),MAT.spaceRed,true,true);fin.position.set(-1.1,sx*.95,0);g.add(fin)}const flame=mesh(new THREE.ConeGeometry(.48,1.9,16),MAT.spaceSun,false,false);flame.rotation.z=Math.PI/2;flame.position.x=-3.35;g.add(flame);spaceAnimated.push({group:flame,type:"rocket",phase:0});spaceLabel("KAPAL EKSPEDISI",25,8.6,10,6.1,.82);return g}
+function spaceComet(x,y,z){const g=new THREE.Group();g.position.set(x,y,z);spaceAdd(g);const head=mesh(new THREE.IcosahedronGeometry(.9,2),MAT.spaceMoon,true,true);g.add(head);for(let i=0;i<16;i++){const p=mesh(new THREE.SphereGeometry(rand(.05,.18),7,5),MAT.spaceBeacon,false,false);p.position.set(-rand(1.0,5.5),rand(-.4,.4),rand(-.4,.4));g.add(p)}spaceAnimated.push({group:g,type:"comet",phase:Math.random()*7});return g}
+function spaceStarField(){const count=1800;const pos=new Float32Array(count*3);for(let i=0;i<count;i++){const r=rand(55,105),a=rand(0,Math.PI*2),b=rand(-Math.PI*.45,Math.PI*.45);pos[i*3]=Math.cos(a)*Math.cos(b)*r;pos[i*3+1]=Math.sin(b)*r*.72+rand(-8,8);pos[i*3+2]=Math.sin(a)*Math.cos(b)*r-8}const geo=new THREE.BufferGeometry();geo.setAttribute("position",new THREE.BufferAttribute(pos,3));spaceStars=new THREE.Points(geo,MAT.spaceStar);spaceAdd(spaceStars)}
+function spaceNebula(){for(let i=0;i<5;i++){const g=new THREE.PlaneGeometry(rand(28,45),rand(16,26));const m=mesh(g,MAT.spaceNebula,false,false);m.position.set(rand(-35,35),rand(10,25),rand(-28,28));m.rotation.set(rand(-.3,.3),rand(0,6),rand(-.25,.25));spaceAdd(m)}}
+function spaceBeacon(x,y,z,label){const g=new THREE.Group();g.position.set(x,y,z);spaceAdd(g);const orb=mesh(new THREE.SphereGeometry(.34,18,12),MAT.spaceBeacon,false,false);g.add(orb);const ring=mesh(new THREE.TorusGeometry(.72,.055,10,32),MAT.spaceBeacon,false,false);ring.rotation.x=Math.PI/2;g.add(ring);const stem=mesh(new THREE.CylinderGeometry(.05,.08,1.1,8),MAT.spaceMetal,false,true);stem.position.y=-.72;g.add(stem);const light=new THREE.PointLight(0x42c8ff,2.8,8);g.add(light);spaceBeacons.push({group:g,orb,ring,light,phase:Math.random()*7});spaceLabel(label,x,y+1.25,z,5.4,.8);return g}
+function spacePlanetaryRings(){const orbit=new THREE.Group();orbit.position.set(0,0,0);spaceAdd(orbit);for(let i=0;i<3;i++){const rg=mesh(new THREE.TorusGeometry(10+i*4,.025,6,100),new THREE.MeshBasicMaterial({color:0x5276b9,transparent:true,opacity:.28}),false,false);rg.rotation.x=Math.PI/2;rg.position.y=6+i*1.5;orbit.add(rg)}}
+function createSpaceWorld(){
+ gardenGroup=new THREE.Group();gardenGroup.name="Level6_SpaceMission_Realistic";scene.add(gardenGroup);
+ spaceStarField();spaceNebula();spaceSun();
+ spacePlanet(-15,8,-7,2.6,MAT.spaceRed,false);
+ spacePlanet(16,11,-8,3.0,MAT.spaceOrange,false);
+ spacePlanet(0,15,0,2.15,MAT.spaceEarthLight,false);
+ spacePlanet(-17,12,10,3.4,MAT.spaceMoon,true);
+ spacePlanet(18,7,12,2.4,MAT.spaceEarthLight,false);
+ spaceStation();spaceRocket();spaceComet(-23,17,-4);spaceComet(22,18,-16);
+ for(let i=0;i<34;i++)spaceAsteroid(rand(-34,34),rand(3,23),rand(-31,31),rand(.35,1.1));
+ for(let i=0;i<70;i++){const p=mesh(new THREE.SphereGeometry(rand(.015,.055),6,5),MAT.spaceStar,false,false);p.position.set(rand(-34,34),rand(3,24),rand(-34,34));spaceAdd(p);spaceDust.push(p)}
+ spaceBeacon(-16,8,-10,"CAHAYA 1 • UTARID");spaceBeacon(16,11,-8,"CAHAYA 2 • MARIKH");spaceBeacon(0,15,0,"CAHAYA 3 • ORBIT");spaceBeacon(-17,12,10,"CAHAYA 4 • BULAN");spaceBeacon(18,7,12,"CAHAYA 5 • MATAHARI");
+ spaceLabel("ZON PENEROKAAN ORBIT",0,2.8,5,8.5,1.0);
+ gardenWorldReady=true;
+}
+function updateSpaceVisual(t){if(!gardenWorldReady)return;const sec=t*.001;spaceAnimated.forEach(a=>{if(a.type==="asteroid")a.group.rotation.y=sec*a.spin+a.phase;else if(a.type==="station")a.group.rotation.x=sec*.35;else if(a.type==="rocket")a.group.scale.x=.92+.12*Math.sin(sec*8+a.phase);else if(a.type==="comet")a.group.position.x+=Math.sin(sec*.22+a.phase)*.002});spaceBeacons.forEach((b,i)=>{const pulse=1+.16*Math.sin(sec*2.5+b.phase);b.orb.scale.setScalar(pulse);b.ring.rotation.z=sec*1.5+b.phase;b.ring.scale.setScalar(1+.1*Math.sin(sec*2+b.phase));b.light.intensity=2.2+.8*Math.sin(sec*3+b.phase)});if(spaceStars)spaceStars.rotation.y=sec*.002;spaceDust.forEach((p,i)=>{p.position.y+=Math.sin(sec*1.2+i)*.0008})}
 
 function loadCharacter(){
  const loader=new GLTFLoader();
@@ -2297,7 +2401,7 @@ function loadCharacter(){
 }
 
 window.setGarden3DLevel=function(theme){
- const shouldUse3D=theme==="plants"||theme==="animals"||theme==="matter"||theme==="energy"||theme==="water";
+ const shouldUse3D=theme==="plants"||theme==="animals"||theme==="matter"||theme==="energy"||theme==="water"||theme==="space";
  gardenActive=shouldUse3D;
  glbCanvas.style.display=gardenActive?"block":"none";
  if(!scene||!camera3d)return;
@@ -2311,6 +2415,7 @@ window.setGarden3DLevel=function(theme){
  cityMode=false;window.labInteriorMode=false;cityGroup=null;labInteriorGroup=null;labDoorGlow=null;cityAnimated=[];window.cityMode=cityMode;
   const labBadgeEl=document.getElementById("labBadge");
  if(labBadgeEl)labBadgeEl.style.display="none";
+  document.body.classList.toggle("spaceLevel",theme==="space");
 
  if(theme==="animals"){
   scene.background=new THREE.Color(0x8edff4);
@@ -2332,6 +2437,11 @@ window.setGarden3DLevel=function(theme){
   scene.background=new THREE.Color(0x72cdec);
   scene.fog.color.set(0x72cdec);
   createWaterWorld();
+ }else if(theme==="space"){
+  scene.background=new THREE.Color(0x050817);
+  scene.fog=new THREE.Fog(0x050817,55,150);
+  createSpaceWorld();
+  player.y=5;
  }
 
  if(shouldUse3D){
@@ -2341,8 +2451,13 @@ window.setGarden3DLevel=function(theme){
   labLookActive=false;
   const positions=getQuestionPositions(theme);
   window.setGardenQuestionLights(levels[state.level].questions,positions);
-  camera3d.position.set(player.x,8.5,player.z+10.5);
-  camera3d.lookAt(player.x,1.0,player.z-2.5);
+  if(theme==="space"){
+   camera3d.position.set(player.x,player.y+5,player.z+11);
+   camera3d.lookAt(player.x,player.y,player.z-3);
+  }else{
+   camera3d.position.set(player.x,8.5,player.z+10.5);
+   camera3d.lookAt(player.x,1.0,player.z-2.5);
+  }
  }
 };
 
@@ -2361,6 +2476,21 @@ function updateCharacter(){
  else if(idleAction&&!moving){if(!idleAction.isRunning())playAction(idleAction)}else if(walkAction&&moving){if(!walkAction.isRunning())playAction(walkAction)}
 
  if(gardenActive){
+  if(levels[state.level]?.theme==="space"){
+   characterRoot.visible=true;
+   characterRoot.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.transparent=true;m.opacity=1})}});
+   characterRoot.position.set(player.x,player.y,player.z);
+   characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
+   if(moving)characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;
+   const orbitDistance=11.5,cp=Math.cos(labCameraPitch),sp=Math.sin(labCameraPitch);
+   const ox=Math.sin(labCameraYaw)*orbitDistance*cp,oz=Math.cos(labCameraYaw)*orbitDistance*cp;
+   const oy=player.y+5.2+sp*4.8;
+   camera3d.position.x+=(player.x+ox-camera3d.position.x)*.09;
+   camera3d.position.y+=(oy-camera3d.position.y)*.09;
+   camera3d.position.z+=(player.z+oz-camera3d.position.z)*.09;
+   camera3d.lookAt(player.x,player.y+sp*1.8,player.z);
+   return;
+  }
   /* Level 3 LAB: tukar kepada pandangan immersive seperti FPS apabila sudah masuk bangunan. */
   if(window.labInteriorMode){
    if(characterRoot)characterRoot.visible=false;
@@ -2434,7 +2564,7 @@ function renderGLB(t){
  updateGardenVisual(t||0);updateCharacter();
  if(gardenActive){
   const theme=levels[state.level]?.theme;
-  const bg=theme==="animals"?0x8edff4:(theme==="matter"?(window.labInteriorMode?0x9aa9b6:0x86d5e8):(theme==="energy"?0x86c8ee:(theme==="water"?0x72cdec:0x9bdff4)));
+  const bg=theme==="animals"?0x8edff4:(theme==="matter"?(window.labInteriorMode?0x9aa9b6:0x86d5e8):(theme==="energy"?0x86c8ee:(theme==="space"?0x050817:(theme==="water"?0x72cdec:0x9bdff4))));
   scene.background=new THREE.Color(bg);scene.fog.color.set(bg);
   renderer.render(scene,camera3d)
  }
@@ -2542,6 +2672,11 @@ base.addEventListener("touchmove",e=>{
 },{passive:false});
 base.addEventListener("touchend",e=>{e.preventDefault();joyTouchActive=false;resetJoystick()},{passive:false});
 base.addEventListener("touchcancel",e=>{e.preventDefault();joyTouchActive=false;resetJoystick()},{passive:false});
+
+window.spaceFlightY=0;
+const spaceUpButton=document.getElementById("spaceUpBtn"),spaceDownButton=document.getElementById("spaceDownBtn");
+function holdSpaceFlight(v){window.spaceFlightY=v}
+[spaceUpButton,spaceDownButton].forEach((btn,i)=>{if(!btn)return;const v=i===0?1:-1;btn.addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();holdSpaceFlight(v)},{passive:false});btn.addEventListener("pointerup",e=>{e.preventDefault();holdSpaceFlight(0)},{passive:false});btn.addEventListener("pointercancel",()=>holdSpaceFlight(0));btn.addEventListener("pointerleave",()=>holdSpaceFlight(0));});
 
 const mobileInteractButton=document.getElementById("interactBtn");
 const mobileMapButton=document.getElementById("mapMobileBtn");
