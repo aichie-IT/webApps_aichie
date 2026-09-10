@@ -640,14 +640,14 @@ function update(dt,t){
   */
   let forward=0,strafe=0;
   if(keys.w||keys.arrowup)forward+=1;if(keys.s||keys.arrowdown)forward-=1;
-  if(keys.a||keys.arrowleft)strafe+=1;if(keys.d||keys.arrowright)strafe-=1;
+  if(keys.a||keys.arrowleft)strafe-=1;if(keys.d||keys.arrowright)strafe+=1;
   if(mobileStick.active){forward=mobileStick.z;strafe=-mobileStick.x}
 
   const inputLen=Math.hypot(forward,strafe);
   if(inputLen>1){forward/=inputLen;strafe/=inputLen}
   const sy=Math.sin(labCameraYaw),cy=Math.cos(labCameraYaw);
-  const desiredX=sy*forward+cy*strafe;
-  const desiredZ=cy*forward-sy*strafe;
+  const desiredX=-sy*forward+cy*strafe;
+  const desiredZ=-cy*forward-sy*strafe;
 
   let vertical=0;
   if(keys[" "]||keys.space)vertical+=1;
