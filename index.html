@@ -287,6 +287,12 @@ let running=false,keys={},last=0,interactCooldown=0,nearMission=false;
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 let W=innerWidth,H=innerHeight,dpr=1;
 let player={x:0,z:0,y:0,angle:0,speed:5,targetX:null,targetZ:null,walk:0};
+/* LEVEL 6 ONLY — smooth space-flight state.
+   Thrust + inertia + damping memberi rasa terapung yang lembut tanpa mengubah
+   movement mana-mana level lain. */
+let spaceVelocity={x:0,y:0,z:0};
+let spaceFlightRoll=0;
+let spaceFlightPitch=0;
 let mobileStick={x:0,z:0,active:false};
 window.mobileStick=mobileStick;
 let camera={x:0,z:0,shake:0};
@@ -347,6 +353,7 @@ function closePanel(){document.getElementById("panel").classList.remove("show")}
 function loadLevel(i){
  if(i>=state.unlocked){toast("Level ini masih terkunci 🔒");return}
  state.level=i;state.questionSolved=0;state.currentQuestion=-1;player.x=0;player.z=levels[i].theme==="space"?5:0;player.y=levels[i].theme==="space"?5:0;player.targetX=null;player.targetZ=null;
+ if(levels[i].theme==="space"){spaceVelocity.x=0;spaceVelocity.y=0;spaceVelocity.z=0;spaceFlightRoll=0;spaceFlightPitch=0;}
  camera.x=0;camera.z=0;world.nodes=[];world.decor=[];world.particles=[];world.animals=[];
  const t=levels[i];
  document.getElementById("levelTitle").textContent=`${t.icon} Level ${i+1}: ${t.name}`;
@@ -625,22 +632,69 @@ function update(dt,t){
     Ini mengelakkan W/S terasa terbalik apabila labCameraYaw berubah.
  */
  if(levels[state.level]?.theme==="space"){
+  /* LEVEL 6 ONLY — cinematic free-flight controller.
+     - WASD / Arrow = camera-relative thrust
+     - SPACE / SHIFT = naik / turun
+     - inertia + damping = gerakan terapung, bukan teleport/berhenti mengejut
+     - gentle auto-level + banking = watak terasa seperti juruterbang angkasa
+  */
   let forward=0,strafe=0;
   if(keys.w||keys.arrowup)forward+=1;if(keys.s||keys.arrowdown)forward-=1;
   if(keys.a||keys.arrowleft)strafe+=1;if(keys.d||keys.arrowright)strafe-=1;
   if(mobileStick.active){forward=mobileStick.z;strafe=-mobileStick.x}
-  const fl=Math.hypot(forward,strafe);
-  if(fl>0){
-   forward/=fl;strafe/=fl;const sy=Math.sin(labCameraYaw),cy=Math.cos(labCameraYaw);
-   dx=sy*forward+cy*strafe;dz=cy*forward-sy*strafe;
-  }
+
+  const inputLen=Math.hypot(forward,strafe);
+  if(inputLen>1){forward/=inputLen;strafe/=inputLen}
+  const sy=Math.sin(labCameraYaw),cy=Math.cos(labCameraYaw);
+  const desiredX=sy*forward+cy*strafe;
+  const desiredZ=cy*forward-sy*strafe;
+
   let vertical=0;
   if(keys[" "]||keys.space)vertical+=1;
   if(keys.shift)vertical-=1;
   vertical+=window.spaceFlightY||0;
-  player.x+=dx*player.speed*1.15*dt;player.z+=dz*player.speed*1.15*dt;player.y+=vertical*player.speed*.9*dt;
-  if(dx||dz)player.angle=Math.atan2(dx,dz);
+  vertical=Math.max(-1,Math.min(1,vertical));
+
+  const flightAccel=18.0;
+  const maxSpeed=8.4;
+  const verticalMaxSpeed=5.8;
+  const response=Math.min(1,flightAccel*dt);
+
+  /* Thrust menuju arah input. Bila tiada input, velocity diserap perlahan
+     supaya pemain berhenti secara semula jadi seperti dalam ruang angkasa. */
+  const targetVX=desiredX*maxSpeed;
+  const targetVZ=desiredZ*maxSpeed;
+  const targetVY=vertical*verticalMaxSpeed;
+  spaceVelocity.x+=(targetVX-spaceVelocity.x)*response;
+  spaceVelocity.z+=(targetVZ-spaceVelocity.z)*response;
+  spaceVelocity.y+=(targetVY-spaceVelocity.y)*Math.min(1,12*dt);
+
+  const drag=Math.pow(.72,dt);
+  if(inputLen<.01){spaceVelocity.x*=drag;spaceVelocity.z*=drag}
+  if(Math.abs(vertical)<.01)spaceVelocity.y*=Math.pow(.58,dt);
+
+  const horizontalSpeed=Math.hypot(spaceVelocity.x,spaceVelocity.z);
+  if(horizontalSpeed>maxSpeed){
+   const k=maxSpeed/horizontalSpeed;spaceVelocity.x*=k;spaceVelocity.z*=k;
+  }
+  spaceVelocity.y=Math.max(-verticalMaxSpeed,Math.min(verticalMaxSpeed,spaceVelocity.y));
+
+  player.x+=spaceVelocity.x*dt;
+  player.z+=spaceVelocity.z*dt;
+  player.y+=spaceVelocity.y*dt;
+
+  /* Soft world boundary: slow down against the edge instead of an abrupt stop. */
+  const edge=31,softEdge=27;
+  if(player.x<-softEdge&&spaceVelocity.x<0)spaceVelocity.x*=Math.max(0,1-dt*2.8);
+  if(player.x> softEdge&&spaceVelocity.x>0)spaceVelocity.x*=Math.max(0,1-dt*2.8);
+  if(player.z<-softEdge&&spaceVelocity.z<0)spaceVelocity.z*=Math.max(0,1-dt*2.8);
+  if(player.z> softEdge&&spaceVelocity.z>0)spaceVelocity.z*=Math.max(0,1-dt*2.8);
+  if(player.y<3.0&&spaceVelocity.y<0)spaceVelocity.y*=Math.max(0,1-dt*3.5);
+  if(player.y>21.5&&spaceVelocity.y>0)spaceVelocity.y*=Math.max(0,1-dt*3.5);
+
   player.x=Math.max(-31,Math.min(31,player.x));player.z=Math.max(-31,Math.min(31,player.z));player.y=Math.max(2.5,Math.min(22,player.y));
+
+  if(horizontalSpeed>.08)player.angle=Math.atan2(spaceVelocity.x,spaceVelocity.z);
  }else if(levels[state.level]?.theme==="matter" && window.labInteriorMode){
   let forward=0,strafe=0;
   /* FRONT/BACK FIX — hanya songsangkan paksi depan/belakang.
@@ -2481,13 +2535,27 @@ function updateCharacter(){
    characterRoot.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>{m.transparent=true;m.opacity=1})}});
    characterRoot.position.set(player.x,player.y,player.z);
    characterRoot.scale.setScalar(CHARACTER_WORLD_HEIGHT/modelHeight);
-   if(moving)characterRoot.rotation.y=GLB_MODEL_ROTATION_Y+player.angle;
-   const orbitDistance=11.5,cp=Math.cos(labCameraPitch),sp=Math.sin(labCameraPitch);
+
+   /* Flight banking: hanya Level 6. Roll mengikut strafe/velocity dan pitch
+      kecil mengikut naik-turun supaya watak nampak ringan tetapi tidak mabuk. */
+   const flightHorizontal=Math.hypot(spaceVelocity.x,spaceVelocity.z);
+   const localRightX=Math.cos(labCameraYaw),localRightZ=-Math.sin(labCameraYaw);
+   const lateralVelocity=spaceVelocity.x*localRightX+spaceVelocity.z*localRightZ;
+   const targetRoll=Math.max(-.22,Math.min(.22,-lateralVelocity*.045));
+   const targetPitch=Math.max(-.14,Math.min(.14,-spaceVelocity.y*.028));
+   spaceFlightRoll+=(targetRoll-spaceFlightRoll)*Math.min(1,7*delta);
+   spaceFlightPitch+=(targetPitch-spaceFlightPitch)*Math.min(1,6*delta);
+   characterRoot.rotation.set(spaceFlightPitch,GLB_MODEL_ROTATION_Y+player.angle,spaceFlightRoll);
+
+   /* Kamera mengejar dengan spring-like smoothing. Sedikit lebih jauh ketika
+      laju meningkat supaya pemain sentiasa nampak ruang di hadapan. */
+   const orbitDistance=11.5+Math.min(2.2,flightHorizontal*.18),cp=Math.cos(labCameraPitch),sp=Math.sin(labCameraPitch);
    const ox=Math.sin(labCameraYaw)*orbitDistance*cp,oz=Math.cos(labCameraYaw)*orbitDistance*cp;
    const oy=player.y+5.2+sp*4.8;
-   camera3d.position.x+=(player.x+ox-camera3d.position.x)*.09;
-   camera3d.position.y+=(oy-camera3d.position.y)*.09;
-   camera3d.position.z+=(player.z+oz-camera3d.position.z)*.09;
+   const cameraFollow=Math.min(1,8.5*delta);
+   camera3d.position.x+=(player.x+ox-camera3d.position.x)*cameraFollow;
+   camera3d.position.y+=(oy-camera3d.position.y)*cameraFollow;
+   camera3d.position.z+=(player.z+oz-camera3d.position.z)*cameraFollow;
    camera3d.lookAt(player.x,player.y+sp*1.8,player.z);
    return;
   }
